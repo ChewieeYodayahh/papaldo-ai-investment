@@ -69,7 +69,13 @@ work:
   ("Can afford to invest in risky and secure assets…"), and the allocation bar
   (`25% / 75%`). The allocation bar additionally needs the Low and High fund
   splits, which were never captured — see CONTEXT.md.
-- No global nav, no layout chrome, no loading skeletons, no dark mode.
+- No global nav, no layout chrome, no loading skeletons.
+- **Dark mode was removed, not skipped.** create-next-app ships a
+  `prefers-color-scheme: dark` block that flipped the background to near-black
+  while every component style here uses a fixed light palette -- the result was
+  dark text and a dark primary button on a dark background. `app/globals.css`
+  now commits to one light theme. A real dark theme means giving the components
+  themed tokens, which belongs with the design pass.
 
 ### Decisions worth remembering
 
