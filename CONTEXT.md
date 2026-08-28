@@ -18,7 +18,7 @@ them is a bug — fix it rather than inventing a synonym.
 The six-item questionnaire every user completes after registering. Its wording is
 transcribed verbatim from Manulife's *Client Suitability Assessment*, so it is a
 spec, not a draft: do not paraphrase questions or choices. Lives in
-`features/isq/questions.ts`.
+`src/app/features/isq/questions.ts`.
 
 **Risk profile**
 The output of scoring an ISQ submission: a **band** plus a 0–100 **score**. There
@@ -70,8 +70,8 @@ price. "Simulated" is load-bearing: it never reaches a broker.
 
 ## Onboarding order
 
-Enforced in one place, `shared/supabase/middleware.ts`, and mirrored by
-`features/auth/api/profile.ts#resolveOnboardingStep`:
+Enforced in one place, `src/app/core/services/supabase/middleware.ts`, and mirrored
+by `src/app/features/auth/api/profile.ts#resolveOnboardingStep`:
 
 ```
 sign up / sign in
@@ -139,22 +139,47 @@ dashboard assignment, which will need those two pairs before it can be built.
 
 ---
 
+## Folder structure
+
+All application code lives under `src/`. The repository root holds configuration
+only (`next.config.ts`, `tsconfig.json`, `package.json`, lockfiles).
+
+```
+src/
+  app/
+    (app)/  (auth)/          route groups — pages, thin composition
+    api/<resource>/route.ts  HTTP handlers, one folder per resource
+    core/services/           external-service clients, one area each
+      supabase/{client,server,middleware,database.types}.ts
+      claude.ts
+    features/<feature>/       feature modules: api/ components/ hooks/ schema.ts …
+    layout.tsx  page.tsx  globals.css
+  components/                 cross-feature UI primitives (index.tsx)
+  lib/                        framework-agnostic helpers (env.ts)
+  middleware.ts               session refresh + onboarding order
+```
+
+The import alias `@/*` resolves to `src/*`, so `@/app/features/isq/scoring`,
+`@/components`, `@/lib/env`, `@/app/core/services/supabase/server`.
+
 ## Architecture rules
 
 **The UI never calls Supabase or Claude directly.** Components `fetch()` a route
-under `app/api/*`; those handlers validate and delegate to a server-only module in
-`features/*/api/`. This holds even for Google OAuth: the button POSTs for a consent
-URL and navigates to it, rather than importing the Supabase browser client.
+under `src/app/api/*`; those handlers validate and delegate to a server-only module
+in `src/app/features/*/api/`. This holds even for Google OAuth: the button POSTs for
+a consent URL and navigates to it, rather than importing the Supabase browser client.
 
-`shared/supabase/client.ts` exists for future client-side reads and is intentionally
-unused. Reaching for it from a form means an API route is missing.
+`src/app/core/services/supabase/client.ts` exists for future client-side reads and is
+intentionally unused. Reaching for it from a form means an API route is missing.
 
-**Features own their logic.** `app/` is thin route composition. `shared/` is
-cross-feature primitives only — nothing in `shared/` may import from `features/`.
+**Features own their logic.** `src/app/` route segments are thin composition;
+`src/app/features/*` hold the logic they render. `src/components/`, `src/lib/`, and
+`src/app/core/` are shared primitives — none of them may import from
+`src/app/features/*`.
 
-**Validation is declared once.** `features/auth/schema.ts` holds the zod schemas used
-by both the client form and the server route, so the two cannot drift. Client-side
-validation is a convenience; the server always re-parses.
+**Validation is declared once.** `src/app/features/auth/schema.ts` holds the zod
+schemas used by both the client form and the server route, so the two cannot drift.
+Client-side validation is a convenience; the server always re-parses.
 
 Validation is deliberately **loose**: `contact` accepts any non-empty string
 (mobiles, landlines, foreign numbers, no normalisation) and `username` has a length

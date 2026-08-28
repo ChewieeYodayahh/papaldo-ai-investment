@@ -1,14 +1,14 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
-const rootDir = fileURLToPath(new URL('.', import.meta.url))
+const srcDir = fileURLToPath(new URL('./src/', import.meta.url))
 
 export default defineConfig({
   resolve: {
-    alias: { '@': rootDir },
+    alias: { '@': srcDir },
   },
   test: {
     environment: 'node',
-    include: ['features/**/*.test.ts', 'shared/**/*.test.ts'],
+    include: ['src/**/*.test.ts'],
   },
 })

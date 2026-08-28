@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Papaldo
 
-## Getting Started
+AI investment **simulation** dashboard for Filipino investors. Users register,
+complete an Investment Suitability Questionnaire (ISQ), receive a Low / Medium /
+High risk profile, and use it to shape a simulated portfolio. No real money moves
+through the system and no orders reach a broker.
 
-First, run the development server:
+Next.js 15 (App Router) · TypeScript · Tailwind v4 · Supabase (Auth + Postgres with
+RLS) · Zod · Vitest.
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # fill in the Supabase values
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are required.
+`NEXT_PUBLIC_SITE_URL` is required outside development (used to build the OAuth
+redirect). See `.env.example`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint (`next/core-web-vitals` + `next/typescript`) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest (`src/**/*.test.ts`) |
 
-## Learn More
+## Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/
+    (app)/  (auth)/          route groups — pages, thin composition
+    api/<resource>/route.ts  HTTP handlers; validate + delegate to features/*/api
+    core/services/           external-service clients (supabase/, claude.ts)
+    features/<feature>/       feature modules: api/ components/ hooks/ schema.ts …
+    layout.tsx  page.tsx  globals.css
+  components/                 cross-feature UI primitives
+  lib/                        framework-agnostic helpers (env.ts)
+  middleware.ts               session refresh + one-directional onboarding order
+supabase/migrations/          schema, mirrored from the Supabase project
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`@/*` resolves to `src/*`. The UI never calls Supabase or Claude directly — it
+`fetch()`es an `app/api/*` route. See `CONTEXT.md` for domain vocabulary and the
+full architecture rules, and `PROGRESS.md` for the build log.

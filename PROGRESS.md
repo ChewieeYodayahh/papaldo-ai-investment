@@ -7,12 +7,24 @@ domain vocabulary and architecture rules.
 
 ## Phase 1 — Registration, Auth and ISQ (current)
 
-**Status: complete, pending the manual steps below.**
+**Status: complete and merged to `main` (fast-forward, `c847aec`). End-to-end
+sign-up → ISQ → dashboard verified live once "Confirm email" was turned off.**
 
-Delivered on branch `feat/auth-isq`:
+### Update 2026-08-28 — folder restructure
 
-- Next.js 15.5.24 + TypeScript + Tailwind v4 app on the feature-based layout
-  (`app/` thin routes, `features/` own their logic, `shared/` cross-feature only).
+The tree was migrated to a `src/`-rooted layout (see `CONTEXT.md` → "Folder
+structure"): `app/` → `src/app/`, `features/` → `src/app/features/`, `middleware.ts`
+→ `src/middleware.ts`, and `shared/` dissolved into `src/components/` (UI),
+`src/lib/` (helpers) and `src/app/core/services/` (Supabase + Claude clients). The
+`@/*` alias now points at `src/*`. Pure move + import rewrite — no behaviour change;
+lint, typecheck, `npm test` (12/12) and `npm run build` (17 routes) all clean after.
+Done on branch `refactor/src-app-structure`.
+
+Delivered originally on branch `feat/auth-isq`:
+
+- Next.js 15.5.24 + TypeScript + Tailwind v4 app on a `src/app`-rooted,
+  feature-based layout (`src/app/` thin routes, `src/app/features/*` own their
+  logic, `src/components` + `src/lib` + `src/app/core` shared only).
 - `public.users`, `public.isq_responses`, `public.risk_profiles` with RLS,
   applied via the Supabase MCP and mirrored into `supabase/migrations/`.
 - Email/password sign-up and login, Google OAuth, complete-profile step for OAuth
@@ -35,11 +47,8 @@ Delivered on branch `feat/auth-isq`:
 
 ### Waiting on you
 
-1. **Supabase → Authentication → Providers → Email → turn off "Confirm email".**
-   Still on as of the last check. Until it is off, `signUp` returns no session,
-   so sign-up cannot flow into the ISQ, and the built-in SMTP rate limit blocks
-   repeated test signups. This is the one thing standing between here and a live
-   end-to-end run.
+1. ~~Turn off "Confirm email".~~ **Done** — sign-up now returns a live session and
+   flows straight into the ISQ.
 2. **Supabase → Authentication → Providers → Google** — client ID and secret from
    Google Cloud Console, redirect URI
    `https://ettgbzgdtvmfbqrdtjzb.supabase.co/auth/v1/callback`. Google sign-in is
@@ -51,7 +60,8 @@ Delivered on branch `feat/auth-isq`:
    `disable-model-invocation`, so it is reserved for explicit user invocation and
    cannot be run or reproduced by the agent. Answers that match this repo:
    issue tracker **GitHub**, docs **single-context**, create **`CLAUDE.md`**.
-6. **Merge the PR** once the Security Review check passes.
+6. ~~Merge the PR.~~ **Done** — `feat/auth-isq` fast-forwarded onto `main` as
+   `c847aec`. The `refactor/src-app-structure` branch still needs merging.
 
 ### Pending UI/UX design
 
@@ -73,7 +83,7 @@ work:
 - **Dark mode was removed, not skipped.** create-next-app ships a
   `prefers-color-scheme: dark` block that flipped the background to near-black
   while every component style here uses a fixed light palette -- the result was
-  dark text and a dark primary button on a dark background. `app/globals.css`
+  dark text and a dark primary button on a dark background. `src/app/globals.css`
   now commits to one light theme. A real dark theme means giving the components
   themed tokens, which belongs with the design pass.
 
