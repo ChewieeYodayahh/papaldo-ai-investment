@@ -142,8 +142,9 @@ export const ISQ_QUESTIONS: IsqQuestion[] = [
 
 /**
  * On the source questionnaire, answering Q2 with "No experience" pre-selects
- * the matching "have not invested" answer on Q3. Encoded as data so the form
- * and any future validation read the same rule.
+ * the matching "have not invested" answer on Q3. Encoded as data and consumed
+ * today only by the form's auto-select (`IsqForm`); `scoreIsq` does not enforce
+ * the pairing, so it is a UI convenience, not a server-side invariant.
  */
 export const ANSWER_DEPENDENCIES = [
   {
@@ -154,7 +155,7 @@ export const ANSWER_DEPENDENCIES = [
   },
 ] as const
 
-export function getQuestion(questionId: string): IsqQuestion | undefined {
+function getQuestion(questionId: string): IsqQuestion | undefined {
   return ISQ_QUESTIONS.find((question) => question.id === questionId)
 }
 

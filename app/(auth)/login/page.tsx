@@ -4,7 +4,7 @@ import { GoogleButton } from '@/features/auth/components/GoogleButton'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { PageShell } from '@/shared/ui'
 
-export const metadata = { title: 'Sign in | Papaldo' }
+export const metadata = { title: 'Sign in' }
 
 export default function LoginPage() {
   return (

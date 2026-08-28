@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: 'Papaldo',
-    template: '%s',
+    template: '%s | Papaldo',
   },
   description: 'AI investment simulation dashboard for Filipino investors.',
 }

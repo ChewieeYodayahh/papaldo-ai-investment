@@ -5,7 +5,7 @@ import { SignOutButton } from '@/features/auth/components/SignOutButton'
 import { getCurrentRiskProfile } from '@/features/isq/api/submit'
 import { PageShell } from '@/shared/ui'
 
-export const metadata = { title: 'Dashboard | Papaldo' }
+export const metadata = { title: 'Dashboard' }
 
 /**
  * Placeholder shell. Building the real dashboard -- allocation, holdings,

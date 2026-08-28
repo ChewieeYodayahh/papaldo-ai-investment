@@ -4,7 +4,7 @@ import { GoogleButton } from '@/features/auth/components/GoogleButton'
 import { SignUpForm } from '@/features/auth/components/SignUpForm'
 import { PageShell } from '@/shared/ui'
 
-export const metadata = { title: 'Create your account | Papaldo' }
+export const metadata = { title: 'Create your account' }
 
 export default function SignUpPage() {
   return (

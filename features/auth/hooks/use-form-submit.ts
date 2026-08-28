@@ -9,6 +9,10 @@ type ApiResponse = {
   [key: string]: unknown
 }
 
+/** Shown when the fetch itself fails (offline, DNS, CORS) rather than the API. */
+export const NETWORK_ERROR =
+  'Could not reach the server. Check your connection and try again.'
+
 /**
  * Posts a JSON payload to one of the `app/api` routes and threads the pending
  * state, the top-level message, and per-field errors back into a form.
@@ -41,7 +45,7 @@ export function useFormSubmit(endpoint: string) {
 
       return body
     } catch {
-      setMessage('Could not reach the server. Check your connection and try again.')
+      setMessage(NETWORK_ERROR)
       return null
     } finally {
       setPending(false)

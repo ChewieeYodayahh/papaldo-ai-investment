@@ -2,7 +2,7 @@ import { CompleteProfileForm } from '@/features/auth/components/CompleteProfileF
 import { getProfile } from '@/features/auth/api/profile'
 import { PageShell } from '@/shared/ui'
 
-export const metadata = { title: 'Complete your profile | Papaldo' }
+export const metadata = { title: 'Complete your profile' }
 
 export default async function CompleteProfilePage() {
   const profile = await getProfile()

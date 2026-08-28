@@ -11,7 +11,9 @@ import { siteUrl } from '@/shared/utils/env'
  * the rule that no component talks to Supabase directly, while still using
  * stock Supabase Auth rather than a hand-rolled OAuth flow.
  */
-export async function getGoogleAuthUrl(): Promise<{ url: string } | { error: string }> {
+export async function getGoogleAuthUrl(): Promise<
+  { ok: true; url: string } | { ok: false; message: string }
+> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -23,10 +25,10 @@ export async function getGoogleAuthUrl(): Promise<{ url: string } | { error: str
   })
 
   if (error || !data.url) {
-    return { error: error?.message ?? 'Could not start Google sign-in.' }
+    return { ok: false, message: error?.message ?? 'Could not start Google sign-in.' }
   }
 
-  return { url: data.url }
+  return { ok: true, url: data.url }
 }
 
 /** Exchanges the `?code=` from Google's redirect for a session cookie. */

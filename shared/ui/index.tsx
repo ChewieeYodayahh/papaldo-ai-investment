@@ -21,11 +21,10 @@ export function PageShell({ title, subtitle, children }: {
   )
 }
 
-export function Field({ label, htmlFor, error, hint, children }: {
+export function Field({ label, htmlFor, error, children }: {
   label: string
   htmlFor: string
   error?: string
-  hint?: string
   children: ReactNode
 }) {
   return (
@@ -34,7 +33,6 @@ export function Field({ label, htmlFor, error, hint, children }: {
         {label}
       </label>
       {children}
-      {hint ? <p className="mt-1 text-xs text-gray-500">{hint}</p> : null}
       {error ? (
         <p id={`${htmlFor}-error`} role="alert" className="mt-1 text-sm text-red-600">
           {error}

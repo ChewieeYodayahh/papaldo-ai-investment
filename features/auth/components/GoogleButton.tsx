@@ -4,6 +4,8 @@ import { useState } from 'react'
 
 import { Button, FormError } from '@/shared/ui'
 
+import { NETWORK_ERROR } from '../hooks/use-form-submit'
+
 /**
  * Starts the Google flow without importing Supabase into the browser: the
  * server builds the consent URL, we navigate to it.
@@ -25,7 +27,7 @@ export function GoogleButton({ label }: { label: string }) {
       }
       window.location.assign(body.url)
     } catch {
-      setMessage('Could not reach the server. Check your connection and try again.')
+      setMessage(NETWORK_ERROR)
       setPending(false)
     }
   }
