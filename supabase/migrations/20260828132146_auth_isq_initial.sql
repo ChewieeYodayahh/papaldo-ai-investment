@@ -153,8 +153,13 @@ create policy risk_profiles_update_own on public.risk_profiles
   with check ((select auth.uid()) = user_id);
 
 -- ---------------------------------------------------------------------------
--- Data API grants. anon gets nothing at all on these tables; authenticated
--- gets exactly the verbs the policies above allow.
+-- Data API grants.
+--
+-- NOTE: the GRANTs below were a no-op. Supabase's default privileges had
+-- already granted ALL on these tables to authenticated, so the intended least
+-- privilege was not achieved here. Corrected in
+-- 20260828134500_restrict_authenticated_table_grants.sql, which revokes first.
+-- Kept as applied -- migrations are history, not a desired-state document.
 -- ---------------------------------------------------------------------------
 revoke all on public.users         from anon;
 revoke all on public.isq_responses from anon;
