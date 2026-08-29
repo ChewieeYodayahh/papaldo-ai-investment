@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/orient.sh",
+            "shell": "bash",
+            "timeout": 10,
+            "statusMessage": "Reading repo state…"
+          }
+        ]
+      }
+    ]
+  }
+}
