@@ -5,6 +5,34 @@ domain vocabulary and architecture rules.
 
 ---
 
+## Agent tooling — 2026-08-29
+
+Not a product phase. Cuts the cost of every future session.
+
+- **`CLAUDE.md` added.** Repo map + rules, loaded every session. Points at
+  `CONTEXT.md` and this file rather than inlining them.
+- **`.claude/orient.sh`** — a SessionStart hook emitting branch, upstream
+  divergence, recent commits and working tree. Replaces the git calls every
+  session was re-running to orient. Always exits 0, so it cannot block a session.
+- **`.claude/skills/wrap`** — `/wrap` folds a session into this file.
+- **Skills pruned 39 → 12** in `.claude/skills/` (originals intact in
+  `.agents/skills/`). Plugins `context-engineering`, `figma` and
+  `mattpocock-skills` disabled, plus `syncClaudeAiPlugins: false`, all scoped to
+  this project in the gitignored `settings.local.json` — untouched elsewhere.
+
+The skill listing is budget-capped, so ~145 entries did not cost runaway tokens;
+it truncated the descriptions of the skills that matter. Pruning bought routing
+accuracy first, tokens second.
+
+**Requires a `claude` restart** — the config watcher was not watching
+`.claude/settings.json` when it was created, so the hook does not fire until then.
+
+**Footgun:** `.claude/skills/` holds symlinks into `.agents/skills/` and git
+follows them. `git add .claude/` would vendor ~30 third-party skill files into the
+repo. Stage by name, or add a `.gitignore` rule.
+
+---
+
 ## Phase 1 — Registration, Auth and ISQ (current)
 
 **Status: complete and merged to `main` (fast-forward, `c847aec`). End-to-end
@@ -53,7 +81,14 @@ Delivered originally on branch `feat/auth-isq`:
    Google Cloud Console, redirect URI
    `https://ettgbzgdtvmfbqrdtjzb.supabase.co/auth/v1/callback`. Google sign-in is
    coded and builds, but is untested until the provider exists.
-3. **`gh auth login`** — the CLI is installed (2.98.0) but not authenticated.
+3. ~~`gh auth login`~~ **Done** — authenticated as `ChewieeYodayahh` (SSH
+   protocol preference). Note: `ssh -T git@github.com` still fails with
+   `Permission denied (publickey)`. It does not bite us — `origin` is HTTPS and
+   Git Credential Manager handles pushes — but any repo cloned via `gh` from here
+   gets an SSH remote that will not push. Fix the key, or
+   `gh config set git_protocol https`.
+   PR [#1](https://github.com/ChewieeYodayahh/papaldo-ai-investment/pull/1) is
+   open against `main` with the Phase 1 work.
 4. **`gh secret set CLAUDE_API_KEY`** — the security-review workflow cannot run
    without it.
 5. **Run `/setup-matt-pocock-skills` yourself.** That skill is marked
