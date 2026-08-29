@@ -42,3 +42,83 @@ next-env.d.ts
 
 # committed example env file
 !.env.example
+
+# ──────────────────────────────────────────────────────────────────────────
+# SECRETS / CREDENTIALS — NEVER COMMIT THESE
+# ──────────────────────────────────────────────────────────────────────────
+# API keys (common patterns)
+*api*key*.json
+*api*key*.txt
+*api*key*.env
+*secret*.json
+*secret*.txt
+*secret*.env
+*token*.json
+*token*.txt
+*token*.env
+*.api-key
+*.secret
+*.token
+*.key
+
+# OmniRoute / Anthropic
+.omniroute/
+omniroute/
+*omniroute*.key
+*omniroute*.secret
+*anthropic*key*
+
+# Generic credential files
+*.pem
+*.ppk
+*.p12
+*.pfx
+*.cer
+*.crt
+*.key
+*.p8
+*.p7b
+*.p7c
+*.der
+*.csr
+
+# Cloud provider credentials
+aws-credentials*
+gcp-credentials*
+azure-credentials*
+*_credentials.json
+service-account*.json
+*service-account*.json
+credentials.json
+
+# Database / connection strings
+*.connection-string*
+*.conn-string*
+*.db-url*
+
+# SSH / GPG
+.ssh/
+.gnupg/
+*.gpg
+*.asc
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
+
+# CI/CD secrets
+.github/workflows/*.secret.yml
+.gitlab-ci*.secret.yml
+
+# Local settings (Claude Code settings.local.json can have env vars)
+.claude/settings.local.json
+
+# Temporary secret files
+*.secret
+*.secrets
+secrets/
+secret/
+.tmp-secret*
+CLAUDE.md
+CLAUDE.md
+CLAUDE.md

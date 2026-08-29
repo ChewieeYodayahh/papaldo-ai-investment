@@ -1,111 +1,140 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
+import {
+  Questionnaire,
+  QuestionnaireProgress,
+  QuestionnaireItem,
+  QuestionnaireTitle,
+  QuestionnaireDescription,
+  QuestionnaireChoices,
+  QuestionnaireChoice,
+  QuestionnaireActions,
+  QuestionnairePrevious,
+  QuestionnaireNext,
+  QuestionnaireSubmit,
+  QuestionnaireError,
+} from '@/components/ui/questionnaire'
 
-import { Button, FormError } from '@/components'
-
-import { ANSWER_DEPENDENCIES, ISQ_QUESTIONS } from '../questions'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useFormSubmit } from '@/app/features/auth/hooks/use-form-submit'
+import { ISQ_QUESTIONS, ANSWER_DEPENDENCIES } from '../questions'
 
 export function IsqForm() {
   const router = useRouter()
+  const { pending, message, submit } = useFormSubmit('/api/isq')
   const [selections, setSelections] = useState<Record<string, string>>({})
-  const [pending, setPending] = useState(false)
-  const [message, setMessage] = useState<string | undefined>()
+
+  // Derive primitive items contract from the question bank (must stay in sync)
+  const items = ISQ_QUESTIONS.map((q) => ({
+    name: q.id,
+    required: true,
+    choices: q.choices.map((c) => ({ value: c.id, disabled: false })),
+  }))
 
   function choose(questionId: string, choiceId: string) {
     setSelections((current) => {
       const next = { ...current, [questionId]: choiceId }
-
-      // Mirrors the source questionnaire: answering "No experience" on Q2
-      // pre-selects the matching "have not invested" answer on Q3.
       for (const rule of ANSWER_DEPENDENCIES) {
         if (rule.whenQuestionId === questionId && rule.whenChoiceId === choiceId) {
           next[rule.thenQuestionId] = rule.thenChoiceId
         }
       }
-
       return next
     })
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const unanswered = ISQ_QUESTIONS.filter((question) => !selections[question.id])
+    const unanswered = ISQ_QUESTIONS.filter((q) => !selections[q.id])
     if (unanswered.length > 0) {
-      setMessage(`Please answer all ${ISQ_QUESTIONS.length} questions before submitting.`)
+      // Primitive's native validation blocks submit if required items missing,
+      // but carry a custom message for clarity.
+      // We rely on the primitive to jump to the first invalid item.
       return
     }
 
-    setPending(true)
-    setMessage(undefined)
+    const result = await submit({
+      answers: ISQ_QUESTIONS.map((q) => ({
+        questionId: q.id,
+        choiceId: selections[q.id],
+      })),
+    })
 
-    try {
-      const response = await fetch('/api/isq', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          answers: ISQ_QUESTIONS.map((question) => ({
-            questionId: question.id,
-            choiceId: selections[question.id],
-          })),
-        }),
-      })
-      const body = (await response.json()) as { ok: boolean; message?: string }
-
-      if (!body.ok) {
-        setMessage(body.message ?? 'Could not save your answers.')
-        setPending(false)
-        return
-      }
-
+    if (result?.ok) {
       router.push('/dashboard')
       router.refresh()
-    } catch {
-      setMessage('Could not reach the server. Check your connection and try again.')
-      setPending(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <FormError message={message} />
-
-      {ISQ_QUESTIONS.map((question, index) => (
-        <fieldset key={question.id} className="mb-8 border-t border-gray-200 pt-6">
-          <legend className="text-sm font-medium">
-            {index + 1}. {question.prompt}
-          </legend>
-
-          <div className="mt-3 space-y-2">
-            {question.choices.map((choice) => (
-              <label
-                key={choice.id}
-                className="flex cursor-pointer items-start gap-3 rounded border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
-              >
-                <input
-                  type="radio"
-                  name={question.id}
-                  value={choice.id}
-                  checked={selections[question.id] === choice.id}
-                  onChange={() => choose(question.id, choice.id)}
-                  className="mt-1"
-                />
-                <span>{choice.label}</span>
-              </label>
-            ))}
+    <Card className="max-w-xl mx-auto shadow-sm">
+      <CardHeader>
+        <CardTitle>Investment Suitability Questionnaire</CardTitle>
+        <CardDescription>
+          Six questions from Manulife&apos;s Client Suitability Assessment.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {message ? (
+          <div
+            role="alert"
+            className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          >
+            {message}
           </div>
+        ) : null}
 
-          {question.helperText ? (
-            <p className="mt-2 text-xs text-gray-500">{question.helperText}</p>
-          ) : null}
-        </fieldset>
-      ))}
+        <Questionnaire
+          items={items}
+          onSubmit={handleSubmit}
+          shortcuts="numbers"
+        >
+          <QuestionnaireProgress />
 
-      <Button type="submit" disabled={pending}>
-        {pending ? 'Scoring…' : 'See my risk profile'}
-      </Button>
-    </form>
+          {ISQ_QUESTIONS.map((question) => (
+            <QuestionnaireItem
+              key={question.id}
+              name={question.id}
+              required
+            >
+              <QuestionnaireTitle>
+                {question.prompt}
+              </QuestionnaireTitle>
+              {question.helperText ? (
+                <QuestionnaireDescription>
+                  {question.helperText}
+                </QuestionnaireDescription>
+              ) : null}
+
+              <QuestionnaireChoices>
+                {question.choices.map((choice) => (
+                  <QuestionnaireChoice
+                    key={choice.id}
+                    value={choice.id}
+                    checked={selections[question.id] === choice.id}
+                    onChange={() => choose(question.id, choice.id)}
+                  >
+                    <span className="font-medium">{choice.label}</span>
+                  </QuestionnaireChoice>
+                ))}
+              </QuestionnaireChoices>
+
+              <QuestionnaireError />
+
+              <QuestionnaireActions>
+                <QuestionnairePrevious />
+                <QuestionnaireNext />
+                <QuestionnaireSubmit disabled={pending}>
+                  {pending ? 'Scoring…' : 'See my risk profile'}
+                </QuestionnaireSubmit>
+              </QuestionnaireActions>
+            </QuestionnaireItem>
+          ))}
+        </Questionnaire>
+      </CardContent>
+    </Card>
   )
 }

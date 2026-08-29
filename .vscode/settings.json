@@ -1,0 +1,28 @@
+{
+  "terminal.integrated.profiles.windows": {
+    "Claude Pro": {
+      "path": "pwsh.exe",
+      "args": [
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.claude\\skills\\provider-switch\\scripts\\launch-pro.ps1",
+        "-Session"
+      ],
+      "icon": "verified"
+    },
+    "Claude OmniRoute": {
+      "path": "pwsh.exe",
+      "args": [
+        "-NoExit",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.claude\\skills\\provider-switch\\scripts\\launch-omniroute.ps1",
+        "-Session"
+      ],
+      "icon": "server-process"
+    }
+  }
+}
