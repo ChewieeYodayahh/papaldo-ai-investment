@@ -20,7 +20,7 @@ const FEATURES = [
   },
   {
     icon: <LineChart className="size-5" />,
-    title: "Track against benchmarks.",
+    title: "Track against benchmarks. (Coming soon)",
     description:
       "Compare your simulated portfolio's performance against the PSEi and the S&P 500 over time.",
   },

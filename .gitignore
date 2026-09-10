@@ -119,6 +119,13 @@ id_dsa*
 secrets/
 secret/
 .tmp-secret*
-CLAUDE.md
-CLAUDE.md
-CLAUDE.md
+
+# Vendored agent skills — symlinks into .agents/, not ours to commit
+.agents/
+.claude/skills/*
+!.claude/skills/wrap/
+!.claude/skills/provider-switch/
+!.claude/skills/nextjs-project-structure/
+
+# Generated knowledge graph (/graphify) — rebuildable, ~2MB
+graphify-out/

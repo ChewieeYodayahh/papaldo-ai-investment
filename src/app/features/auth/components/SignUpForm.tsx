@@ -3,7 +3,10 @@
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
 
-import { Button, Field, FormError, TextInput } from '@/components'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 import { useFormSubmit } from '../hooks/use-form-submit'
 import { ONBOARDING_PATHS } from '../routes'
@@ -32,32 +35,55 @@ export function SignUpForm() {
     event.preventDefault()
     const result = await submit(values)
     if (result) {
-      router.push(ONBOARDING_PATHS[result.next as OnboardingStep])
+      router.push(ONBOARDING_PATHS[result.next as OnboardingStep] ?? '/onboarding/profile')
       router.refresh()
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <FormError message={message} />
+    <Card className="mx-auto max-w-md shadow-sm">
+      <CardHeader className="text-center">
+        <CardTitle>Create your account</CardTitle>
+        <CardDescription>Free simulation — no real money.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {message ? (
+          <div role="alert" className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+            {message}
+          </div>
+        ) : null}
 
-      {FIELDS.map((field) => (
-        <Field key={field.name} label={field.label} htmlFor={field.name} error={errors[field.name]}>
-          <TextInput
-            id={field.name}
-            name={field.name}
-            type={field.type}
-            autoComplete={field.autoComplete}
-            value={values[field.name]}
-            invalid={Boolean(errors[field.name])}
-            onChange={(event) => setValues({ ...values, [field.name]: event.target.value })}
-          />
-        </Field>
-      ))}
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          {FIELDS.map(({ name, label, type, autoComplete }) => (
+            <div key={name}>
+              <Label htmlFor={name}>
+                {label}
+                {errors[name] ? (
+                  <span id={`${name}-error`} className="ml-1 text-xs text-destructive" role="alert">
+                    {errors[name]}
+                  </span>
+                ) : null}
+              </Label>
+              <Input
+                id={name}
+                name={name}
+                type={type}
+                value={values[name]}
+                onChange={(e) => setValues({ ...values, [name]: e.target.value })}
+                autoComplete={autoComplete}
+                aria-invalid={!!errors[name] || undefined}
+                aria-describedby={errors[name] ? `${name}-error` : undefined}
+                className={errors[name] ? 'border-destructive focus-visible:ring-destructive/50' : ''}
+                disabled={pending}
+              />
+            </div>
+          ))}
 
-      <Button type="submit" disabled={pending}>
-        {pending ? 'Creating account…' : 'Create account'}
-      </Button>
-    </form>
+          <Button type="submit" disabled={pending} className="w-full">
+            {pending ? 'Creating account…' : 'Create account'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

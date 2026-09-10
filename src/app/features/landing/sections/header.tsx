@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu } from "lucide-react"
+import { Menu, Sun, Moon, Monitor } from "lucide-react"
+import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -10,11 +11,23 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 const NAV_LINKS = [
   { href: "#features", label: "How it works" },
   { href: "#trust", label: "Why Papaldo" },
+  { href: "/markets", label: "Markets" },
   { href: "#faq", label: "FAQ" },
 ] as const
 
 export function Header() {
   const [open, setOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true); }, [])
+  const cycles = [
+    { key: "light", icon: Sun, label: "Light" },
+    { key: "dark", icon: Moon, label: "Dark" },
+    { key: "system", icon: Monitor, label: "System" },
+  ] as const
+
+  const current = cycles.find((c) => c.key === (theme ?? "system")) ?? cycles[2]
+  const next = cycles[(cycles.findIndex((c) => c.key === current.key) + 1) % 3]
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
@@ -36,6 +49,17 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {mounted ? (
+            <button
+              onClick={() => setTheme(next.key)}
+              aria-label={`Theme: ${current.label}`}
+              className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-muted"
+            >
+              <current.icon className="size-3.5" />
+            </button>
+          ) : (
+            <span className="inline-flex size-8" />
+          )}
           <Link href="/login">
             <Button variant="ghost" size="sm">
               Log in

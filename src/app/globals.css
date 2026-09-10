@@ -6,13 +6,7 @@
  */
 @custom-variant dark (&:is(.dark *));
 
-/*
- * This phase commits to a single light theme. The component styles use a fixed
- * light palette (gray-300 borders, gray-600 secondary text, a near-black
- * primary button), so honouring prefers-color-scheme here would leave dark text
- * on a dark background. A proper dark theme is listed under "Pending UI/UX
- * design" in PROGRESS.md; until then, one legible theme beats two broken ones.
- */
+/* Dark theme enabled 2026-08-29 (Phase 2). .dark palette fully defined; see PROGRESS.md. */
 
 @theme inline {
   --color-background: var(--background);

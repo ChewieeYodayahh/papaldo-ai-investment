@@ -17,6 +17,7 @@ const eslintConfig = [
       ".next/**",
       "out/**",
       "build/**",
+      "graphify-out/**",
       "next-env.d.ts",
     ],
   },
