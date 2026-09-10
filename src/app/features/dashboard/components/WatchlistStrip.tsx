@@ -1,21 +1,23 @@
+import Link from 'next/link'
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 
 import type { FinnhubQuote } from '@/app/core/services/finnhub'
+import type { MarketResult } from '../api/market'
+import { marketUnavailableMessage } from '@/app/features/markets/market-status'
 
-export function WatchlistStrip({ quotes }: { quotes: FinnhubQuote[] | null }) {
-  if (!quotes) {
+export function WatchlistStrip({ quotes }: { quotes: MarketResult<FinnhubQuote[]> }) {
+  if (!quotes.ok) {
     return (
       <Card className="p-4 text-sm text-muted-foreground">
-        Live quotes are unavailable right now — Finnhub did not respond. Everything else on this page is
-        unaffected.
+        {marketUnavailableMessage(quotes.reason)} Everything else on this page is unaffected.
       </Card>
     )
   }
 
-  const sorted = [...quotes].sort((a, b) => b.changePercent - a.changePercent)
+  const sorted = [...quotes.data].sort((a, b) => b.changePercent - a.changePercent)
 
   return (
     <Card className="overflow-hidden p-4">
@@ -26,15 +28,17 @@ export function WatchlistStrip({ quotes }: { quotes: FinnhubQuote[] | null }) {
         </Badge>
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        Ranked within this fixed 7-symbol list only — not a market-wide top-gainers screen.
+        Ranked within this fixed 7-symbol list only — not a market-wide top-gainers screen. Select a symbol
+        for its detail page.
       </p>
       <div className="flex gap-4 overflow-x-auto pb-1">
         {sorted.map((q) => {
           const up = q.change >= 0
           return (
-            <div
+            <Link
               key={q.symbol}
-              className="flex min-w-[140px] flex-col gap-1 rounded-lg border border-border p-3"
+              href={`/markets/${q.symbol}`}
+              className="flex min-w-[140px] flex-col gap-1 rounded-lg border border-border p-3 transition-colors hover:border-primary hover:bg-muted/50 focus-visible:border-primary focus-visible:outline-none"
             >
               <span className="text-sm font-semibold">{q.symbol}</span>
               <span className="tabular-nums text-sm">${q.current.toFixed(2)}</span>
@@ -47,7 +51,7 @@ export function WatchlistStrip({ quotes }: { quotes: FinnhubQuote[] | null }) {
                 {up ? '+' : ''}
                 {q.changePercent.toFixed(2)}%
               </span>
-            </div>
+            </Link>
           )
         })}
       </div>

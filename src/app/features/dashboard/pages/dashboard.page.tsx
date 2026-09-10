@@ -21,9 +21,9 @@ import { Card, CardContent } from '@/components/ui/card'
  * Trading/order-placement feature exists; nothing here fabricates a
  * position.
  *
- * Watchlist quotes and market news are live Finnhub calls, fetched
- * independently via Promise.allSettled so a Finnhub outage degrades those
- * two sections gracefully instead of failing the whole page.
+ * Watchlist quotes and market news are live Finnhub calls. Both return a
+ * MarketResult and never throw, so a Finnhub outage or a missing key degrades
+ * those two cards -- each stating why -- instead of failing the whole page.
  */
 export async function DashboardPage() {
   const [profile, riskProfile, portfolio] = await Promise.all([
@@ -32,9 +32,10 @@ export async function DashboardPage() {
     getPortfolio(),
   ])
 
-  const [watchlistResult, newsResult] = await Promise.allSettled([getWatchlistQuotes(), getMarketInsight()])
-  const watchlist = watchlistResult.status === 'fulfilled' ? watchlistResult.value : null
-  const news = newsResult.status === 'fulfilled' ? newsResult.value : null
+  const [watchlist, news] = await Promise.all([getWatchlistQuotes(), getMarketInsight()])
+  // The portfolio cards price holdings from live quotes when there are any,
+  // and fall back to avg_cost otherwise -- so they take the data or nothing.
+  const quotes = watchlist.ok ? watchlist.data : null
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -59,12 +60,12 @@ export async function DashboardPage() {
         {portfolio ? (
           <>
             <div className="mb-6">
-              <OverviewCard portfolio={portfolio} watchlist={watchlist} />
+              <OverviewCard portfolio={portfolio} watchlist={quotes} />
             </div>
 
             <div className="mb-6 grid gap-6 lg:grid-cols-[2fr_1fr]">
               <HoldingsList holdings={portfolio.holdings} />
-              <AllocationDonut portfolio={portfolio} watchlist={watchlist} />
+              <AllocationDonut portfolio={portfolio} watchlist={quotes} />
             </div>
           </>
         ) : (

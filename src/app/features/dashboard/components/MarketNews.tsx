@@ -1,21 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import type { FinnhubNewsItem } from '@/app/core/services/finnhub'
+import type { MarketResult } from '../api/market'
+import { marketUnavailableMessage } from '@/app/features/markets/market-status'
 
-export function MarketNews({ items }: { items: FinnhubNewsItem[] | null }) {
+export function MarketNews({ items }: { items: MarketResult<FinnhubNewsItem[]> }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-sm font-medium text-muted-foreground">Market Insight</CardTitle>
       </CardHeader>
       <CardContent>
-        {!items ? (
-          <p className="text-sm text-muted-foreground">Live news is unavailable right now — Finnhub did not respond.</p>
-        ) : items.length === 0 ? (
+        {!items.ok ? (
+          <p className="text-sm text-muted-foreground">{marketUnavailableMessage(items.reason)}</p>
+        ) : items.data.length === 0 ? (
           <p className="text-sm text-muted-foreground">No news returned right now.</p>
         ) : (
           <ul className="space-y-4">
-            {items.map((item) => (
+            {items.data.map((item) => (
               <li key={item.id}>
                 <a
                   href={item.url}

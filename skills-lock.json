@@ -85,6 +85,12 @@
       "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
       "computedHash": "016f12709bff30a27419e8add978a9be70f5ca1fb6738b3be6793038e0aba631"
     },
+    "lightweight-charts": {
+      "source": "tradingview/lightweight-charts",
+      "sourceType": "github",
+      "skillPath": ".github/skills/lightweight-charts/SKILL.md",
+      "computedHash": "7d3b6f51bdbe175b1aace1b994a70f07c52d12b72fb1768cff92b6daa297b7a6"
+    },
     "loop-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",

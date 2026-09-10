@@ -1,6 +1,7 @@
 import 'server-only'
 
-import { getMarketNews, getQuotes } from '@/app/core/services/finnhub'
+import { getMarketNews, getQuotes, type FinnhubNewsItem, type FinnhubQuote } from '@/app/core/services/finnhub'
+import { attempt, type MarketResult } from '@/app/features/markets/api/result'
 
 /**
  * Starter watchlist -- NOT the ~60-symbol curated universe REQUIREMENTS.md
@@ -12,11 +13,12 @@ import { getMarketNews, getQuotes } from '@/app/core/services/finnhub'
  */
 export const WATCHLIST_SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'TSLA', 'META'] as const
 
-export async function getWatchlistQuotes() {
-  return getQuotes([...WATCHLIST_SYMBOLS])
+export type { MarketResult }
+
+export async function getWatchlistQuotes(): Promise<MarketResult<FinnhubQuote[]>> {
+  return attempt('watchlist quotes', () => getQuotes([...WATCHLIST_SYMBOLS]))
 }
 
-export async function getMarketInsight(limit = 6) {
-  const news = await getMarketNews('general')
-  return news.slice(0, limit)
+export async function getMarketInsight(limit = 6): Promise<MarketResult<FinnhubNewsItem[]>> {
+  return attempt('market news', async () => (await getMarketNews('general')).slice(0, limit))
 }
