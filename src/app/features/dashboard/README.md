@@ -51,7 +51,7 @@ features/dashboard/
   types.ts         re-exports for component props
 ```
 
-Rendered from `src/app/(app)/dashboard/page.tsx`, an async Server Component
+Rendered from `src/app/features/dashboard/pages/dashboard.page.tsx`, an async Server Component
 that calls these `api/` modules directly (not via `fetch()` to `src/app/api/*`
 — that indirection is for Client Components; Server Components importing a
 server-only feature module directly is the established pattern here, same as

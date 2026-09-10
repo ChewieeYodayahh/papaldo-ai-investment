@@ -35,10 +35,11 @@ redirect). See `.env.example`.
 ```
 src/
   app/
-    (app)/  (auth)/          route groups — pages, thin composition
+    <route>/page.tsx         one folder per route; a thin adapter over a
+                             feature page, nothing more
     api/<resource>/route.ts  HTTP handlers; validate + delegate to features/*/api
     core/services/           external-service clients (supabase/, claude.ts)
-    features/<feature>/       feature modules: api/ components/ hooks/ schema.ts …
+    features/<feature>/       feature modules: api/ components/ hooks/ pages/ …
     layout.tsx  page.tsx  globals.css
   components/                 cross-feature UI primitives
   lib/                        framework-agnostic helpers (env.ts)

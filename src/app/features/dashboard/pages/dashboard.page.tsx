@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import { getProfile } from '@/app/features/auth/api/profile'
 import { SignOutButton } from '@/app/features/auth/components/SignOutButton'
-import { getCurrentRiskProfile } from '@/app/features/isq/api/submit'
+import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import { getPortfolio } from '@/app/features/dashboard/api/portfolio'
 import { getMarketInsight, getWatchlistQuotes } from '@/app/features/dashboard/api/market'
 import { AllocationDonut } from '@/app/features/dashboard/components/AllocationDonut'
@@ -12,8 +12,6 @@ import { OverviewCard } from '@/app/features/dashboard/components/OverviewCard'
 import { WatchlistStrip } from '@/app/features/dashboard/components/WatchlistStrip'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-
-export const metadata = { title: 'Dashboard' }
 
 /**
  * Home dashboard. Portfolio numbers (cash balance, holdings) are real reads
@@ -27,7 +25,7 @@ export const metadata = { title: 'Dashboard' }
  * independently via Promise.allSettled so a Finnhub outage degrades those
  * two sections gracefully instead of failing the whole page.
  */
-export default async function DashboardPage() {
+export async function DashboardPage() {
   const [profile, riskProfile, portfolio] = await Promise.all([
     getProfile(),
     getCurrentRiskProfile(),
@@ -72,8 +70,9 @@ export default async function DashboardPage() {
         ) : (
           <Card className="mb-6">
             <CardContent className="p-6 text-sm text-muted-foreground">
-              No portfolio found for this account. If you signed up before this feature shipped, sign out and
-              back in, or contact support.
+              No portfolio found for this account. Accounts created before portfolios shipped have no row
+              until the backfill migration is applied — signing out and back in will not create one, because
+              the seeding trigger fires on signup only. Contact support.
             </CardContent>
           </Card>
         )}

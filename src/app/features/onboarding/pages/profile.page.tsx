@@ -1,10 +1,8 @@
-import { CompleteProfileForm } from '@/app/features/auth/components/CompleteProfileForm'
 import { getProfile } from '@/app/features/auth/api/profile'
+import { CompleteProfileForm } from '@/app/features/onboarding/components/CompleteProfileForm'
 import { PageShell } from '@/components'
 
-export const metadata = { title: 'Complete your profile' }
-
-export default async function CompleteProfilePage() {
+export async function CompleteProfilePage() {
   const profile = await getProfile()
 
   return (

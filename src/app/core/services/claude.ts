@@ -4,7 +4,7 @@ import 'server-only'
  * Thin server-only wrapper around the Claude API.
  *
  * INTENTIONALLY UNUSED IN THIS PHASE. Risk profiling is fully deterministic --
- * see `features/isq/scoring.ts` -- so nothing here is called yet and the app
+ * see `features/onboarding/scoring.ts` -- so nothing here is called yet and the app
  * builds and runs without an ANTHROPIC_API_KEY. This module exists so the
  * later phases (portfolio recommendations, plain-language profile narratives)
  * have one place to add the integration rather than scattering fetch calls

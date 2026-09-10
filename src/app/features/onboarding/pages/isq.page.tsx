@@ -1,10 +1,8 @@
-import { IsqForm } from '@/app/features/isq/components/IsqForm'
-import { getCurrentRiskProfile } from '@/app/features/isq/api/submit'
+import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
+import { IsqForm } from '@/app/features/onboarding/components/IsqForm'
 import { PageShell } from '@/components'
 
-export const metadata = { title: 'Investment Suitability Questionnaire' }
-
-export default async function IsqPage() {
+export async function IsqPage() {
   const existing = await getCurrentRiskProfile()
 
   return (

@@ -5,7 +5,7 @@ import { useState, type FormEvent } from 'react'
 
 import { Button, Field, FormError, TextInput } from '@/components'
 
-import { useFormSubmit } from '../hooks/use-form-submit'
+import { useFormSubmit } from '@/app/features/auth/hooks/use-form-submit'
 
 const FIELDS = [
   { name: 'username', label: 'Username', type: 'text', autoComplete: 'username' },
