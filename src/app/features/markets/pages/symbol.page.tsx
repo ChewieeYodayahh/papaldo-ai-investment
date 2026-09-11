@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 
 import { Card, CardContent } from '@/components/ui/card'
 
+import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
+import { isBuyable } from '../api/universe'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
 import { OrderTicket } from '@/app/features/trading/components/OrderTicket'
 
@@ -33,7 +35,7 @@ import { SymbolNews } from '../components/SymbolNews'
 export async function SymbolPage({ symbol }: { symbol: string }) {
   if (!isPlausibleSymbol(symbol)) notFound()
 
-  const [overview, news, ratings, candles, portfolio] = await Promise.all([
+  const [overview, news, ratings, candles, portfolio, riskProfile, buyable] = await Promise.all([
     getSymbolOverview(symbol),
     getSymbolNews(symbol),
     getSymbolRatings(symbol),
@@ -41,6 +43,12 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
     // Null when signed out. This page is public, so the ticket is the only
     // part that needs an account.
     getPortfolio(),
+    // Buying requires a risk profile. The ticket reflects that; place_order
+    // enforces it whether or not the ticket is the thing that submits.
+    getCurrentRiskProfile(),
+    // Mirrors the PA007 check so the ticket does not offer a buy the
+    // database will refuse.
+    isBuyable(symbol),
   ])
 
   if (!overview.ok) {
@@ -92,6 +100,8 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
                 // Alpaca decides whether a fraction is allowed. Unknown asset
                 // records default to whole units rather than assuming.
                 fractionable={overview.data.asset.ok ? overview.data.asset.data.fractionable : false}
+                hasRiskProfile={Boolean(riskProfile)}
+                isBuyable={buyable}
               />
             ) : (
               <Card>

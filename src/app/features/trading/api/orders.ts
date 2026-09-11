@@ -31,9 +31,10 @@ const ORDER_ERRORS: Record<string, string> = {
   PA003: 'No portfolio found for this account.',
   PA004: 'You are not signed in.',
   PA005: 'That order is not valid.',
-  // Buys only. Selling never requires a profile, so a position can always be
-  // exited -- see the migration that added this rule.
+  // Both of these are buys-only. Selling never consults either rule, so a
+  // position can always be exited even after a symbol leaves the universe.
   PA006: 'Take the questionnaire to set your risk appetite before buying.',
+  PA007: 'That symbol is outside the advised universe, so it cannot be bought here.',
 }
 
 type OrderRow = {

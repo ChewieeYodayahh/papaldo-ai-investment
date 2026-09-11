@@ -1,13 +1,16 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
+import { Compass } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { FormError } from '@/components'
+import { cn } from '@/lib/utils'
 
 import { useFormSubmit } from '@/app/features/auth/hooks/use-form-submit'
 import type { Order } from '../types'
@@ -26,6 +29,14 @@ const money = new Intl.NumberFormat('en-US', {
  * not send a price and the confirmation reports the real one -- a ticket that
  * displayed its estimate as the outcome would be quietly lying whenever the
  * market moved between render and submit.
+ *
+ * Buying needs two things: a risk profile, and a symbol inside the curated
+ * universe. Selling needs neither, so a position is always exitable --
+ * including one bought before the universe existed, or in a symbol later
+ * retired from it.
+ *
+ * The gates below are a courtesy. `place_order` refuses the buy regardless
+ * (PA006, PA007), because that function is callable without this form.
  */
 export function OrderTicket({
   symbol,
@@ -34,6 +45,8 @@ export function OrderTicket({
   cashBalance,
   heldQuantity,
   fractionable,
+  hasRiskProfile,
+  isBuyable,
 }: {
   symbol: string
   assetClass: 'equity' | 'crypto'
@@ -41,11 +54,21 @@ export function OrderTicket({
   cashBalance: number
   heldQuantity: number
   fractionable: boolean
+  hasRiskProfile: boolean
+  /** In `tradable_assets` and active. Mirrors the PA007 check. */
+  isBuyable: boolean
 }) {
   const router = useRouter()
   const { pending, message, errors, submit } = useFormSubmit('/api/trading/orders')
 
-  const [side, setSide] = useState<'buy' | 'sell'>('buy')
+  const canBuy = hasRiskProfile && isBuyable
+  const canSell = heldQuantity > 0
+  // Order matters: if a symbol cannot be bought at all, taking the
+  // questionnaire would not change that, so saying so would mislead.
+  const blockedReason = !isBuyable ? 'universe' : !hasRiskProfile ? 'profile' : null
+  // Someone holding a position but lacking a profile can only exit, so the
+  // form opens where they can actually act rather than on a dead tab.
+  const [side, setSide] = useState<'buy' | 'sell'>(canBuy ? 'buy' : 'sell')
   const [quantity, setQuantity] = useState('1')
   const [filled, setFilled] = useState<Order | null>(null)
 
@@ -72,6 +95,40 @@ export function OrderTicket({
     router.refresh()
   }
 
+  // Nothing to buy and nothing to sell, so the card becomes whichever
+  // explanation actually applies.
+  if (!canBuy && !canSell) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Trade {symbol}</CardTitle>
+          <Badge variant="outline" className="text-[10px]">
+            Simulated
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          {blockedReason === 'universe' ? (
+            <p className="text-sm text-muted-foreground">
+              {symbol} is outside the advised universe, so it cannot be bought here. You can still
+              browse it, and anything you already hold can always be sold.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Six questions set the risk profile we use to shape your portfolio. Buying opens once
+                you have one.
+              </p>
+              <Link href="/isq" className={cn(buttonVariants({ size: 'default' }), 'mt-4 w-full')}>
+                <Compass className="size-4" />
+                Discover your Risk Appetite
+              </Link>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
@@ -89,6 +146,7 @@ export function OrderTicket({
               type="button"
               size="sm"
               variant={option === side ? 'default' : 'ghost'}
+              disabled={option === 'buy' && !canBuy}
               onClick={() => {
                 setSide(option)
                 setFilled(null)
@@ -99,6 +157,21 @@ export function OrderTicket({
             </Button>
           ))}
         </div>
+
+        {blockedReason === 'universe' ? (
+          <p className="mb-4 text-xs text-muted-foreground">
+            You can close this position. {symbol} is outside the advised universe, so it cannot be
+            bought here.
+          </p>
+        ) : blockedReason === 'profile' ? (
+          <p className="mb-4 text-xs text-muted-foreground">
+            You can close this position, but buying needs a risk profile first.{' '}
+            <Link href="/isq" className="underline">
+              Take the questionnaire
+            </Link>
+            .
+          </p>
+        ) : null}
 
         <form onSubmit={onSubmit} className="space-y-3">
           <div>

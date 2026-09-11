@@ -5,14 +5,18 @@ import { cache } from 'react'
 import { getMarketHeadlines, type NewsItem } from '@/app/features/markets/api/news'
 import { getQuotes, type Quote } from '@/app/features/markets/api/quotes'
 import { type MarketResult } from '@/app/features/markets/api/result'
+import { getFeaturedSymbols } from '@/app/features/markets/api/universe'
 
 /**
- * Starter watchlist. Seven large, liquid US names, kept small because it is a
- * default view rather than the universe -- `/markets` browses Alpaca's full
- * tradable catalogue, so this no longer stands in for a ticker list the repo
- * is waiting on.
+ * The watchlist is drawn from the curated buyable universe, not hardcoded.
+ *
+ * It used to be a literal list and had drifted out of sync with what can
+ * actually be bought: it promoted GOOGL, TSLA and NFLX, none of which
+ * `place_order` accepts, and one account had already bought GOOGL before the
+ * universe existed. A watchlist whose symbols cannot be bought is worse than
+ * a shorter one.
  */
-export const WATCHLIST_SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'TSLA', 'META'] as const
+const WATCHLIST_SIZE = 7
 
 export type { MarketResult, Quote, NewsItem }
 
@@ -26,9 +30,11 @@ export type { MarketResult, Quote, NewsItem }
  * quote and cost one call per symbol.
  */
 export const getWatchlistQuotes = cache(async (): Promise<MarketResult<Quote[]>> => {
-  return getQuotes([...WATCHLIST_SYMBOLS])
+  return getQuotes(await getFeaturedSymbols(WATCHLIST_SIZE))
 })
 
 export const getMarketInsight = cache(async (): Promise<MarketResult<NewsItem[]>> => {
   return getMarketHeadlines()
 })
+
+// test

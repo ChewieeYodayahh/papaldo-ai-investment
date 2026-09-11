@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { getTradableAssets, searchAssets } from '../api/assets'
 import { getCandles, type Candle } from '../api/candles'
 import { getQuotes } from '../api/quotes'
+import { getFeaturedSymbols } from '../api/universe'
 import { marketUnavailableMessage } from '../market-status'
 import { AssetTable } from '../components/AssetTable'
 import { QuoteCard } from '../components/QuoteCard'
@@ -22,22 +23,28 @@ import { QuoteCard } from '../components/QuoteCard'
  * below it is the universe, searchable, and every row links to a detail page
  * priced from the same source that would fill a simulated order.
  */
-const FEATURED = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'TSLA', 'META', 'NFLX'] as const
+/**
+ * Drawn from the curated buyable universe, spread across sectors. Hardcoding
+ * it meant featuring symbols `place_order` refuses -- GOOGL, TSLA and NFLX were
+ * all on this row and none of them can be bought.
+ */
+const FEATURED_COUNT = 8
 
 /** Daily bars behind each sparkline. About six weeks of sessions. */
 const SPARKLINE_DAYS = 45
 
 export async function MarketsPage({ query }: { query: string }) {
+  // Resolved first: everything below keys off it, and it is one cached query.
+  const featured = await getFeaturedSymbols(FEATURED_COUNT)
+
   const [quotes, assets, ...bars] = await Promise.all([
-    getQuotes([...FEATURED]),
+    getQuotes(featured),
     getTradableAssets(),
-    ...FEATURED.map((symbol) => getCandles(symbol, 'equity', SPARKLINE_DAYS)),
+    ...featured.map((symbol) => getCandles(symbol, 'equity', SPARKLINE_DAYS)),
   ])
 
-  // Widened to string keys: FEATURED is `as const`, so an inferred Map would
-  // be keyed by the literal union and reject a lookup by a plain symbol.
   const candlesBySymbol = new Map<string, Candle[]>(
-    FEATURED.map((symbol, i) => [symbol, bars[i].ok ? bars[i].data : []]),
+    featured.map((symbol, i) => [symbol, bars[i].ok ? bars[i].data : []]),
   )
   const nameBySymbol = new Map<string, string>(
     assets.ok ? assets.data.map((asset) => [asset.symbol, asset.name]) : [],

@@ -1,0 +1,55 @@
+﻿name: Model portfolios
+
+# Weekly, plus a manual trigger. The allocation is derived from two years of
+# daily bars, so it barely moves day to day -- running it nightly would burn
+# Alpaca requests to rewrite almost the same numbers.
+on:
+  schedule:
+    # 06:00 UTC Sunday: US markets are closed, so the most recent session is
+    # complete and no bar is half-formed.
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+
+# The job writes to the production database. Two runs at once would race on the
+# same (band, symbol, date) keys, so let one finish.
+concurrency:
+  group: model-portfolios
+  cancel-in-progress: false
+
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    # Longer than it should ever need. The failure mode worth guarding is a
+    # hung Alpaca request, not slow maths.
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # Reads .python-version. Pinned to 3.12 rather than latest: the
+          # scientific stack this depends on is reliably built for it, and
+          # tracking the newest release is how a weekly cron starts failing on
+          # a morning nobody touched it.
+          python-version-file: '.python-version'
+          cache: 'pip'
+          cache-dependency-path: 'python/requirements.txt'
+
+      - name: Upgrade packaging tooling
+        run: |
+          python -m pip install --upgrade pip setuptools wheel packaging
+
+      - name: Install dependencies
+        run: pip install -r python/requirements.txt
+
+      - name: Validate PyPortfolioOpt import
+        run: python -c "import pypfopt; print('PyPortfolioOpt version:', pypfopt.__version__)"
+
+      - name: Compute and write model portfolios
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
+          ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+        run: python python/model_portfolios.py

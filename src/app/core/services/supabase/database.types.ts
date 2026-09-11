@@ -194,6 +194,36 @@ export type Database = {
           },
         ]
       }
+      tradable_assets: {
+        Row: {
+          active: boolean
+          asset_class: string
+          created_at: string
+          name: string
+          risk_tier: string
+          sector: string
+          symbol: string
+        }
+        Insert: {
+          active?: boolean
+          asset_class: string
+          created_at?: string
+          name: string
+          risk_tier: string
+          sector: string
+          symbol: string
+        }
+        Update: {
+          active?: boolean
+          asset_class?: string
+          created_at?: string
+          name?: string
+          risk_tier?: string
+          sector?: string
+          symbol?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           contact: string | null
@@ -224,6 +254,107 @@ export type Database = {
         }
         Relationships: []
       }
+
+      market_outlooks: {
+          Row: {
+            risk_band: string
+            as_of_date: string
+            outlook_text: string
+            model_used: string
+            context_pct: number
+            created_at: string
+          }
+          Insert: {
+            risk_band: string
+            as_of_date?: string
+            outlook_text: string
+            model_used?: string
+            context_pct?: number
+            created_at?: string
+          }
+          Update: {
+            risk_band?: string
+            as_of_date?: string
+            outlook_text?: string
+            model_used?: string
+            context_pct?: number
+            created_at?: string
+          }
+          Relationships: []
+        }
+        model_portfolios: {
+          Row: {
+            risk_band: string
+            symbol: string
+            target_weight: number
+            as_of_date: string
+            method: string
+            created_at: string
+          }
+          Insert: {
+            risk_band: string
+            symbol: string
+            target_weight: number
+            as_of_date: string
+            method: string
+            created_at?: string
+          }
+          Update: {
+            risk_band?: string
+            symbol?: string
+            target_weight?: number
+            as_of_date?: string
+            method?: string
+            created_at?: string
+          }
+          Relationships: [
+            {
+              foreignKeyName: "model_portfolios_symbol_fkey"
+              columns: ["symbol"]
+              isOneToOne: false
+              referencedRelation: "tradable_assets"
+              referencedColumns: ["symbol"]
+            }
+          ]
+        }
+        market_signals: {
+          Row: {
+            symbol: string
+            as_of_date: string
+            trailing_return: number | null
+            volatility: number | null
+            sharpe: number | null
+            observations: number
+            created_at: string
+          }
+          Insert: {
+            symbol: string
+            as_of_date: string
+            trailing_return?: number | null
+            volatility?: number | null
+            sharpe?: number | null
+            observations: number
+            created_at?: string
+          }
+          Update: {
+            symbol?: string
+            as_of_date?: string
+            trailing_return?: number | null
+            volatility?: number | null
+            sharpe?: number | null
+            observations?: number
+            created_at?: string
+          }
+          Relationships: [
+            {
+              foreignKeyName: "market_signals_symbol_fkey"
+              columns: ["symbol"]
+              isOneToOne: false
+              referencedRelation: "tradable_assets"
+              referencedColumns: ["symbol"]
+            }
+          ]
+        }
     }
     Views: {
       [_ in never]: never
@@ -257,6 +388,8 @@ export type Database = {
         }
       }
     }
+
+
     Enums: {
       [_ in never]: never
     }
