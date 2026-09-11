@@ -139,3 +139,9 @@ graphify-out/
 .vscode/
 .codex/
 .claude/launch.json
+.claude/skills/provider-switch/scripts/_common.ps1
+.claude/skills/provider-switch/scripts/current-provider.ps1
+.claude/skills/provider-switch/scripts/launch-omniroute.ps1
+.claude/skills/provider-switch/scripts/launch-pro.ps1
+.claude/skills/provider-switch/SKILL.md
+.claude/skills/provider-switch/REFERENCE.md

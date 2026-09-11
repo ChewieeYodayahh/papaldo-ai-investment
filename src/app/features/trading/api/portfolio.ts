@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/app/core/services/supabase/server'
+import { getSessionUser } from '@/app/core/services/supabase/session'
 
 export type Holding = {
   id: string
@@ -30,9 +31,7 @@ export type PortfolioSummary = {
  */
 export async function getPortfolio(): Promise<PortfolioSummary | null> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) return null
 
   const { data: portfolio } = await supabase

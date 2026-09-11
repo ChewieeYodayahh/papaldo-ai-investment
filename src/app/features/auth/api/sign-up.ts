@@ -46,8 +46,9 @@ export async function signUpWithPassword(input: SignUpInput): Promise<AuthResult
   }
 
   // Email confirmation is disabled for this project, so signUp returns a live
-  // session and the user can go straight to the questionnaire.
-  return { ok: true, next: 'isq' }
+  // session. New accounts land on the dashboard and are invited to take the
+  // questionnaire from there rather than being held at it.
+  return { ok: true, next: 'dashboard' }
 }
 
 /**

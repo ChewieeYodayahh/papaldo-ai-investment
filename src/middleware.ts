@@ -6,12 +6,21 @@ export async function middleware(request: NextRequest) {
   return updateSession(request)
 }
 
+/**
+ * Only the routes that actually need a session.
+ *
+ * This used to match everything but static assets, so the landing page,
+ * `/markets` and every symbol page paid for a session check they never read.
+ * On a prerendered page like `/login` that was the entire server cost of the
+ * request.
+ *
+ * What stays: the protected prefixes the middleware guards, and the auth
+ * routes it bounces signed-in users away from. Nothing else reads the result.
+ * Adding a new protected route means adding it here *and* to
+ * PROTECTED_PREFIXES in core/services/supabase/middleware.ts -- the two lists
+ * are deliberately separate (one decides where the middleware runs, the other
+ * what it enforces) and they have to be changed together.
+ */
 export const config = {
-  matcher: [
-    /*
-     * Everything except Next internals and static assets. Auth cookies need
-     * refreshing on real page requests, not on every image fetch.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/dashboard/:path*', '/isq/:path*', '/onboarding/:path*', '/login', '/sign-up'],
 }

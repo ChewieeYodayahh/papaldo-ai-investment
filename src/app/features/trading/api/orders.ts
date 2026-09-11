@@ -2,6 +2,7 @@ import 'server-only'
 
 import { getLatestPrice } from '@/app/core/services/alpaca'
 import { createClient } from '@/app/core/services/supabase/server'
+import { getSessionUser } from '@/app/core/services/supabase/session'
 
 import { orderSchema, type OrderInput } from '../schema'
 import type { Order, OrderResult } from '../types'
@@ -30,6 +31,9 @@ const ORDER_ERRORS: Record<string, string> = {
   PA003: 'No portfolio found for this account.',
   PA004: 'You are not signed in.',
   PA005: 'That order is not valid.',
+  // Buys only. Selling never requires a profile, so a position can always be
+  // exited -- see the migration that added this rule.
+  PA006: 'Take the questionnaire to set your risk appetite before buying.',
 }
 
 type OrderRow = {
@@ -60,9 +64,7 @@ export async function placeOrder(input: OrderInput): Promise<OrderResult> {
   const parsed = orderSchema.parse(input)
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) return { ok: false, message: 'You are not signed in.' }
 
   // Price first. If the market data call fails there is no fill, and nothing

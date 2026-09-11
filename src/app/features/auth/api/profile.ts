@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/app/core/services/supabase/server'
+import { getSessionUser } from '@/app/core/services/supabase/session'
 
 import type { OnboardingStep, UserProfile } from '../types'
 import { completeProfileSchema, type CompleteProfileInput } from '../schema'
@@ -8,9 +9,7 @@ import { completeProfileSchema, type CompleteProfileInput } from '../schema'
 /** Reads the signed-in user's profile row, or null if there is no session. */
 export async function getProfile(): Promise<UserProfile | null> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) return null
 
   const { data } = await supabase
@@ -27,33 +26,31 @@ export function isProfileComplete(profile: Pick<UserProfile, 'username' | 'conta
 }
 
 /**
- * Decides where a signed-in user belongs: finish the profile, take the ISQ,
- * or go to the dashboard. The middleware enforces the same order.
+ * Decides where a signed-in user belongs: finish the profile, or go to the
+ * dashboard. The middleware enforces the same rule.
  */
 export async function resolveOnboardingStep(): Promise<OnboardingStep> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) return 'complete-profile'
 
-  const [{ data: profile }, { data: riskProfile }] = await Promise.all([
-    supabase.from('users').select('username, contact, occupation').eq('id', user.id).maybeSingle(),
-    supabase.from('risk_profiles').select('id').eq('user_id', user.id).maybeSingle(),
-  ])
+  const { data: profile } = await supabase
+    .from('users')
+    .select('username, contact, occupation')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  if (!isProfileComplete(profile)) return 'complete-profile'
-  if (!riskProfile) return 'isq'
-  return 'dashboard'
+  // The risk profile is deliberately not consulted. Not having taken the
+  // questionnaire is a normal state the dashboard renders for, not a reason to
+  // send someone somewhere else.
+  return isProfileComplete(profile) ? 'dashboard' : 'complete-profile'
 }
 
 /** Fills in the fields Google sign-in cannot supply. */
 export async function updateProfile(input: CompleteProfileInput) {
   const parsed = completeProfileSchema.parse(input)
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) {
     return { ok: false as const, message: 'You are not signed in.' }
   }

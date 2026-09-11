@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/app/core/services/supabase/server'
+import { getSessionUser } from '@/app/core/services/supabase/session'
 import type { Json } from '@/app/core/services/supabase/database.types'
 
 import { scoreIsq } from '../scoring'
@@ -25,9 +26,7 @@ export type SubmitIsqResult =
  */
 export async function submitIsq(answers: IsqAnswer[]): Promise<SubmitIsqResult> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
 
   if (!user) {
     return { ok: false, message: 'You are not signed in.' }
@@ -71,9 +70,7 @@ export async function submitIsq(answers: IsqAnswer[]): Promise<SubmitIsqResult> 
 /** The user's current risk profile, or null if they have not taken the ISQ. */
 export async function getCurrentRiskProfile() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
   if (!user) return null
 
   const { data } = await supabase

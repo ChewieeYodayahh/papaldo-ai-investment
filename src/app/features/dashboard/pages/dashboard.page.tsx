@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 
 import { getProfile } from '@/app/features/auth/api/profile'
@@ -6,26 +7,33 @@ import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import { getOrderHistory } from '@/app/features/trading/api/orders'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
 import { OrderHistory } from '@/app/features/trading/components/OrderHistory'
-import { getMarketInsight, getWatchlistQuotes } from '@/app/features/dashboard/api/market'
-import { AllocationDonut } from '@/app/features/dashboard/components/AllocationDonut'
-import { HoldingsList } from '@/app/features/dashboard/components/HoldingsList'
-import { MarketNews } from '@/app/features/dashboard/components/MarketNews'
-import { OverviewCard } from '@/app/features/dashboard/components/OverviewCard'
-import { WatchlistStrip } from '@/app/features/dashboard/components/WatchlistStrip'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 
+import {
+  MarketNewsPanel,
+  NewsSkeleton,
+  PortfolioPanels,
+  PortfolioPanelsSkeleton,
+  StripSkeleton,
+  WatchlistPanel,
+} from '../components/MarketPanels'
+
 /**
- * Home dashboard. Portfolio numbers (cash balance, holdings) are real reads
- * from `portfolios`/`holdings` -- every account starts with a $500,000 USD
- * demo cash balance and zero holdings, seeded at signup by the
- * on_auth_user_created_portfolio trigger. Holdings stay empty until a
- * Trading/order-placement feature exists; nothing here fabricates a
- * position.
+ * Home dashboard.
  *
- * Watchlist quotes and market news are live Finnhub calls. Both return a
- * MarketResult and never throw, so a Finnhub outage or a missing key degrades
- * those two cards -- each stating why -- instead of failing the whole page.
+ * Two tiers, on purpose. Everything the database already knows -- name, risk
+ * band, cash, holdings, order history -- is awaited here in a single
+ * `Promise.all` and paints straight away. Anything that waits on Alpaca or
+ * Finnhub streams in behind Suspense, so a slow or dead market-data provider
+ * costs those panels and nothing else.
+ *
+ * The database reads are genuinely cheap now: identity is resolved once per
+ * request by `getSessionUser`, which verifies the JWT locally rather than
+ * paying a round trip to Supabase Auth per module (four of them, before).
+ *
+ * Portfolio numbers are real reads. Holdings move only through
+ * `place_order()`; nothing here fabricates a position.
  */
 export async function DashboardPage() {
   const [profile, riskProfile, portfolio, orders] = await Promise.all([
@@ -34,11 +42,6 @@ export async function DashboardPage() {
     getPortfolio(),
     getOrderHistory(),
   ])
-
-  const [watchlist, news] = await Promise.all([getWatchlistQuotes(), getMarketInsight()])
-  // The portfolio cards price holdings from live quotes when there are any,
-  // and fall back to avg_cost otherwise -- so they take the data or nothing.
-  const quotes = watchlist.ok ? watchlist.data : null
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -61,16 +64,9 @@ export async function DashboardPage() {
         </header>
 
         {portfolio ? (
-          <>
-            <div className="mb-6">
-              <OverviewCard portfolio={portfolio} watchlist={quotes} />
-            </div>
-
-            <div className="mb-6 grid gap-6 lg:grid-cols-[2fr_1fr]">
-              <HoldingsList holdings={portfolio.holdings} />
-              <AllocationDonut portfolio={portfolio} watchlist={quotes} />
-            </div>
-          </>
+          <Suspense fallback={<PortfolioPanelsSkeleton />}>
+            <PortfolioPanels portfolio={portfolio} hasRiskProfile={Boolean(riskProfile)} />
+          </Suspense>
         ) : (
           <Card className="mb-6">
             <CardContent className="p-6 text-sm text-muted-foreground">
@@ -82,26 +78,29 @@ export async function DashboardPage() {
         )}
 
         <div className="mb-6">
-          <WatchlistStrip quotes={watchlist} />
+          <Suspense fallback={<StripSkeleton />}>
+            <WatchlistPanel />
+          </Suspense>
         </div>
 
         <div className="mb-6">
           <OrderHistory orders={orders} />
         </div>
 
-        <MarketNews items={news} />
+        <Suspense fallback={<NewsSkeleton />}>
+          <MarketNewsPanel />
+        </Suspense>
 
-        <p className="mt-8 text-sm text-muted-foreground">
-          {riskProfile ? (
+        {/* Only the retake link lives down here. The first-time invitation is
+            the CTA in My Assets, where someone with no positions is already
+            looking -- two calls to the same action compete with each other. */}
+        {riskProfile ? (
+          <p className="mt-8 text-sm text-muted-foreground">
             <Link href="/isq" className="underline">
               Retake the questionnaire
             </Link>
-          ) : (
-            <Link href="/isq" className="underline">
-              Take the Investment Suitability Questionnaire
-            </Link>
-          )}
-        </p>
+          </p>
+        ) : null}
       </div>
     </main>
   )

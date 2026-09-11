@@ -5,6 +5,108 @@ domain vocabulary and architecture rules.
 
 ---
 
+## The ISQ stops being a gate (2026-09-11)
+
+Carlos's call: a new account should land on the dashboard and be *invited* to
+the questionnaire, not held at it.
+
+**Routing.** The middleware no longer redirects to `/isq`, `sign-up` now
+returns `next: 'dashboard'`, and `resolveOnboardingStep` no longer consults
+`risk_profiles` at all. `'isq'` is gone from the `OnboardingStep` union and
+from `ONBOARDING_PATHS` rather than left as a dead member that invites
+reintroduction. `/isq` stays reachable, first time or retake.
+
+Completing the profile is still forced, and is now the only forced step. That
+one stays because the app cannot address a user it has no username for.
+
+**Dashboard.** "My Assets" has three distinct empty states instead of one, on
+the grounds that "no positions" means different things:
+
+| State | Shows |
+|---|---|
+| No risk profile | **Discover your Risk Appetite** button to `/isq` |
+| Profile taken, no positions | Browse markets |
+| Has positions | The table |
+
+The allocation donut greys out until the questionnaire is taken — muted token
+plus 35% opacity rather than a second palette, so dark mode needs no separate
+muted set. The percentages stay readable underneath, because the split really
+is accurate without a risk profile; grey signals "not tailored yet", not
+"unknown".
+
+The bottom-of-page questionnaire link is now retake-only. Two calls to the
+same action on one screen compete with each other.
+
+**Also fixed: stale copy.** "My Assets" still said *"Trading (order placement)
+is a later phase"* — untrue since Phase 4 shipped earlier the same day.
+
+**Verified against a production build with real sessions**, both states, using
+a throwaway account created through the app's own sign-up route and deleted
+after: sign-up returns `dashboard`; the no-profile dashboard shows the CTA, the
+"Not assessed" badge and the greyed donut with no duplicate CTA and no stale
+copy; after inserting a risk profile the same account shows Browse markets, a
+coloured donut, the band badge and the retake link. `/isq` returned 200
+throughout. No orphan rows; Carlos's account untouched at $500,000.
+
+---
+
+## Load-time fix: local JWT verification (2026-09-11)
+
+Carlos reported slow loads on login and the dashboard. It was not Next.js.
+
+**Diagnosis.** Supabase is in Seoul, Vercel functions were in Washington DC,
+and `auth.getUser()` is a network round trip to `/auth/v1/user` on every call
+— measured at 0.6-1.0s from here, with the TLS handshake alone around 0.2s.
+One dashboard render paid that four times: once in middleware, then again in
+`getProfile`, `getCurrentRiskProfile` and `getPortfolio`, each asking
+independently. Roughly 2.5-4s of pure identity checking before a single row
+was queried.
+
+The clearest evidence: `/login` is a **prerendered static page** and still
+took 2.25s on a production build. All of it was middleware.
+
+**Fixed, all six:**
+1. **`getClaims()` replaces `getUser()`.** The project signs with ES256 —
+   confirmed by fetching its JWKS endpoint — so the JWT verifies locally
+   against a cached key set with no network call. It still calls `getSession()`
+   internally, so expiring tokens still refresh and the cookie still rotates;
+   read the auth-js source before changing this.
+2. **One cached resolver.** `core/services/supabase/session.ts` wraps it in
+   React `cache()`, so four asks per render became one.
+3. **Middleware matcher narrowed** to the protected prefixes and the two auth
+   routes. The landing page, `/markets` and every symbol page were paying for
+   a session check nothing read.
+4. **Dashboard waterfall merged** into one `Promise.all`.
+5. **Market panels stream behind Suspense.** Everything the database knows
+   paints immediately; Alpaca and Finnhub fill in behind skeletons. The three
+   quote-dependent cards share one boundary so a total never appears before
+   the allocation explaining it, and `getWatchlistQuotes` is `cache()`d so two
+   panels share one request.
+6. **`vercel.json` pins functions to `icn1` (Seoul).** Next to the database
+   and much closer to Philippine users. Market data gets farther away, which
+   no longer blocks a render now that it streams. **Takes effect on next
+   deploy.**
+
+**Measured on a production build, same machine:**
+
+| Route | Before | After |
+|---|---|---|
+| `/login` | 2.25s | 0.20s first, 0.01s warm |
+| `/markets/AAPL` | 2.25s | 1.05s first, 0.36s warm |
+| `/` | — | 0.01s |
+| `/dashboard` (real session) | — | 1.6s first, ~0.9s warm |
+
+**Verified with a real session, not just a compile.** A throwaway account was
+created through the app's own sign-up route, given a risk profile, used to
+load `/dashboard`, then deleted; no orphan rows remain and Carlos's account is
+untouched at $500,000 / 0 holdings / 0 orders.
+
+That also closes a long-open item: **the `on_auth_user_created_portfolio`
+trigger had never actually fired.** It did here, seeding $500,000 USD on a
+genuine signup, alongside the profile row.
+
+---
+
 ## Phase 4 — Buy/sell orders (2026-09-11)
 
 Simulated trading works end to end. Open a symbol, place a buy or a sell,
