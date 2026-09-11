@@ -1,9 +1,14 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Card, CardContent } from '@/components/ui/card'
 
-import { getCandles } from '../api/candles.mock'
-import { getSymbolNews, getSymbolOverview, getSymbolRatings, isPlausibleSymbol } from '../api/symbol'
+import { getPortfolio } from '@/app/features/trading/api/portfolio'
+import { OrderTicket } from '@/app/features/trading/components/OrderTicket'
+
+import { getCandles } from '../api/candles'
+import { getSymbolNews } from '../api/news'
+import { assetClassOf, getSymbolOverview, getSymbolRatings, isPlausibleSymbol } from '../api/symbol'
 import { marketUnavailableMessage } from '../market-status'
 import { AnalystRatings } from '../components/AnalystRatings'
 import { EarningsChart } from '../components/EarningsChart'
@@ -28,10 +33,14 @@ import { SymbolNews } from '../components/SymbolNews'
 export async function SymbolPage({ symbol }: { symbol: string }) {
   if (!isPlausibleSymbol(symbol)) notFound()
 
-  const [overview, news, ratings] = await Promise.all([
+  const [overview, news, ratings, candles, portfolio] = await Promise.all([
     getSymbolOverview(symbol),
     getSymbolNews(symbol),
     getSymbolRatings(symbol),
+    getCandles(symbol, assetClassOf(symbol)),
+    // Null when signed out. This page is public, so the ticket is the only
+    // part that needs an account.
+    getPortfolio(),
   ])
 
   if (!overview.ok) {
@@ -49,7 +58,6 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
   }
 
   const { quote, profile, metrics, earnings } = overview.data
-  const { candles, source } = getCandles(symbol, quote)
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -58,12 +66,44 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-6">
-            <PriceChart candles={candles} source={source} />
+            {candles.ok ? (
+              <PriceChart candles={candles.data} />
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-sm text-muted-foreground">
+                  Price history unavailable. {marketUnavailableMessage(candles.reason, 'Alpaca')}
+                </CardContent>
+              </Card>
+            )}
             <EarningsChart points={earnings} />
             <SymbolNews items={news} symbol={symbol} />
           </div>
 
           <div className="space-y-6">
+            {portfolio ? (
+              <OrderTicket
+                symbol={symbol}
+                assetClass={assetClassOf(symbol)}
+                price={quote.price}
+                cashBalance={portfolio.cashBalance}
+                heldQuantity={
+                  portfolio.holdings.find((h) => h.symbol === symbol)?.quantity ?? 0
+                }
+                // Alpaca decides whether a fraction is allowed. Unknown asset
+                // records default to whole units rather than assuming.
+                fractionable={overview.data.asset.ok ? overview.data.asset.data.fractionable : false}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-sm text-muted-foreground">
+                  <Link href="/login" className="underline">
+                    Sign in
+                  </Link>{' '}
+                  to place a simulated order.
+                </CardContent>
+              </Card>
+            )}
+
             <KeyStats quote={quote} metrics={metrics} />
             <AnalystRatings ratings={ratings} />
           </div>

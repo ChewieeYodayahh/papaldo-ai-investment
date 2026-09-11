@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import type { FinnhubQuote } from '@/app/core/services/finnhub'
-import type { PortfolioSummary } from '../api/portfolio'
+import type { Quote } from '@/app/features/markets/api/quotes'
+import type { PortfolioSummary } from '@/app/features/trading/api/portfolio'
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -9,9 +9,9 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 2,
 })
 
-function holdingsMarketValue(portfolio: PortfolioSummary, quotes: FinnhubQuote[] | null): number {
+function holdingsMarketValue(portfolio: PortfolioSummary, quotes: Quote[] | null): number {
   if (portfolio.holdings.length === 0) return 0
-  const bySymbol = new Map((quotes ?? []).map((q) => [q.symbol, q.current]))
+  const bySymbol = new Map((quotes ?? []).map((q) => [q.symbol, q.price]))
   // Falls back to avg_cost per holding when a live quote isn't available
   // (symbol outside the watchlist, or Finnhub didn't respond) -- an honest
   // best-known value rather than dropping the position from the total.
@@ -23,7 +23,7 @@ export function OverviewCard({
   watchlist,
 }: {
   portfolio: PortfolioSummary
-  watchlist: FinnhubQuote[] | null
+  watchlist: Quote[] | null
 }) {
   const holdingsValue = holdingsMarketValue(portfolio, watchlist)
   const accountValue = portfolio.cashBalance + holdingsValue

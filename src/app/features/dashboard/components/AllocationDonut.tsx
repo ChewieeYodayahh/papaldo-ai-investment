@@ -5,8 +5,8 @@ import { Cell, Pie, PieChart } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 
-import type { FinnhubQuote } from '@/app/core/services/finnhub'
-import type { PortfolioSummary } from '../api/portfolio'
+import type { Quote } from '@/app/features/markets/api/quotes'
+import type { PortfolioSummary } from '@/app/features/trading/api/portfolio'
 
 const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 
@@ -15,9 +15,9 @@ export function AllocationDonut({
   watchlist,
 }: {
   portfolio: PortfolioSummary
-  watchlist: FinnhubQuote[] | null
+  watchlist: Quote[] | null
 }) {
-  const bySymbol = new Map((watchlist ?? []).map((q) => [q.symbol, q.current]))
+  const bySymbol = new Map((watchlist ?? []).map((q) => [q.symbol, q.price]))
   const holdingSlices = portfolio.holdings.map((h) => ({
     name: h.symbol,
     value: (bySymbol.get(h.symbol) ?? h.avgCost) * h.quantity,

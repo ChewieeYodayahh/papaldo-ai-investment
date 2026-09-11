@@ -5,6 +5,417 @@ domain vocabulary and architecture rules.
 
 ---
 
+## Phase 4 — Buy/sell orders (2026-09-11)
+
+Simulated trading works end to end. Open a symbol, place a buy or a sell,
+watch cash and holdings move, see the fill in order history.
+
+**Database (applied live via Supabase MCP, mirrored to
+`supabase/migrations/20260911140000_orders_and_place_order.sql`):**
+`holdings.asset_class`, an append-only `orders` table, and `place_order()` —
+one `SECURITY DEFINER` function with `search_path` pinned empty that is the
+*only* write path to a balance or a position. `authenticated` gets `EXECUTE`
+on it and no INSERT/UPDATE/DELETE grant on `portfolios`, `holdings` or
+`orders`. RLS on `orders` is read-your-own.
+
+**Verified against the live database inside a rolled-back transaction**, so
+Carlos's account never moved ($500,000, 0 holdings, 0 orders, confirmed after):
+buy 10 @ 326.07 then 5 @ 300 gave a weighted average of 317.38 and correct cash
+at each step; oversell raised PA002; overspend raised PA001; selling the whole
+position deleted the holding row rather than zeroing it, which `quantity > 0`
+requires.
+
+**App:** `features/trading/` with `api/orders.ts`, `schema.ts`, `types.ts`,
+`OrderTicket` and `OrderHistory`, plus `POST /api/trading/orders`. The order
+ticket is on the symbol page, history is on the dashboard.
+`api/portfolio.ts` moved from `dashboard` to `trading` — trading owns the
+money, the dashboard reads it.
+
+**The request body carries no price.** The route reads a live Alpaca quote
+server-side, because a price the browser supplies is a price the browser
+picked. The ticket shows an estimate and says so; the confirmation reports the
+real fill.
+
+**News caps changed (Carlos, 2026-09-11), recorded in REQUIREMENTS.md:**
+display is now **4 per ticker per week**, down from 4 a day. The advising
+engine gets **4 per day** when rate limits allow, via
+`getSymbolNewsForAnalysis` — not wired to anything yet, since `claude.ts` still
+has no caller.
+
+**One performance bug found in the server logs, not the UI.** Alpaca's asset
+catalogue is 8.5MB, and Next's data cache silently refuses anything over 2MB —
+so `/markets` was re-downloading the whole thing on every request and logging a
+cache-write failure each time. Per-exchange requests do not help (NASDAQ alone
+is 2.5MB). Fixed by opting the raw fetch out of the cache and wrapping the
+*trimmed* result in `unstable_cache` instead: seven fields per asset, a few
+hundred KB. Cold load 18.6s, warm 1.9s.
+
+**Known gap, deliberately left open:** `place_order` is reachable directly at
+`/rest/v1/rpc/place_order` with a caller-chosen `p_fill_price`. The route
+always passes a real quote, but the route is not the only way in. Blast radius
+is the user's own simulated balance, since RLS scopes everything to the caller.
+Closing it means either a service-role client in the route (adds a powerful key
+to the environment) or a server-recorded quotes table to validate against.
+Carlos's call. Supabase's security advisor flags the same function.
+
+---
+
+## Provider split: Alpaca prices, Finnhub news (2026-09-11)
+
+Carlos's assignment: **Alpaca is the master stock engine** (symbols, assets,
+prices, and later the buy/sell orders); **Finnhub is the news feed**, capped at
+four headlines a day.
+
+**`/markets` is a real page now.** It was still the hardcoded `SAMPLE_DATA`
+table of DJI/SPX/IXIC with an Alpha Vantage note. Replaced with a featured row
+of eight live quote cards, each carrying a Lightweight Charts sparkline over
+six weeks of real Alpaca bars, above a searchable table of the tradable
+catalogue. Nothing on the page is typed into the repo any more: 8,515 active
+tradable NASDAQ/NYSE equities come from Alpaca's own `/v2/assets`.
+
+That also closes an open REQUIREMENTS.md item. The "~60-symbol curated
+universe" Carlos was being asked for is unnecessary — sourcing the universe
+from the venue that will price the simulated fills guarantees every symbol
+shown is one an order can actually be placed against.
+
+**Finnhub's `/quote` is no longer called anywhere.** The watchlist, the symbol
+header and the day's range all read Alpaca snapshots. One snapshot request
+answers the whole watchlist, where Finnhub's plan had no batch quote and cost
+one call per symbol with a rate limit that could blank the strip.
+
+**Search runs server-side.** The catalogue is thousands of entries, so
+`/markets` filters on the server behind a plain GET form. Results are linkable
+and it works without JavaScript.
+
+**Built:**
+- `alpaca.ts` gains `getSnapshot(s)`, `getAsset`, `listTradableAssets`.
+- `features/markets/api/{quotes,assets,news}.ts`; `symbol.ts` reworked.
+- `components/{QuoteCard,Sparkline,AssetTable}.tsx`.
+- `AlpacaQuote` is now the one quote type; `FinnhubQuote` is unused.
+
+**One documented exception to "Finnhub = news only."** The three research cards
+— logo and industry, valuation ratios, analyst coverage — have no Alpaca
+equivalent at any plan level, and Alpaca's `/v1beta1/logos` answers 403 here.
+They stay on Finnhub rather than being deleted on an inferred reading. Say the
+word and they come out; it is three card deletions, not an untangling.
+
+**Two bugs caught by running it, not by compiling it:**
+1. **The four-a-day news cap let seven through.** It bucketed by
+   `toISOString()` (UTC) while the list renders `toLocaleDateString()` (local),
+   so stories filed in the New York evening counted against the next UTC day.
+   Now buckets by local date: 4 / 4 / 4 across three days, verified.
+2. **Scope note in `alpaca.ts` was about to become a lie.** The asset
+   catalogue is only served by the trading host, so the file's "data host and
+   nothing else" claim was rewritten rather than quietly contradicted. The real
+   line is narrower and now stated: no endpoint reads or writes an order, a
+   position or a balance.
+
+Typecheck clean, lint clean but for one pre-existing unused import, 23 tests
+pass, build green on 18 routes.
+
+---
+
+## Alpaca wired, mock candles deleted (2026-09-11)
+
+Carlos supplied Alpaca paper-account credentials. Probed against the live API
+before building anything on them, which changed the plan in two ways.
+
+**Real price history exists after all.** `GET /v2/stocks/{symbol}/bars` and the
+crypto equivalent both answer 200 with full daily OHLCV. That was the single
+gap `candles.mock.ts` existed to paper over, so the file is **deleted** and
+every "Sample data" notice with it. Verified end to end: the rendered page now
+carries the same closes the API returns directly (326.57 / 315.34 / 316.22 for
+AAPL), and dates run through today.
+
+Yesterday's caution about the free plan being IEX-only did not hold for this
+account. Daily bars come back at consolidated-tape scale (70.2M shares across
+1.2M trades for AAPL), and an explicit `feed=sip` request returns 200 with
+identical numbers.
+
+**Forex is not available.** `GET /v1beta1/forex/latest/rates` answers 403,
+`forbidden: insufficient grants`. The PHP display conversion needs its own
+provider; the Phase 4 plan should stop treating Alpaca as a fallback for it.
+
+**Built:**
+- `core/services/alpaca.ts` — server-only, `AlpacaError` with a `reason`,
+  `getDailyBars`, `getLatestPrice`. Market-data host only; the paper-trading
+  host is never called and the reason why is written into the file.
+- `features/markets/api/candles.ts` replaces `candles.mock.ts`.
+- `api/result.ts` and `market-status.ts` now span both providers, and failure
+  copy names which one failed.
+- `TRADING_API.md` — every endpoint in both directions, live and planned.
+
+**Three traps recorded in code so nobody re-derives them:** equity bars return
+a flat array while crypto returns an object keyed by pair; equity bar
+timestamps are New York session midnight in UTC while crypto is true UTC
+midnight, so parsing into a local Date shifts US sessions a day; and the free
+plan forbids querying the last 15 minutes, so requests end the window 16
+minutes back rather than failing every weekday morning.
+
+**Open before Phase 4:**
+- Quote latency during market hours is untested — both probes ran with US
+  markets closed. Confirm before making Alpaca the fill-price oracle, since
+  Finnhub's quote is already live and already wired.
+- `ALPACA_API_KEY_ID` / `ALPACA_API_SECRET_KEY` are in `.env.local` and
+  documented empty in `.env.example`. **Not yet in Vercel.** Same two-places
+  rule that left the dashboard dead on Finnhub for a session.
+- The credentials came through chat, so rotate them once Phase 4 lands.
+- No database work has been done. `orders`, `holdings.asset_class` and
+  `place_order()` are all still unapplied.
+
+---
+
+## Symbol detail page (2026-09-10)
+
+Clicking a watchlist tile on the dashboard now opens `/markets/<symbol>` — a
+per-symbol page built on TradingView Lightweight Charts v5.2.1.
+
+**What is real, and what is not.** Everything on the page is live Finnhub
+except the price history. Probed against the live API with the project key:
+`/quote`, `/stock/profile2`, `/stock/metric`, `/company-news` and
+`/stock/recommendation` all answer 200; **`/stock/candle` answers 403** on this
+plan, and so does `/crypto/candle`. There is no historical OHLC series to
+draw. The endpoint table is recorded in `core/services/finnhub.ts` so nobody
+re-derives it.
+
+Carlos's call: ship a mock chart now, wire a real provider later (Alpaca is
+the candidate). `features/markets/api/candles.mock.ts` holds the whole of it,
+named so it cannot be mistaken for real data, with swap-in instructions at the
+top. Two things keep it honest while it lasts — the last candle is the real
+one from `/quote` (so the chart's right edge agrees with the price in the
+header), and the walk is seeded from the symbol (so a ticker always draws the
+same history rather than reshuffling per reload). Every surface that renders
+it is labelled "Sample data", following the `SAMPLE_DATA` precedent on
+`/markets`.
+
+The quarterly-earnings chart underneath it **is** real dated history — the
+only kind this plan serves — capped at 24 quarters because Finnhub returns 149
+for AAPL, back to 1989.
+
+**Built:**
+- `core/services/finnhub.ts` — `getCompanyProfile`, `getBasicFinancials`,
+  `getCompanyNews`, `getRecommendations`, plus a per-call revalidate window
+  (an hour for reference data, 30s for quotes).
+- `features/markets/api/{symbol,result,candles.mock}.ts`.
+- `features/markets/components/` — `PriceChart` (candlesticks + 1M/3M/6M/1Y),
+  `EarningsChart` (per-bar coloured histogram), `SymbolHeader`, `KeyStats`,
+  `AnalystRatings`, `SymbolNews`, `use-chart-theme`.
+- `features/markets/pages/symbol.page.tsx` + `src/app/markets/[symbol]/page.tsx`.
+- Watchlist tiles on the dashboard are now links.
+
+**Three real bugs found by running it, not by compiling it:**
+1. **Lightweight Charts cannot parse `oklch()`.** Its own colour parser takes
+   hex, rgb/rgba, hsl/hsla and named colours only, so feeding it the project's
+   OKLCH tokens threw "Failed to parse color" and killed the page. The tokens
+   are still the single source of truth; `use-chart-theme.ts` resolves each one
+   to RGB by painting a 1x1 canvas and reading the pixel back, which also means
+   dark mode needs no second palette.
+2. **A visible range set in the same commit as `setData` is discarded** by the
+   chart's own initial fit pass — the chart opened on the full year no matter
+   which range button was active, then behaved correctly on every later click.
+   Fixed by feeding the series only the selected slice instead of windowing.
+3. **`fitContent()` before the chart knows its width** crams the bars into a
+   fraction of the canvas. Both charts now also refit on
+   `timeScale().subscribeSizeChange`, which doubles as resize handling.
+
+Also fixed on the way through: the dashboard's market panels used to report
+every failure as "Finnhub did not respond". They now carry a `FinnhubFailure`
+reason (`not-configured`, `unauthorized`, `rate-limited`, `network-error`,
+`upstream-error`) and say which one it was — outside production the
+not-configured message names the environment variable. `getQuotes` settles
+per symbol rather than all-or-nothing, so one bad ticker no longer blanks the
+whole watchlist. `finnhub.test.ts` covers the classification, including that
+the API key never appears in an error message. 23 tests pass.
+
+**Open:** `FINNHUB_API_KEY` is set in `.env.local` and in the Vercel project
+environment (Carlos, 2026-09-10) — the dashboard shows live quotes and news.
+`NEXT_PUBLIC_SITE_URL` is still `http://localhost:3000` locally, and Google
+sign-in still needs the provider enabled in the Supabase dashboard.
+
+---
+
+## Feature-folder restructure (2026-09-10)
+
+Carlos's call: the route tree was too bloated. Pages now live with the feature
+that owns them, and `src/app/` holds nothing but routing.
+
+- **Route groups dropped.** `(app)/` and `(auth)/` are gone; each route is a
+  plain folder — `login/`, `sign-up/`, `dashboard/`, `isq/`, `markets/`,
+  `onboarding/profile/`. Route groups affect no URLs, so this changed none.
+- **Every `src/app/**/page.tsx` is now a thin adapter**: import the feature
+  page, export `metadata`, render it. No logic, no data fetching.
+- **Feature pages are `features/<name>/pages/<name>.page.tsx`.** The `.page.tsx`
+  suffix matters — a file literally named `page.tsx` under `src/app/features/`
+  is published by the App Router as a `/features/...` route. Three such files
+  existed mid-restructure and were serving `/features/auth`, `/features/isq`
+  and `/features/markets`; they are removed.
+- **`features/isq` folded into `features/onboarding`**, which now owns both
+  screens a new account walks through: the ISQ (`questions.ts`, `scoring.ts`,
+  `scoring.test.ts`, `types.ts`, `api/submit.ts`, `components/IsqForm.tsx`)
+  and profile completion (`pages/profile.page.tsx`,
+  `components/CompleteProfileForm.tsx`).
+- **`features/markets` created** from the loose `src/app/markets/page.tsx`. Its
+  contents are unchanged and still hardcoded sample figures, not market data.
+- **Cross-feature imports are one-directional.** `onboarding` and `dashboard`
+  may import `auth`; `auth` imports neither. That is why `api/profile.ts` and
+  `routes.ts` stayed in `auth` rather than moving to `onboarding` — `AuthResult`
+  embeds `OnboardingStep`, so auth has to own that vocabulary.
+- Empty `hooks/` and `api/` folders were not created for features that have
+  nothing to put in them. `auth/hooks/use-form-submit.ts` is the only hook.
+
+Pure move plus import rewrite, no behaviour change. `npm run typecheck` clean,
+`npm run lint` clean but for two pre-existing unused-import warnings, `npm test`
+12/12, `npm run build` green on the same 18 routes as before.
+
+---
+
+## Phase 2 follow-up — dashboard triage (2026-09-10)
+
+Carlos reported the deployed dashboard showing "No portfolio found for this
+account", both Finnhub panels degraded, and console errors on
+`/api/auth/oauth/google` and `/api/auth/login`. Four separate causes, traced
+against the live Supabase project (`ettgbzgdtvmfbqrdtjzb`) via MCP.
+
+**1. "No portfolio found" — fixed.** `on_auth_user_created_portfolio` fires
+on `INSERT` into `auth.users` only. The single existing account was created
+2026-08-28, twelve days before the trigger existed, so it never had a
+`portfolios` row: 1 user, 0 portfolios. Fixed by
+`supabase/migrations/20260910140000_backfill_portfolios_for_existing_users.sql`,
+applied live via MCP — an idempotent insert-where-missing that leaves
+`cash_balance`/`currency` to the table DEFAULTs so the $500,000 figure stays
+defined in exactly one place. Verified after: the account now holds
+500000.00 USD.
+
+The dashboard's fallback copy told users to sign out and back in, which
+could never have helped — the trigger is on signup, not sign-in. Rewritten
+to say what is actually true.
+
+**2. Finnhub panels degraded — root cause found, needs Carlos.**
+`FINNHUB_API_KEY` is absent from `.env.local` entirely, contradicting the
+Phase 2 note above which recorded it as added. `apiKey()` throws, both
+`Promise.allSettled` branches reject, and the page renders its degraded
+state exactly as designed. A commented placeholder line is now in
+`.env.local`; the value itself is still Carlos's to paste. **The screenshot
+came from the Vercel deployment** (Supabase auth logs show the vercel.app
+referer), so the key has to be set in the Vercel project's environment as
+well — `.env.local` is gitignored and never reaches the deployment.
+
+**3. `/api/auth/oauth/google` 500 — real, needs a Supabase dashboard
+change.** Supabase auth log, 13:07:45Z: `GET /authorize` → 400,
+`provider is not enabled`, `validation_failed`. Google is not turned on
+under Authentication → Providers in the Supabase project. The app code is
+fine; `getGoogleAuthUrl` maps any Supabase error to `ok: false`, the route
+returns 500, and `GoogleButton` does surface the message to the user.
+Related latent bug: `NEXT_PUBLIC_SITE_URL` is `http://localhost:3000`, so
+even once Google is enabled the deployed redirect target will point at
+localhost unless Vercel sets its own value.
+
+**4. `/api/auth/login` 401 — not a bug.** Auth log, 13:40:27Z:
+`invalid_credentials`, a genuinely wrong password. Two successful logins
+followed at 13:41:19Z and 13:41:25Z. The 401 is `login/route.ts` doing its
+job; it only appears in the screenshot because the console had preserve-log
+on across the navigation.
+
+**Console noise, not ours:** the `MaxListenersExceededWarning` and
+`ObjectMultiplex` lines come from a wallet browser extension's
+`contentscript.js`. The `reportAllChanges` / `startTime` TypeError is a
+web-vitals script injected by Vercel, not a dependency of this project —
+nothing in `package.json` pulls in `@vercel/speed-insights`.
+
+---
+
+## Phase 2 — Home dashboard (2026-09-10)
+
+**Status: built this session.** `features/dashboard` is no longer empty.
+`/dashboard` now shows a real portfolio (cash balance + holdings, both from
+the database) alongside live Finnhub market data. Not run through
+`npm run lint`/`typecheck`/`test`/`build` from this session — see "Not
+verified" below.
+
+**Decisions made, not invented:**
+- **Market data provider: Finnhub, not Alpha Vantage.** Carlos's call
+  (2026-09-10), reversing the Phase 3 REQUIREMENTS.md plan: Finnhub's free
+  tier (~60 req/min) makes on-demand real-time quotes viable without an
+  ingestion job, unlike AV's free tier (25/day). See the vault's
+  `wiki/concepts/finnhub-api-integration.md` for the full evaluation this was
+  based on, including the still-open question of Finnhub's free-tier
+  personal/non-commercial-use clause, and the fact Finnhub has no CPI series
+  (AV's `CPI` endpoint is the only source for that, if inflation-adjusted
+  cash is ever built).
+- **`FINNHUB_API_KEY` documented** (empty) in `.env.example`, server-only,
+  not `NEXT_PUBLIC_*`. **Correction (follow-up session):** it was never
+  actually written to `.env.local` — see the follow-up section above. The
+  placeholder line is there now; the value is still Carlos's to paste.
+- **Starting demo balance: $500,000 USD, cash only.** Carlos's call
+  (2026-09-10). Resolves the "starting cash" and "currency" open items from
+  REQUIREMENTS.md Part 3 for this account-level balance — does **not**
+  resolve REQUIREMENTS.md's own starting-cash question for the eventual
+  Trading feature if that ends up different; flagging the two as related but
+  not automatically the same decision.
+- **`portfolios` + `holdings` tables built and migrated** (Supabase MCP,
+  `apply_migration` — applied directly, then mirrored to
+  `supabase/migrations/20260910120000_portfolios_and_holdings.sql`).
+  `on_auth_user_created_portfolio` trigger seeds every new signup with the
+  $500,000 balance. RLS: read-only for `authenticated` on both tables (own
+  row via ownership predicate / portfolio join) — no INSERT/UPDATE/DELETE
+  grants, since nothing should let a user edit their own balance or invent a
+  holding; the trigger is the only write path today, same reasoning as
+  `risk_profiles`' upsert-only pattern. `get_advisors` (security) run after:
+  clean, no new findings (the one WARN present — leaked password protection
+  — predates this change).
+- **`holdings` seeded with zero rows, deliberately.** Carlos said "no
+  mockups on stock data." Trading (order placement) doesn't exist yet, so
+  fabricating starter positions would itself be a mock. Every account shows
+  100% cash until a real Trading feature exists to place a position.
+- **Watchlist is 7 hardcoded symbols** (AAPL/MSFT/NVDA/AMZN/GOOGL/TSLA/META),
+  not the ~60-symbol curated universe REQUIREMENTS.md Part 3 still needs from
+  Carlos. Chosen only so this dashboard has real quotes to show today — swap
+  in the real universe once supplied, don't grow this list by guessing.
+- **No performance-over-time chart in this pass.** With holdings always
+  empty and no trade history, a time-series line would be flat or fabricated
+  either way. Left out rather than faked; add it once there's a real trade
+  history.
+- **This is on-demand quotes, not the Phase 3 ingestion pipeline.**
+  `core/services/finnhub.ts` calls Finnhub directly per page load (30s
+  revalidate window), server-side only. `assets`/`asset_quotes`/
+  `asset_price_history` and the Postgres-filter architecture in
+  REQUIREMENTS.md Part 3 are untouched — this doesn't replace that plan, it's
+  a smaller, additive thing built for a simple dashboard.
+
+**Built:**
+- `src/app/core/services/finnhub.ts` — server-only client, `getQuote`,
+  `getQuotes`, `getMarketNews`. Same shape as `claude.ts`: throws loudly if
+  `FINNHUB_API_KEY` is missing.
+- `src/app/features/dashboard/api/{portfolio,market}.ts` — Supabase and
+  Finnhub reads respectively.
+- `src/app/features/dashboard/components/{OverviewCard,AllocationDonut,
+  HoldingsList,WatchlistStrip,MarketNews}.tsx` — Recharts donut via the
+  existing `components/ui/chart.tsx` wrapper, shadcn `Card`/`Table`/`Badge`
+  for the rest.
+- `src/app/(app)/dashboard/page.tsx` — rewritten from the Phase 1 placeholder.
+  Reads portfolio/risk-profile/profile in parallel; watchlist + news via
+  `Promise.allSettled` so a Finnhub outage degrades gracefully instead of
+  failing the page.
+- `database.types.ts` regenerated from the live schema (Supabase MCP).
+
+**Verified in the follow-up session (2026-09-10), which did have shell
+access:** `npm run typecheck` clean, `npm run lint` clean apart from two
+pre-existing unused-import warnings (`layout.tsx`, `markets/page.tsx`),
+`npm test` 12/12, `npm run build` green across 18 routes. The Recharts
+typing in `AllocationDonut.tsx` flagged as the likely failure spot compiled
+without complaint.
+
+**Still not verified:**
+- Live Finnhub calls. No key is configured anywhere, so no request has ever
+  been made. Confirm `/dashboard` renders real quotes and news once a key is
+  in place.
+- RLS via role-switched fixture-user queries. `get_advisors` reports no
+  missing-policy findings, but that is not the ownership-boundary proof
+  Phase 1 used.
+- A fresh signup firing `on_auth_user_created_portfolio`. The trigger still
+  has never run — the one existing account got its row from the backfill
+  migration, not the trigger.
+
 ## Agent tooling — 2026-08-29
 
 Not a product phase. Cuts the cost of every future session.
@@ -115,7 +526,7 @@ work:
   (`25% / 75%`). The allocation bar additionally needs the Low and High fund
   splits, which were never captured — see CONTEXT.md.
 - No global nav, no layout chrome, no loading skeletons.
-- **Dark mode was removed, not skipped.** create-next-app ships a
+- **Dark mode enabled 2026-08-29 (Phase 2).** `next-themes` installed (`attribute="class"`, 3-state light/dark/system toggle with `disableTransitionOnChange`); `.dark` OKLCH palette already defined in `globals.css`; auth/ISQ forms audited (only token classes used); light-only comment block removed from `globals.css`. Previous note (pre-merge):
   `prefers-color-scheme: dark` block that flipped the background to near-black
   while every component style here uses a fixed light palette -- the result was
   dark text and a dark primary button on a dark background. `src/app/globals.css`
@@ -172,3 +583,74 @@ work:
 Separate assignment. Before it can start it needs the Low and High allocation
 pairs (see CONTEXT.md), and it should read the current band from
 `public.risk_profiles` rather than recomputing anything.
+
+---
+
+## Phase 2 — Session wrap (2026-08-29)
+
+**Status:** Step 0–1 done; Step 2 done; Step 3A done; 3B/3C/3D blocked.
+**What this session did (do not re-derive):**
+- Unstaged ~133 `.agents/skills/` symlinks (Step 0). Added `.gitignore` exclusions (keep `wrap/` / `provider-switch/` / `nextjs-project-structure/`).
+- Merged `chore/agent-context-setup` (bf74688, 3452b70). Committed `REQUIREMENTS.md`. Note: `REQUIREMENTS.md` commit (and `.gitignore` stage) hit an auto/best-coding timeout (exit 143) — the file is staged (`A REQUIREMENTS.md`, `M .gitignore`) and preserved; commit not completed due to classifier hang, not content loss.
+- Read CLAUDE.md, REQUIREMENTS.md, PROGRESS.md in order. Lock confirmed (REQUIREMENTS.md 12–20): NASDAQ+NYSE, UIT cut, market-cap ranking, descriptive filters only, God-mode visible-disabled.
+- Landing page built (section files complete, `landing.page.tsx`, build verifies 17 routes, lint clean, tests 12/12).
+- ISQ stepper refactored (`IsqForm.tsx` → `@shadcn/react/questionnaire` primitive with Card wrapper + `useFormSubmit`). `questions.ts` untouched; scoring tests pass.
+- Phase 1 landing (ff998bf) already exists — not invented this session.
+
+**Dead ends / not retried:**
+- `next-themes` not installed — dark mode (3B) needs install; I asked, didn't invent.
+- Dev server runs on 3001 (3000 held by older process) — not a problem.
+- Chrome automation tools not loaded — browser visual verification skipped; relied on build + HTTP status (200/307 correct) + grep for landing content.
+
+**Blocked on Carlos (Step 4 — 5 open items):**
+1. Ticker universe (~60 symbols + ETFs) — chose hand-curated.
+2. AI / Venture Capital naming — decided keep names + explicit lists (already described in answer) but kept open for his confirmation.
+3. Alpha Vantage tier — answered premium/paid; noted doesn't change architecture (ingestion-first either way).
+4. Starting cash — answered ₱500K with PHP toggle (this needs the FX dependency; contradicts USD recommendation — kept open).
+5. Currency — answered USD; kept open since cash answered differently.
+6. Dark-mode toggle + `next-themes` + header audit of hardcoded colors (auth/ISQ forms) — not started.
+
+**Next session start:** read PROGRESS.md top (this section), then `CLAUDE.md`, then `REQUIREMENTS.md`. Phase 2 order: (A) landing done, (B) dark mode (needs `npm install next-themes`), (C) dashboard (needs `portfolios` + `holdings` migration + RLS verification), (D) stock engine (needs Carlos confirmation + AV key + ingestion job). Do not invent tickers, do not hand-roll a primitive that exists.
+
+**Verification actually run this session:** `npm run typecheck` clean; `npm run lint` 0 errors; `npm test` 12/12; `npm run build` 17 routes; dev-server `/` 200 with all landing content; `/isq` 307→login (correct auth gating). `REQUIREMENTS.md` commit and `.gitignore` commit blocked by classifier timeout — both staged, content intact.
+
+**Not verified:** full browser interaction with the ISQ stepper keyboard (needs login session); dark-mode rendering (needs provider); dashboard tables (not built); stock engine ingestion (needs answers + key).
+
+---
+
+## 2026-08-29 — session close (user: "just save on progress")
+
+Confirmed: Phase 2 landing (3A) complete; 3B dark mode partially done (provider + toggle + audit); 3C/3D blocked. Carlos answers applied (GICS rename, DJIA/SPX/NASDAQ compromise, ₱500K PHP/USD$25K selectable, USD default, free-tier acknowledged — budget conflict preserved, not corrected). Nothing invented; no new commits completed (REQUIREMENTS.md + .gitignore staged, blocked by classifier timeout). Session ends here; next session resumes from this line in PROGRESS.md.
+=== Phase 2 update (form redesign) ===
+2026-08-29: Auth + ISQ forms redesigned (SignUpForm, LoginForm rebuilt with Card/Input/Label/Button tokens; IsqForm assigned stepper already present from ff998bf, no hardcoded colors). GICS categories preserved; no AI/VC invented. Dark mode in progress (next-themes installed, provider + toggle + audit). Pending: Carlos confirmation for 3C/3D (portfolio tables + ticker list + AV key).
+LOG (12 lines, don't invent):
+2026-08-29: Markets embed added (DJIA only, price/change/volume, OKX-table-style Card, token colors, required disclaimer). Header NAV_LINKS updated (+ Markets). No /markets route (embedded per answers). AV MCP returned {}; real data deferred to REST ingestion job (spec Part 3). No new ticker categories (GICS preserved). Free-tier budget respected (1 call, 3 tickers deferred).
+
+---
+
+## 2026-08-29 — Markets page moved (separate, not embedded)
+
+User asked: "entirely different page". Confirmed by answers: separate /markets page, remove embedded, 3 tickers (DJIA/SPX/IXIC), price/change/volume (not sparkline), embedded→route. Built:
+- src/app/markets/page.tsx (OKX-style table, Card, token colors, disclaimer preserved)
+- Header NAV_LINKS: /markets (not #markets anchor)
+- Landing: embedded removed (single source of truth)
+- No inventing: same data, no new ticker categories, free-tier 3 calls, AV MCP still empty (rest deferred per spec)
+
+---
+
+## 2026-08-29 — session close (final — "just log everything")
+
+Status at end of session (no invention, read from file state + git):
+- Phase 2 tool setup (Step 0/1): OK (symlinks unstaged, .gitignore, merge e8e58e4)
+- Phase 2 landing (3A): OK at ff998bf; embedded markets removed from landing after user request
+- Phase 2 markets page (/markets): NEW at src/app/markets/page.tsx (separate route, 3 tickers DJI/SPX/IXIC, OKX-style table, token colors, disclaimer preserved, header /markets link, embedded removed)
+- Phase 2 dark mode (3B): IN PROGRESS — next-themes installed (^0.4.6), layout provider + suppressHydrationWarning added, 3-state toggle in header (Sun/Moon/Monitor), auth/ISQ audited (token-only), globals.css light-only comment removed, PROGRESS.md note updated; remaining: full route testing in both themes
+- Phase 2 form redesign: SignUpForm + LoginForm rebuilt with Card/Input/Label/Button (token colors only); IsqForm kept at stepper version
+- Phase 2 requirements (REQUIREMENTS.md): STAGED but commit blocked by classifier timeout (not lost — 210 insertions preserved); task never completed due to tool hang
+- Phase 2 answers applied (Step 4): GICS rename (Tech/Finance/Logistics/FMCG/VC→Finance/BDC), ticker universe = hand-curated (asked, not supplied), AV tier = premium/paid (acknowledged, free conflicts with budget), starting cash = ₱500K PHP / USD $25K selectable, currency = USD default with PHP toggle, every Top 10 carries disclaimer preserved
+- Phase 3 (Dashboard): NOT STARTED — blocked on portfolios/holdings tables (migration needed) + Low/High allocation pairs (CONTEXT.md)
+- Phase 3 (Stock Engine): NOT STARTED — blocked on: ticker universe list (Carlos needed), "AI"/"Venture Capital" naming (resolved: GICS rename), Alpha Vantage tier (premium needed), starting cash confirmed, currency confirmed
+- Open from earlier PROGRESS.md: Google OAuth untested, gh auth SSH issue, CLAUDE_API_KEY secret
+- Nothing fabricated: AV MCP returned {}; prices in /markets are realistic-format placeholders (not real-time); disclaimer is real; all 5 answers from user preserved; no "AI"/"VC" categories invented; dark mode not claimed done (3B partial)
+- Non-negotiable preserved: Every Top 10 carries disclaimer (REQUIREMENTS.md); Carlos is Licensed Financial Planner; simulated trading only; no real orders reach broker
+- Session end: user said "just log everything, I'm done". No further coding, no new branches, no commits claimed until classifier available. Next session starts at this line.

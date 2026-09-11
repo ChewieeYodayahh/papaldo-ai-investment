@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import type { FinnhubQuote } from '@/app/core/services/finnhub'
+import type { Quote } from '../api/quotes'
 import type { MarketResult } from '../api/result'
 import { marketUnavailableMessage } from '../market-status'
 
@@ -29,7 +29,7 @@ export function KeyStats({
   quote,
   metrics,
 }: {
-  quote: FinnhubQuote
+  quote: Quote
   metrics: MarketResult<Metrics>
 }) {
   const m = metrics.ok ? metrics.data : {}

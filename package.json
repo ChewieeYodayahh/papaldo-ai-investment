@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@alpacahq/alpaca-trade-api": "^4.0.2",
     "@base-ui/react": "^1.7.0",
     "@gsap/react": "^2.1.2",
     "@shadcn/react": "^0.3.0",

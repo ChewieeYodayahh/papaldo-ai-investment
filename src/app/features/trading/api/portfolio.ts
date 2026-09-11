@@ -5,6 +5,8 @@ import { createClient } from '@/app/core/services/supabase/server'
 export type Holding = {
   id: string
   symbol: string
+  /** Which Alpaca namespace prices this position. */
+  assetClass: 'equity' | 'crypto'
   quantity: number
   avgCost: number
 }
@@ -18,13 +20,13 @@ export type PortfolioSummary = {
 /**
  * The signed-in user's portfolio + holdings, or null if not signed in.
  *
+ * Lives in `trading` because trading owns the money: `place_order()` is the
+ * only thing that may change either number, and the dashboard is a reader.
+ *
  * Every account gets exactly one portfolio row, seeded with a $500,000 USD
- * demo cash balance by the `on_auth_user_created_portfolio` trigger at
- * signup (see supabase/migrations/*_portfolios_and_holdings.sql) -- so a
- * null return here means "not signed in," never "no portfolio yet."
- * `holdings` is real data from the `holdings` table; it is simply always
- * empty today, since there is no order-placement feature yet to write to it.
- * Nothing here fabricates a position.
+ * demo cash balance by the `on_auth_user_created_portfolio` trigger at signup,
+ * so a null return here means "not signed in," never "no portfolio yet."
+ * `holdings` is written by `place_order` and by nothing else.
  */
 export async function getPortfolio(): Promise<PortfolioSummary | null> {
   const supabase = await createClient()
@@ -43,7 +45,7 @@ export async function getPortfolio(): Promise<PortfolioSummary | null> {
 
   const { data: holdings } = await supabase
     .from('holdings')
-    .select('id, symbol, quantity, avg_cost')
+    .select('id, symbol, asset_class, quantity, avg_cost')
     .eq('portfolio_id', portfolio.id)
 
   return {
@@ -52,6 +54,7 @@ export async function getPortfolio(): Promise<PortfolioSummary | null> {
     holdings: (holdings ?? []).map((h) => ({
       id: h.id,
       symbol: h.symbol,
+      assetClass: h.asset_class === 'crypto' ? ('crypto' as const) : ('equity' as const),
       quantity: h.quantity,
       avgCost: h.avg_cost,
     })),

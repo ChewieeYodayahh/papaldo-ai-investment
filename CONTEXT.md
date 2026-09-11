@@ -18,7 +18,7 @@ them is a bug — fix it rather than inventing a synonym.
 The six-item questionnaire every user completes after registering. Its wording is
 transcribed verbatim from Manulife's *Client Suitability Assessment*, so it is a
 spec, not a draft: do not paraphrase questions or choices. Lives in
-`src/app/features/isq/questions.ts`.
+`src/app/features/onboarding/questions.ts`.
 
 **Risk profile**
 The output of scoring an ISQ submission: a **band** plus a 0–100 **score**. There
@@ -147,19 +147,21 @@ only (`next.config.ts`, `tsconfig.json`, `package.json`, lockfiles).
 ```
 src/
   app/
-    (app)/  (auth)/          route groups — pages, thin composition
+    <route>/page.tsx         one folder per route; each page.tsx is a thin
+                             adapter over a feature page + its metadata
     api/<resource>/route.ts  HTTP handlers, one folder per resource
     core/services/           external-service clients, one area each
       supabase/{client,server,middleware,database.types}.ts
-      claude.ts
-    features/<feature>/       feature modules: api/ components/ hooks/ schema.ts …
+      claude.ts  finnhub.ts
+    features/<feature>/       feature modules: api/ components/ hooks/ pages/
+                              schema.ts types.ts …
     layout.tsx  page.tsx  globals.css
   components/                 cross-feature UI primitives (index.tsx)
   lib/                        framework-agnostic helpers (env.ts)
   middleware.ts               session refresh + onboarding order
 ```
 
-The import alias `@/*` resolves to `src/*`, so `@/app/features/isq/scoring`,
+The import alias `@/*` resolves to `src/*`, so `@/app/features/onboarding/scoring`,
 `@/components`, `@/lib/env`, `@/app/core/services/supabase/server`.
 
 ## Architecture rules

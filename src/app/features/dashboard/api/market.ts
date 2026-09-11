@@ -1,24 +1,24 @@
 import 'server-only'
 
-import { getMarketNews, getQuotes, type FinnhubNewsItem, type FinnhubQuote } from '@/app/core/services/finnhub'
-import { attempt, type MarketResult } from '@/app/features/markets/api/result'
+import { getMarketHeadlines, type NewsItem } from '@/app/features/markets/api/news'
+import { getQuotes, type Quote } from '@/app/features/markets/api/quotes'
+import { type MarketResult } from '@/app/features/markets/api/result'
 
 /**
- * Starter watchlist -- NOT the ~60-symbol curated universe REQUIREMENTS.md
- * calls for (that list is still open, Carlos's editorial call: see
- * REQUIREMENTS.md "Open -- needed before build," item 1). These are seven
- * large, liquid US names chosen only so this dashboard has real quotes to
- * show today. Swap in the real universe once Carlos supplies it -- don't
- * grow this list by guessing at more tickers in the meantime.
+ * Starter watchlist. Seven large, liquid US names, kept small because it is a
+ * default view rather than the universe -- `/markets` browses Alpaca's full
+ * tradable catalogue, so this no longer stands in for a ticker list the repo
+ * is waiting on.
  */
 export const WATCHLIST_SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'TSLA', 'META'] as const
 
-export type { MarketResult }
+export type { MarketResult, Quote, NewsItem }
 
-export async function getWatchlistQuotes(): Promise<MarketResult<FinnhubQuote[]>> {
-  return attempt('watchlist quotes', () => getQuotes([...WATCHLIST_SYMBOLS]))
+/** One Alpaca request for the whole strip, where Finnhub cost one per symbol. */
+export async function getWatchlistQuotes(): Promise<MarketResult<Quote[]>> {
+  return getQuotes([...WATCHLIST_SYMBOLS])
 }
 
-export async function getMarketInsight(limit = 6): Promise<MarketResult<FinnhubNewsItem[]>> {
-  return attempt('market news', async () => (await getMarketNews('general')).slice(0, limit))
+export async function getMarketInsight(): Promise<MarketResult<NewsItem[]>> {
+  return getMarketHeadlines()
 }

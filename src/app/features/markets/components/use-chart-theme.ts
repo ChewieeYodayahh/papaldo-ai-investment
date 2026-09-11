@@ -70,6 +70,17 @@ function css({ r, g, b, a }: Rgb, alpha = a): string {
   return alpha >= 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${Number(alpha.toFixed(3))})`
 }
 
+/**
+ * Re-alpha a colour this hook already produced, for gradient stops that must
+ * track whichever tone a caller picked at runtime. Takes the `rgb()` strings
+ * from this module only -- it is not a general CSS colour parser.
+ */
+export function withAlpha(rgb: string, alpha: number): string {
+  const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  if (!match) return rgb
+  return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${Number(alpha.toFixed(3))})`
+}
+
 export function useChartTheme(): ChartTheme | null {
   const { resolvedTheme } = useTheme()
   const [theme, setTheme] = useState<ChartTheme | null>(null)

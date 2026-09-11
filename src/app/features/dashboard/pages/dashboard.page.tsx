@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { getProfile } from '@/app/features/auth/api/profile'
 import { SignOutButton } from '@/app/features/auth/components/SignOutButton'
 import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
-import { getPortfolio } from '@/app/features/dashboard/api/portfolio'
+import { getOrderHistory } from '@/app/features/trading/api/orders'
+import { getPortfolio } from '@/app/features/trading/api/portfolio'
+import { OrderHistory } from '@/app/features/trading/components/OrderHistory'
 import { getMarketInsight, getWatchlistQuotes } from '@/app/features/dashboard/api/market'
 import { AllocationDonut } from '@/app/features/dashboard/components/AllocationDonut'
 import { HoldingsList } from '@/app/features/dashboard/components/HoldingsList'
@@ -26,10 +28,11 @@ import { Card, CardContent } from '@/components/ui/card'
  * those two cards -- each stating why -- instead of failing the whole page.
  */
 export async function DashboardPage() {
-  const [profile, riskProfile, portfolio] = await Promise.all([
+  const [profile, riskProfile, portfolio, orders] = await Promise.all([
     getProfile(),
     getCurrentRiskProfile(),
     getPortfolio(),
+    getOrderHistory(),
   ])
 
   const [watchlist, news] = await Promise.all([getWatchlistQuotes(), getMarketInsight()])
@@ -80,6 +83,10 @@ export async function DashboardPage() {
 
         <div className="mb-6">
           <WatchlistStrip quotes={watchlist} />
+        </div>
+
+        <div className="mb-6">
+          <OrderHistory orders={orders} />
         </div>
 
         <MarketNews items={news} />

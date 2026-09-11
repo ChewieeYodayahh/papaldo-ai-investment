@@ -4,7 +4,8 @@ import { ArrowDownRight, ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
-import type { FinnhubCompanyProfile, FinnhubQuote } from '@/app/core/services/finnhub'
+import type { FinnhubCompanyProfile } from '@/app/core/services/finnhub'
+import type { Quote } from '../api/quotes'
 import type { MarketResult } from '../api/result'
 
 const priceFormatter = new Intl.NumberFormat('en-US', {
@@ -17,7 +18,7 @@ export function SymbolHeader({
   quote,
   profile,
 }: {
-  quote: FinnhubQuote
+  quote: Quote
   profile: MarketResult<FinnhubCompanyProfile>
 }) {
   const up = quote.change >= 0
@@ -60,7 +61,7 @@ export function SymbolHeader({
         <div className="flex items-center gap-4">
           <div className="text-right">
             <div className="text-3xl font-semibold tabular-nums">
-              {priceFormatter.format(quote.current)}
+              {priceFormatter.format(quote.price)}
             </div>
             <div
               className={`mt-0.5 inline-flex items-center gap-1 text-sm font-medium tabular-nums ${

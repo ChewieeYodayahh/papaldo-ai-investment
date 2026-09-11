@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import type { Candle, CandleSource } from '../api/candles.mock'
+import type { Candle } from '../api/candles'
 import { useChartTheme } from './use-chart-theme'
 
 /** Approximate trading days per window. Labels are what the buttons show. */
@@ -23,10 +23,9 @@ type RangeLabel = (typeof RANGES)[number]['label']
 /**
  * Daily candles.
  *
- * `source` decides the labelling, and the caller must pass it honestly. While
- * it is `'sample'` the bars before today are generated, not observed — see
- * `api/candles.mock.ts`. When a real provider lands, pass `'live'` and the
- * sample-data notices disappear on their own.
+ * Real daily OHLCV from Alpaca. The generated placeholder series this used to
+ * render, and every "sample data" notice that went with it, was deleted on
+ * 2026-09-11 once Alpaca's history endpoint was verified working.
  *
  * Switching range re-feeds the series from data already in the browser, so it
  * is instant and costs no API call. It sets the data rather than moving the
@@ -34,7 +33,7 @@ type RangeLabel = (typeof RANGES)[number]['label']
  * commit loses the window to the chart's own initial fit pass, which shows up
  * as "opens on the full year, but every later click works".
  */
-export function PriceChart({ candles, source }: { candles: Candle[]; source: CandleSource }) {
+export function PriceChart({ candles }: { candles: Candle[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
@@ -117,7 +116,7 @@ export function PriceChart({ candles, source }: { candles: Candle[]; source: Can
           <p className="mt-1 text-xs text-muted-foreground">Daily candles</p>
         </div>
         <Badge variant="outline" className="shrink-0 text-[10px]">
-          {source === 'sample' ? 'Sample data' : 'Live'}
+          Live · Alpaca
         </Badge>
       </CardHeader>
 
@@ -138,13 +137,10 @@ export function PriceChart({ candles, source }: { candles: Candle[]; source: Can
 
         <div ref={containerRef} className="h-[320px] w-full" />
 
-        {source === 'sample' ? (
-          <p className="mt-3 text-xs text-muted-foreground">
-            <strong className="text-foreground">Sample data.</strong> This Finnhub plan does not include
-            historical candles, so the bars before today are generated for layout and are not real prices.
-            Today’s bar and the price above it are live. A real history provider replaces this.
-          </p>
-        ) : null}
+        <p className="mt-3 text-xs text-muted-foreground">
+          Daily open, high, low and close from Alpaca. Today’s bar can lag by about 15 minutes on this
+          plan; the price above it is live.
+        </p>
       </CardContent>
     </Card>
   )

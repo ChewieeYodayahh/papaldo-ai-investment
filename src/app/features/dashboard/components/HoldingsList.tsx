@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-import type { Holding } from '../api/portfolio'
+import type { Holding } from '@/app/features/trading/api/portfolio'
 
 export function HoldingsList({ holdings }: { holdings: Holding[] }) {
   return (

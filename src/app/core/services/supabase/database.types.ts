@@ -19,6 +19,7 @@ export type Database = {
     Tables: {
       holdings: {
         Row: {
+          asset_class: string
           avg_cost: number
           created_at: string
           id: string
@@ -28,6 +29,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          asset_class?: string
           avg_cost: number
           created_at?: string
           id?: string
@@ -37,6 +39,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          asset_class?: string
           avg_cost?: number
           created_at?: string
           id?: string
@@ -81,6 +84,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      orders: {
+        Row: {
+          asset_class: string
+          cash_amount: number
+          created_at: string
+          fill_price: number
+          filled_at: string
+          id: string
+          portfolio_id: string
+          quantity: number
+          side: string
+          symbol: string
+        }
+        Insert: {
+          asset_class: string
+          cash_amount: number
+          created_at?: string
+          fill_price: number
+          filled_at?: string
+          id?: string
+          portfolio_id: string
+          quantity: number
+          side: string
+          symbol: string
+        }
+        Update: {
+          asset_class?: string
+          cash_amount?: number
+          created_at?: string
+          fill_price?: number
+          filled_at?: string
+          id?: string
+          portfolio_id?: string
+          quantity?: number
+          side?: string
+          symbol?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       portfolios: {
         Row: {
@@ -179,7 +229,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      place_order: {
+        Args: {
+          p_asset_class: string
+          p_fill_price: number
+          p_quantity: number
+          p_side: string
+          p_symbol: string
+        }
+        Returns: {
+          asset_class: string
+          cash_amount: number
+          created_at: string
+          fill_price: number
+          filled_at: string
+          id: string
+          portfolio_id: string
+          quantity: number
+          side: string
+          symbol: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never

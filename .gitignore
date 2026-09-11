@@ -129,3 +129,13 @@ secret/
 
 # Generated knowledge graph (/graphify) — rebuildable, ~2MB
 graphify-out/
+
+# editor / agent-local config
+.vscode/
+.codex/
+.claude/launch.json
+
+# editor / agent-local config
+.vscode/
+.codex/
+.claude/launch.json
