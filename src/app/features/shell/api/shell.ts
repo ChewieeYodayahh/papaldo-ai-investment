@@ -9,7 +9,7 @@ import type { Fx } from '@/app/features/preferences/components/Money'
 import { getOrderHistory } from '@/app/features/trading/api/orders'
 import type { Order } from '@/app/features/trading/types'
 
-import { GREETINGS } from '../greetings'
+import { greetingSeed } from '../greetings'
 
 export type ShellUser = {
   displayName: string
@@ -25,7 +25,8 @@ export type ShellData = {
   fx: Fx
   /** Recent simulated fills -- the only events Papaldo has to notify about. */
   notifications: Order[]
-  greetingIndex: number
+  /** Constant for one five-minute window of this session; see greetings.ts. */
+  greetingSeed: number
 }
 
 const NOTIFICATION_COUNT = 8
@@ -37,9 +38,8 @@ const NOTIFICATION_COUNT = 8
  * username to the email's local part, so an email sign-up is still greeted by
  * something that looks like a name.
  *
- * The greeting is picked here, per request, rather than in the browser: a
- * client-side `Math.random()` would render one greeting on the server and a
- * different one on hydration.
+ * The greeting seed is computed here from the session, not rolled in the
+ * browser: the server and the first client render must agree on it.
  *
  * `cache()`d so a page that also wants the viewer's name shares this read
  * with the shell instead of repeating it.
@@ -80,6 +80,6 @@ export const getShellData = cache(async (): Promise<ShellData> => {
     user,
     fx,
     notifications,
-    greetingIndex: Math.floor(Math.random() * GREETINGS.length),
+    greetingSeed: greetingSeed(session),
   }
 })

@@ -12,7 +12,9 @@ Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui + Supabase + Claude API.
 ```
 src/app/                    one folder per route — each page.tsx is a thin
   login/  sign-up/          adapter that imports a feature page and adds
-  dashboard/  portfolio/    metadata. No logic, no data fetching.
+  dashboard/  portfolio/    metadata. No logic, no data fetching. The app
+                            routes also carry layout.tsx (renders AppShell)
+                            and loading.tsx (a feature skeleton), same rule.
   isq/  markets/  onboarding/profile/
   api/                      route handlers — delegate to features/*/api
   features/<name>/          owns api/ components/ hooks/ pages/ + schema.ts,

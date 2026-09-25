@@ -26,21 +26,3 @@ export function Change({
   )
 }
 
-/**
- * A ticker's monogram. Alpaca's logo endpoint answers 403 on this plan and
- * Finnhub's logo is one request per symbol, so a list of forty would cost
- * forty calls for decoration; the monogram costs none.
- */
-export function SymbolMark({ symbol, className }: { symbol: string; className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-[0.5625rem] font-bold tracking-tight text-secondary-foreground',
-        className,
-      )}
-    >
-      {symbol.replace(/[^A-Z]/g, '').slice(0, 4)}
-    </span>
-  )
-}

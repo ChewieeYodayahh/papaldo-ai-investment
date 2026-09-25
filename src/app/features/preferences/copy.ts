@@ -88,7 +88,6 @@ const en = {
   'dash.topHoldings': 'Top Holdings',
   'dash.bySector': 'By sector',
 
-  'mkt.title': 'Markets',
   'mkt.subtitle': 'Live US stock and ETF prices from Alpaca. Pick something to simulate a trade.',
   'mkt.indexes': 'Benchmarks',
   'mkt.universe': 'Tradable on Papaldo',
@@ -106,8 +105,12 @@ const en = {
   'mkt.catalogue': 'Browse all US stocks',
   'mkt.news': 'Market News',
 
-  'pf.title': 'Portfolio',
   'pf.subtitle': 'Everything you hold, what it is worth, and how you got here.',
+
+  // Header titles on every page except Home, which gets the greeting.
+  'page.portfolio': 'Portfolio',
+  'page.markets': 'Markets',
+  'page.trade': 'Trade',
 } as const
 
 export type CopyKey = keyof typeof en
@@ -143,12 +146,13 @@ const slang: Dictionary = {
   'dash.startNow': "Let's go",
   'dash.yourPortfolio': 'Your Stack',
   'dash.topHoldings': 'Your big ones',
-  'mkt.title': 'The Market',
+  'page.portfolio': 'My Stack',
+  'page.markets': 'The Market',
+  'page.trade': 'Make a Move',
   'mkt.topGainers': 'Biggest winners',
   'mkt.topLosers': 'Taking a hit',
   'mkt.trade': 'Trade it',
   'mkt.heatmap': 'Heat check',
-  'pf.title': 'My Stack',
 }
 
 const brainrot: Dictionary = {
@@ -198,7 +202,9 @@ const brainrot: Dictionary = {
   'dash.portfolioPage': 'Flex page',
   'dash.topHoldings': 'Main Characters',
   'dash.bySector': 'By sector fr',
-  'mkt.title': 'The Stonks',
+  'page.portfolio': 'Asset Flex',
+  'page.markets': 'The Stonks',
+  'page.trade': 'Ape In Zone',
   'mkt.subtitle': 'Live US stonks from Alpaca. Pick one and ape in (simulated, chill).',
   'mkt.indexes': 'The Big Dawgs',
   'mkt.universe': 'Copable on Papaldo',
@@ -209,7 +215,6 @@ const brainrot: Dictionary = {
   'mkt.heatmap': 'Vibe Map',
   'mkt.catalogue': 'Every stonk in the lore',
   'mkt.news': 'The Tea',
-  'pf.title': 'Asset Flex',
   'pf.subtitle': 'Your whole bag, its aura, and the lore behind it.',
 }
 

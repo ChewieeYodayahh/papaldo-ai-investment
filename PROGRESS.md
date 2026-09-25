@@ -77,7 +77,35 @@ convenient.
   bars (it used the first fill, which drew a dip nothing caused), and the
   y-axis keeps at least 2% headroom so small moves look small.
 
-Typecheck clean, lint clean (two pre-existing warnings), 44 tests pass,
+**Third pass (Carlos's review, same day):**
+- **Equal gap** on all four sides of the frame (`--frame-gap`, 12–40px by
+  viewport), no narrow max-width forcing wide side margins.
+- **Logos** everywhere a ticker appears, via `SymbolMark` on the shadcn
+  Avatar: FMP's public image path, loaded by the browser, monogram fallback
+  on 404. See EXTERNAL_SERVICES.md.
+- **Route skeletons.** `AppShell` moved from the pages into per-route
+  `layout.tsx` files so each route's `loading.tsx` renders *inside* the
+  frame. Skeletons mirror each page's layout, with a shimmer on the shadcn
+  Skeleton. The sidebar's collapsed state is now read back from its cookie,
+  since each route layout remounts it.
+- **Click feedback.** A lime progress bar and a progress cursor from the
+  moment a link is clicked until the URL changes; a Spinner on the sidebar
+  item being loaded (`useLinkStatus`).
+- **Markets:** benchmarks are compact tiles in one card (2×2 on a phone)
+  with an arrow CTA to the trade page. The universe table scrolls inside an
+  ~8-row window on every filter, header pinned, with a jump-to-end /
+  back-to-top button; on a phone rows collapse to logo, ticker, price with
+  change beneath, and an arrow.
+- **Forest dark deepened**: near-black green page, low-chroma layers a step
+  apart, lime the only saturated colour.
+- **Header:** the greeting is Home-only; other pages show their name
+  (Markets / Portfolio / Trade, with slang and brainrot versions). The
+  greeting holds for a five-minute window from sign-in and changes on a new
+  login — derived from the JWT's `session_id` and `amr` timestamp, so no
+  cookie and no hydration flash. Per-register pools plus a rare easter-egg
+  line (~1 window in 40).
+
+Typecheck clean, lint clean (two pre-existing warnings), 51 tests pass,
 production build green on 20 routes.
 
 ---

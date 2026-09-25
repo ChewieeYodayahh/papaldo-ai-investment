@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { AppShell } from '@/app/features/shell/components/AppShell'
 
 import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import { isBuyable } from '../api/universe'
@@ -54,23 +53,20 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
 
   if (!overview.ok) {
     return (
-      <AppShell>
-        <div>
+      <div>
           <Card>
             <CardContent className="p-6 text-sm text-muted-foreground">
               No price for {symbol}. {marketUnavailableMessage(overview.reason, 'Alpaca')}
             </CardContent>
           </Card>
-        </div>
-      </AppShell>
+      </div>
     )
   }
 
   const { quote, profile, metrics, earnings } = overview.data
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl">
         <SymbolHeader quote={quote} profile={profile} />
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -124,7 +120,6 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
           Simulated trading only — no real money and no broker orders. Nothing on this page is investment
           advice.
         </p>
-      </div>
-    </AppShell>
+    </div>
   )
 }

@@ -4,7 +4,8 @@ import Link from 'next/link'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Change, SymbolMark } from '@/app/features/markets/components/Change'
+import { Change } from '@/app/features/markets/components/Change'
+import { SymbolMark } from '@/app/features/markets/components/SymbolMark'
 import { Money } from '@/app/features/preferences/components/Money'
 import { useCopy } from '@/app/features/preferences/copy'
 

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link, { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   ChartNoAxesCombined,
@@ -24,6 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { Spinner } from '@/components/ui/spinner'
 import { useCopy, type CopyKey } from '@/app/features/preferences/copy'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +41,12 @@ const NAV: NavItem[] = [
   { href: '/markets', label: 'nav.market', icon: ChartNoAxesCombined },
   { href: '/tools', label: 'nav.tools', icon: Wrench, disabled: true },
 ]
+
+/** A spinner on the one nav item whose page is loading. Must render inside its <Link>. */
+function PendingSpinner() {
+  const { pending } = useLinkStatus()
+  return pending ? <Spinner className="ml-auto size-3.5 text-sidebar-primary group-data-[collapsible=icon]:hidden" /> : null
+}
 
 export function AppSidebar() {
   const pathname = usePathname()
@@ -104,6 +111,7 @@ export function AppSidebar() {
                     >
                       <Icon />
                       <span>{t(item.label)}</span>
+                      <PendingSpinner />
                     </SidebarMenuButton>
                   )}
                 </SidebarMenuItem>

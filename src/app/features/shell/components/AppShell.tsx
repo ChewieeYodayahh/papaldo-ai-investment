@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers'
+
 import { FxProvider } from '@/app/features/preferences/components/Money'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
@@ -5,30 +7,43 @@ import { getShellData } from '../api/shell'
 import { AppHeader } from './AppHeader'
 import { AppSidebar } from './AppSidebar'
 
+/** Written by the shadcn SidebarProvider whenever the sidebar is toggled. */
+const SIDEBAR_COOKIE = 'sidebar_state'
+
 /**
  * The chrome around every app page, and the one USD->PHP rate every
  * `<Money>` on the page converts with.
  *
- * From md up the whole app sits in one rounded frame with the page background
- * showing around it (Carlos, 2026-09-25, after the Helios reference). The
- * frame is viewport-high and the content scrolls inside it, so the sidebar
- * and header never scroll away. Below md there is no frame: the sidebar is a
- * sheet and the page scrolls normally.
+ * Rendered from each app route's `layout.tsx`, not from the pages, so the
+ * route's `loading.tsx` skeleton appears *inside* the frame while a page
+ * loads instead of replacing the whole screen.
+ *
+ * From md up the app sits in one rounded frame with the same gap
+ * (`--frame-gap`, globals.css) on all four sides. The frame is
+ * viewport-high and the content scrolls inside it, so the sidebar and header
+ * never scroll away. Below md there is no frame: the sidebar is a sheet and
+ * the page scrolls normally.
  *
  * Works signed out too (`/markets` is public): the header swaps the user card
  * for Log in / Sign up and drops the bell.
  */
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, fx, notifications, greetingIndex } = await getShellData()
+  const [{ user, fx, notifications, greetingSeed }, cookieStore] = await Promise.all([getShellData(), cookies()])
+  // The provider writes this cookie but never reads it back. Each route has
+  // its own layout, so without this the sidebar re-expanded on every page.
+  const sidebarOpen = cookieStore.get(SIDEBAR_COOKIE)?.value !== 'false'
 
   return (
     <FxProvider fx={fx}>
-      <div data-app-shell className="app-backdrop min-h-svh md:p-4 lg:p-5">
-        <SidebarProvider className="app-frame relative mx-auto min-h-svh max-w-[1440px] md:h-[calc(100svh-2rem)] md:min-h-0 md:overflow-hidden md:rounded-[1.75rem] md:ring-1 md:ring-foreground/10 lg:h-[calc(100svh-2.5rem)]">
+      <div data-app-shell className="app-backdrop min-h-svh md:p-(--frame-gap)">
+        <SidebarProvider
+          defaultOpen={sidebarOpen}
+          className="app-frame relative mx-auto min-h-svh max-w-[2000px] md:h-[calc(100svh-2*var(--frame-gap))] md:min-h-0 md:overflow-hidden md:rounded-[1.75rem] md:ring-1 md:ring-foreground/10"
+        >
           <AppSidebar />
           <SidebarInset className="min-w-0 bg-transparent md:overflow-y-auto">
             <div className="w-full px-4 pb-6 md:pr-5 md:pl-2">
-              <AppHeader user={user} notifications={notifications} greetingIndex={greetingIndex} />
+              <AppHeader user={user} notifications={notifications} greetingSeed={greetingSeed} />
               {children}
             </div>
           </SidebarInset>

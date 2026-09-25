@@ -84,6 +84,21 @@ html:has([data-app-shell]) {
   font-size: clamp(13.5px, 0.25vw + 10.5px, 15px);
 }
 
+/*
+ * The gap around the app frame. One value for all four sides, so the space
+ * above the frame always matches the space beside it (Carlos, 2026-09-25).
+ * px, not rem: it should track the window, not the fluid root size.
+ */
+[data-app-shell] {
+  --frame-gap: clamp(12px, 2vw, 40px);
+}
+
+/* While a clicked link loads: the cursor says so everywhere. */
+html[data-navigating],
+html[data-navigating] * {
+  cursor: progress !important;
+}
+
 /* Settings -> Themes -> Fonts. `html[...]` outranks the next/font class. */
 html[data-font="geist"] {
   --font-sans: var(--font-geist-sans);
@@ -192,24 +207,32 @@ html[data-font="system"] {
 /*
  ---break---
  */
+/*
+ * Forest dark, deepened 2026-09-25 (Carlos: "too bright, no contrast"). The
+ * first cut had cards at L 0.32 / C 0.075 -- saturated mid-green -- over a
+ * background only 0.12 darker, so layers blurred together and muted text
+ * sat on a colour as loud as itself. Now: near-black green page, frame and
+ * sidebar a step up, cards a step above that, low chroma everywhere, and
+ * the lime accent left as the only saturated thing on screen.
+ */
 .dark {
-  --background: oklch(0.2 0.035 160);
-  --foreground: oklch(0.97 0.01 150);
-  --card: oklch(0.32 0.075 157);
-  --card-foreground: oklch(0.97 0.01 150);
-  --popover: oklch(0.29 0.065 157);
-  --popover-foreground: oklch(0.97 0.01 150);
+  --background: oklch(0.155 0.018 160);
+  --foreground: oklch(0.97 0.008 150);
+  --card: oklch(0.225 0.034 158);
+  --card-foreground: oklch(0.97 0.008 150);
+  --popover: oklch(0.24 0.036 158);
+  --popover-foreground: oklch(0.97 0.008 150);
   --primary: oklch(0.88 0.19 135);
   --primary-foreground: oklch(0.24 0.06 157);
   --secondary: oklch(0.96 0.01 150);
   --secondary-foreground: oklch(0.26 0.06 157);
-  --muted: oklch(0.28 0.055 158);
-  --muted-foreground: oklch(0.8 0.035 152);
-  --accent: oklch(0.4 0.09 156);
-  --accent-foreground: oklch(0.98 0.01 150);
+  --muted: oklch(0.27 0.03 158);
+  --muted-foreground: oklch(0.76 0.02 152);
+  --accent: oklch(0.3 0.048 157);
+  --accent-foreground: oklch(0.98 0.008 150);
   --destructive: oklch(0.7 0.19 22);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
   --ring: oklch(0.88 0.19 135);
   --gain: oklch(0.88 0.21 140);
   --loss: oklch(0.72 0.18 22);
@@ -219,13 +242,13 @@ html[data-font="system"] {
   --chart-3: oklch(0.83 0.15 80);
   --chart-4: oklch(0.72 0.15 300);
   --chart-5: oklch(0.72 0.13 245);
-  --sidebar: oklch(0.31 0.075 157);
-  --sidebar-foreground: oklch(0.97 0.01 150);
+  --sidebar: oklch(0.195 0.026 159);
+  --sidebar-foreground: oklch(0.95 0.008 150);
   --sidebar-primary: oklch(0.88 0.19 135);
   --sidebar-primary-foreground: oklch(0.24 0.06 157);
-  --sidebar-accent: oklch(0.43 0.1 156);
-  --sidebar-accent-foreground: oklch(0.98 0.01 150);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-accent: oklch(0.31 0.06 156);
+  --sidebar-accent-foreground: oklch(0.98 0.008 150);
+  --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.88 0.19 135);
 }
 
@@ -299,6 +322,40 @@ html[data-font="system"] {
     background: color-mix(in oklch, var(--card) 38%, var(--background));
   }
 
+  /* Loading placeholders: a soft sweep across the shadcn Skeleton's pulse. */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--foreground) 7%, transparent), transparent);
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* Thin bar across the top while a clicked link loads (NavigationProgress). */
+  .nav-progress {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 100;
+    height: 3px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .nav-progress::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    border-radius: 9999px;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+    animation: nav-progress 1s ease-in-out infinite;
+  }
+
   /*
    * Money and percentages: tabular digits so columns line up, in the UI face.
    * A monospace face made large figures far wider than their labels.
@@ -306,6 +363,31 @@ html[data-font="system"] {
   .figure {
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
+  }
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes nav-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer::after,
+  .nav-progress::before {
+    animation: none;
+  }
+  .nav-progress::before {
+    width: 100%;
+    transform: none;
   }
 }
   * {

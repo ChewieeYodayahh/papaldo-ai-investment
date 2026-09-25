@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { T } from '@/app/features/preferences/copy'
-import { AppShell } from '@/app/features/shell/components/AppShell'
 
 import { getTradableAssets, searchAssets } from '../api/assets'
 import { getCandlesMany, type Candle } from '../api/candles'
@@ -55,31 +54,35 @@ export async function MarketsPage({ query }: { query: string }) {
   const matches = assets.ok ? searchAssets(assets.data, query) : []
 
   return (
-    <AppShell>
-      <div className="mb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold tracking-tight">
-            <T k="mkt.title" />
-          </h2>
-          <Badge variant="outline">Live · Alpaca</Badge>
-        </div>
-        <p className="mt-0.5 max-w-2xl text-[0.8125rem] text-muted-foreground">
+    <>
+      {/* The page name lives in the header (AppHeader); this is only the context line. */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <Badge variant="outline">Live · Alpaca</Badge>
+        <p className="max-w-3xl text-[0.8125rem] text-muted-foreground">
           <T k="mkt.subtitle" /> Simulated trading only — no real money and no broker orders.
         </p>
       </div>
 
       {quotes.ok ? (
         <div className="grid gap-4">
-          <section aria-label="Benchmarks" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {benchmarks.map((quote) => (
-              <QuoteCard
-                key={quote.symbol}
-                quote={quote}
-                name={quote.name}
-                candles={candles.get(quote.symbol) ?? []}
-              />
-            ))}
-          </section>
+          {/* One window, 2x2 on a phone -- the same shape as the dashboard's portfolio tiles. */}
+          <Card className="rounded-2xl border-0 py-4">
+            <CardContent className="space-y-3 px-4">
+              <h2 className="text-base font-medium">
+                <T k="mkt.indexes" />
+              </h2>
+              <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
+                {benchmarks.map((quote) => (
+                  <QuoteCard
+                    key={quote.symbol}
+                    quote={quote}
+                    name={quote.name}
+                    candles={candles.get(quote.symbol) ?? []}
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
             <UniverseTable quotes={quotes.data} trends={trends} />
@@ -91,7 +94,7 @@ export async function MarketsPage({ query }: { query: string }) {
           </div>
         </div>
       ) : (
-        <Card className="rounded-3xl border-0">
+        <Card className="rounded-2xl border-0">
           <CardContent className="p-6 text-sm text-muted-foreground">
             {marketUnavailableMessage(quotes.reason, 'Alpaca')}
           </CardContent>
@@ -102,7 +105,7 @@ export async function MarketsPage({ query }: { query: string }) {
         {assets.ok ? (
           <AssetTable assets={matches} total={assets.data.length} query={query} />
         ) : (
-          <Card className="rounded-3xl border-0">
+          <Card className="rounded-2xl border-0">
             <CardContent className="p-6 text-sm text-muted-foreground">
               Asset catalogue unavailable. {marketUnavailableMessage(assets.reason, 'Alpaca')}
             </CardContent>
@@ -110,6 +113,6 @@ export async function MarketsPage({ query }: { query: string }) {
         )}
         <MarketNews items={news} />
       </div>
-    </AppShell>
+    </>
   )
 }

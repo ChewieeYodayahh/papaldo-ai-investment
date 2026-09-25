@@ -3,7 +3,6 @@ import { Suspense } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import { T } from '@/app/features/preferences/copy'
-import { AppShell } from '@/app/features/shell/components/AppShell'
 import { getOrderHistory } from '@/app/features/trading/api/orders'
 import { getPortfolio, type PortfolioSummary } from '@/app/features/trading/api/portfolio'
 import { OrderHistory } from '@/app/features/trading/components/OrderHistory'
@@ -39,15 +38,11 @@ export async function PortfolioPage() {
   ])
 
   return (
-    <AppShell>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold tracking-tight">
-          <T k="pf.title" />
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          <T k="pf.subtitle" />
-        </p>
-      </div>
+    <>
+      {/* The page name lives in the header (AppHeader); this is only the context line. */}
+      <p className="mb-4 text-[0.8125rem] text-muted-foreground">
+        <T k="pf.subtitle" />
+      </p>
 
       {portfolio ? (
         <div className="grid gap-4">
@@ -69,6 +64,6 @@ export async function PortfolioPage() {
           <CardContent className="p-6 text-sm text-muted-foreground">No portfolio found for this account.</CardContent>
         </Card>
       )}
-    </AppShell>
+    </>
   )
 }

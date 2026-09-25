@@ -4,6 +4,8 @@ import { AreaSeries, createChart, type IChartApi } from 'lightweight-charts'
 import { useEffect, useRef } from 'react'
 
 import type { Candle } from '../api/candles'
+import { cn } from '@/lib/utils'
+
 import { useChartTheme, withAlpha } from './use-chart-theme'
 
 /**
@@ -15,7 +17,15 @@ import { useChartTheme, withAlpha } from './use-chart-theme'
  * an instrument; leaving the interactions on lets a stray scroll over a card
  * silently desynchronise it from every other tile in the grid.
  */
-export function Sparkline({ candles, rising }: { candles: Candle[]; rising: boolean }) {
+export function Sparkline({
+  candles,
+  rising,
+  className,
+}: {
+  candles: Candle[]
+  rising: boolean
+  className?: string
+}) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const theme = useChartTheme()
@@ -63,8 +73,8 @@ export function Sparkline({ candles, rising }: { candles: Candle[]; rising: bool
   }, [theme, candles, rising])
 
   if (candles.length === 0) {
-    return <div className="h-12 w-full" aria-hidden />
+    return <div className={cn('h-12 w-full', className)} aria-hidden />
   }
 
-  return <div ref={containerRef} className="h-12 w-full" />
+  return <div ref={containerRef} className={cn('h-12 w-full', className)} />
 }

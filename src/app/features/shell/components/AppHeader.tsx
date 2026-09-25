@@ -1,45 +1,66 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { buttonVariants } from '@/components/ui/button'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { useCopy } from '@/app/features/preferences/copy'
+import { useCopy, type CopyKey } from '@/app/features/preferences/copy'
+import { usePreferences } from '@/app/features/preferences/store'
 import type { Order } from '@/app/features/trading/types'
 import { cn } from '@/lib/utils'
 
 import type { ShellUser } from '../api/shell'
-import { GREETINGS } from '../greetings'
+import { pickGreeting } from '../greetings'
 import { NotificationsMenu } from './NotificationsMenu'
 import { initials, ProfileDialog } from './ProfileDialog'
 import { SettingsMenu } from './SettingsMenu'
 
+/**
+ * What the header says on each route. Home is the only page that greets;
+ * everywhere else the header names the page (Carlos, 2026-09-25).
+ */
+function titleFor(pathname: string): CopyKey | 'greeting' {
+  if (pathname.startsWith('/portfolio')) return 'page.portfolio'
+  if (pathname === '/markets') return 'page.markets'
+  if (pathname.startsWith('/markets/')) return 'page.trade'
+  return 'greeting'
+}
+
 export function AppHeader({
   user,
   notifications,
-  greetingIndex,
+  greetingSeed,
 }: {
   user: ShellUser | null
   notifications: Order[]
-  greetingIndex: number
+  greetingSeed: number
 }) {
   const t = useCopy()
+  const language = usePreferences((s) => s.language)
+  const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
-  const greeting = GREETINGS[greetingIndex] ?? GREETINGS[0]
+  const title = titleFor(pathname)
 
   return (
     <header className="flex flex-wrap items-center gap-x-3 gap-y-3 pt-5 pb-4">
       <SidebarTrigger className="md:hidden" />
 
       <h1 className="mr-auto text-xl font-medium tracking-tight lg:text-[1.625rem]">
-        {greeting}
-        {user ? (
+        {title === 'greeting' ? (
           <>
-            , <span className="text-highlight">{user.firstName}</span>
+            {pickGreeting(language, greetingSeed)}
+            {user ? (
+              <>
+                , <span className="text-highlight">{user.firstName}</span>
+              </>
+            ) : null}
           </>
-        ) : null}
+        ) : (
+          t(title)
+        )}
       </h1>
 
       <div className="flex items-center gap-2">

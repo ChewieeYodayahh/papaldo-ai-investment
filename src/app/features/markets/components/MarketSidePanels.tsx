@@ -7,7 +7,8 @@ import { Money } from '@/app/features/preferences/components/Money'
 import { useCopy, type CopyKey } from '@/app/features/preferences/copy'
 
 import type { SectorMove, UniverseQuote } from '../api/movers'
-import { Change, SymbolMark } from './Change'
+import { Change } from './Change'
+import { SymbolMark } from './SymbolMark'
 import { MiniTrend } from './MiniTrend'
 
 export function MoversList({

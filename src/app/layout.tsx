@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes"
 import './globals.css'
 import { cn } from "@/lib/utils";
 import { PreferencesEffects } from '@/app/features/preferences/components/PreferencesEffects'
+import { NavigationProgress } from '@/app/features/shell/components/NavigationProgress'
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
@@ -46,6 +47,7 @@ export default function RootLayout({
             Settings -> Themes. */}
         <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           <PreferencesEffects />
+          <NavigationProgress />
           {children}
         </ThemeProvider>
       </body>

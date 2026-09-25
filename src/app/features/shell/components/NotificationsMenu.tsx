@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { SymbolMark } from '@/app/features/markets/components/SymbolMark'
 import { Money } from '@/app/features/preferences/components/Money'
 import { useCopy } from '@/app/features/preferences/copy'
 import { usePreferences } from '@/app/features/preferences/store'
@@ -62,13 +63,16 @@ export function NotificationsMenu({ orders }: { orders: Order[] }) {
             <DropdownMenuItem
               key={order.id}
               render={<Link href={`/markets/${encodeURIComponent(order.symbol)}`} />}
-              className="flex-col items-start gap-0.5"
+              className="gap-2.5"
             >
+              <SymbolMark symbol={order.symbol} className="size-7" />
+              <span className="flex min-w-0 flex-col gap-0.5">
               <span className="text-sm">
                 {order.side === 'buy' ? t('header.bought') : t('header.sold')}{' '}
                 <span className="figure">{order.quantity}</span> {order.symbol} @ <Money usd={order.fillPrice} />
               </span>
               <span className="text-xs text-muted-foreground">{timeFormatter.format(new Date(order.filledAt))}</span>
+              </span>
             </DropdownMenuItem>
           ))
         )}

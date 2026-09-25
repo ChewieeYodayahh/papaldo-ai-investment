@@ -1,54 +1,42 @@
 import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { Money } from '@/app/features/preferences/components/Money'
 
 import type { Candle } from '../api/candles'
 import type { Quote } from '../api/quotes'
 import { Change } from './Change'
 import { Sparkline } from './Sparkline'
+import { SymbolMark } from './SymbolMark'
 
 /**
- * One symbol at a glance: live Alpaca price, today's move, and a thumbnail of
- * the last month of real daily closes.
- *
- * `name` is Alpaca's official asset name rather than anything typed here, so a
- * ticker always renders as the venue records it.
+ * One benchmark at a glance, sized like the dashboard's portfolio tiles so
+ * four of them sit in a 2x2 window on a phone instead of four full-width
+ * cards (Carlos, 2026-09-25). The arrow is the CTA, as on the dashboard's
+ * Markets card; the whole tile leads to the symbol's trade page.
  */
-export function QuoteCard({
-  quote,
-  name,
-  candles,
-}: {
-  quote: Quote
-  name?: string
-  candles: Candle[]
-}) {
-  const up = quote.change >= 0
-
+export function QuoteCard({ quote, name, candles }: { quote: Quote; name?: string; candles: Candle[] }) {
   return (
-    <Link href={`/markets/${encodeURIComponent(quote.symbol)}`} className="group">
-      <Card className="h-full rounded-2xl border-0 transition-shadow group-hover:ring-primary/60">
-        <CardContent className="px-3.5 py-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="text-sm font-semibold">{quote.symbol}</div>
-              {name ? (
-                <div className="truncate text-xs text-muted-foreground" title={name}>
-                  {name}
-                </div>
-              ) : null}
-            </div>
-            <Change percent={quote.changePercent} arrow className="shrink-0 text-xs font-medium" />
-          </div>
+    <Link
+      href={`/markets/${encodeURIComponent(quote.symbol)}`}
+      aria-label={`Trade ${quote.symbol}`}
+      className="group flex min-w-0 flex-col gap-2 rounded-xl bg-radial from-accent/70 to-muted p-3 ring-1 ring-foreground/5 transition-shadow hover:ring-primary/60"
+    >
+      <div className="flex items-start gap-2">
+        <SymbolMark symbol={quote.symbol} className="size-7" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm leading-tight font-semibold">{quote.symbol}</span>
+          {name ? <span className="block truncate text-[0.6875rem] text-muted-foreground">{name}</span> : null}
+        </span>
+        <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" aria-hidden />
+      </div>
 
-          <Money usd={quote.price} className="mt-1.5 block text-base font-semibold" />
+      <div className="flex items-baseline justify-between gap-2">
+        <Money usd={quote.price} className="truncate text-[0.9375rem] font-semibold" />
+        <Change percent={quote.changePercent} className="shrink-0 text-[0.6875rem]" />
+      </div>
 
-          <div className="mt-2">
-            <Sparkline candles={candles} rising={up} />
-          </div>
-        </CardContent>
-      </Card>
+      <Sparkline candles={candles} rising={quote.change >= 0} className="h-9" />
     </Link>
   )
 }

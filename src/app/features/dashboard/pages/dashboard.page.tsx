@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import type { RiskBand } from '@/app/features/onboarding/types'
 import { getShellData } from '@/app/features/shell/api/shell'
-import { AppShell } from '@/app/features/shell/components/AppShell'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
 
 import { RiskAppetiteCard } from '../components/RiskAppetiteCard'
@@ -36,9 +35,7 @@ export async function DashboardPage() {
 
   const band = (riskProfile?.band ?? null) as RiskBand | null
 
-  return (
-    <AppShell>
-      {portfolio ? (
+  return portfolio ? (
         <div className="grid gap-4">
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[1fr_1fr_1.1fr]">
             <div className="grid content-start gap-4">
@@ -67,15 +64,13 @@ export async function DashboardPage() {
             Simulated trading only — no real money, no broker orders.
           </p>
         </div>
-      ) : (
-        <Card>
-          <CardContent className="p-6 text-sm text-muted-foreground">
-            No portfolio found for this account. Accounts created before portfolios shipped have no row
-            until the backfill migration is applied — signing out and back in will not create one, because
-            the seeding trigger fires on signup only. Contact support.
-          </CardContent>
-        </Card>
-      )}
-    </AppShell>
+  ) : (
+    <Card>
+      <CardContent className="p-6 text-sm text-muted-foreground">
+        No portfolio found for this account. Accounts created before portfolios shipped have no row until the
+        backfill migration is applied — signing out and back in will not create one, because the seeding trigger
+        fires on signup only. Contact support.
+      </CardContent>
+    </Card>
   )
 }
