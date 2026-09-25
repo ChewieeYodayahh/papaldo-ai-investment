@@ -169,7 +169,11 @@ async function alpacaFetch<T>(
  * header covers anyway.
  */
 function safeEnd(): string {
-  return new Date(Date.now() - 16 * 60 * 1000).toISOString()
+  // Floored to a 15-minute boundary so the URL -- and with it Next's data
+  // cache key -- stays the same for a quarter hour. A millisecond-precise end
+  // made every request unique, so the `revalidate` windows below never hit.
+  const quarterHour = 15 * 60 * 1000
+  return new Date(Math.floor((Date.now() - 16 * 60 * 1000) / quarterHour) * quarterHour).toISOString()
 }
 
 function startDaysAgo(days: number): string {
@@ -230,6 +234,46 @@ export async function getDailyBars(
     900,
   )
   return ascendingUnique((data.bars ?? []).map(toBar))
+}
+
+/**
+ * Daily bars for many equities in one request -- the markets table draws a
+ * trend for every buyable name, and one call per row would be forty.
+ *
+ * Unlike the single-symbol endpoint this one pages: `limit` caps bars across
+ * *all* symbols, so a long window over many names follows next_page_token.
+ * Symbols Alpaca has no bars for are absent from the result, not empty.
+ */
+export async function getDailyBarsMany(symbols: string[], days = 45): Promise<Map<string, AlpacaBar[]>> {
+  const result = new Map<string, AlpacaBar[]>()
+  if (symbols.length === 0) return result
+
+  const params: Record<string, string> = {
+    symbols: symbols.join(','),
+    timeframe: '1Day',
+    start: startDaysAgo(days),
+    end: safeEnd(),
+    limit: '10000',
+  }
+
+  const raw = new Map<string, RawBar[]>()
+  // A handful of pages at most for any window this app asks for; the cap
+  // guards against a token that never runs out.
+  for (let page = 0; page < 10; page += 1) {
+    const data = await alpacaFetch<{ bars?: Record<string, RawBar[]>; next_page_token?: string | null }>(
+      '/v2/stocks/bars',
+      params,
+      900,
+    )
+    for (const [symbol, bars] of Object.entries(data.bars ?? {})) {
+      raw.set(symbol, [...(raw.get(symbol) ?? []), ...bars])
+    }
+    if (!data.next_page_token) break
+    params.page_token = data.next_page_token
+  }
+
+  for (const [symbol, bars] of raw) result.set(symbol, ascendingUnique(bars.map(toBar)))
+  return result
 }
 
 /**

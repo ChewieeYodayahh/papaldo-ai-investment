@@ -1,107 +1,115 @@
-import { TrendingUp } from 'lucide-react'
-
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { T } from '@/app/features/preferences/copy'
+import { AppShell } from '@/app/features/shell/components/AppShell'
 
 import { getTradableAssets, searchAssets } from '../api/assets'
-import { getCandles, type Candle } from '../api/candles'
-import { getQuotes } from '../api/quotes'
-import { getFeaturedSymbols } from '../api/universe'
+import { getCandlesMany, type Candle } from '../api/candles'
+import { getUniverseQuotes, sectorMoves, topMovers } from '../api/movers'
+import { getMarketHeadlines } from '../api/news'
+import { getUniverse } from '../api/universe'
 import { marketUnavailableMessage } from '../market-status'
 import { AssetTable } from '../components/AssetTable'
+import { MarketNews } from '../components/MarketNews'
+import { MoversList, SectorHeatmap } from '../components/MarketSidePanels'
 import { QuoteCard } from '../components/QuoteCard'
+import { UniverseTable } from '../components/UniverseTable'
 
 /**
- * Markets index.
+ * Markets (redesigned 2026-09-25, after the ForexDrift reference, cut down to
+ * what Papaldo actually has: US equities and ETFs priced by Alpaca).
  *
- * Replaced the hardcoded `SAMPLE_DATA` table on 2026-09-11. Nothing on this
- * page is typed into the repo any more: the quotes, the daily bars behind each
- * sparkline, the company names and the tradable universe are all live Alpaca,
- * which is the app's pricing and asset engine.
+ * Top to bottom: four benchmark ETFs, the buyable universe with live prices
+ * and trend lines beside today's movers and a sector heatmap, then the full
+ * Alpaca catalogue search and the news feed.
  *
- * The featured row is a default view, not a curated universe -- the catalogue
- * below it is the universe, searchable, and every row links to a detail page
- * priced from the same source that would fill a simulated order.
+ * Everything moving-related is drawn from the 41-name buyable universe, so
+ * every name promoted here is one `place_order` will accept. The catalogue
+ * search below it is the view-only 8,500.
+ *
+ * Two Alpaca requests price the whole top half: one snapshot call for the
+ * quotes and one multi-symbol bars call for every trend line.
  */
-/**
- * Drawn from the curated buyable universe, spread across sectors. Hardcoding
- * it meant featuring symbols `place_order` refuses -- GOOGL, TSLA and NFLX were
- * all on this row and none of them can be bought.
- */
-const FEATURED_COUNT = 8
 
-/** Daily bars behind each sparkline. About six weeks of sessions. */
-const SPARKLINE_DAYS = 45
+/** Broad-market proxies. Each is in the buyable universe; filtered anyway in case that changes. */
+const BENCHMARKS = ['VOO', 'QQQ', 'VTI', 'IBIT']
+
+const MOVER_COUNT = 5
+const TREND_DAYS = 45
 
 export async function MarketsPage({ query }: { query: string }) {
-  // Resolved first: everything below keys off it, and it is one cached query.
-  const featured = await getFeaturedSymbols(FEATURED_COUNT)
+  const universe = await getUniverse()
+  const symbols = universe.map((a) => a.symbol)
 
-  const [quotes, assets, ...bars] = await Promise.all([
-    getQuotes(featured),
+  const [quotes, bars, assets, news] = await Promise.all([
+    getUniverseQuotes(),
+    getCandlesMany(symbols, TREND_DAYS),
     getTradableAssets(),
-    ...featured.map((symbol) => getCandles(symbol, 'equity', SPARKLINE_DAYS)),
+    getMarketHeadlines(),
   ])
 
-  const candlesBySymbol = new Map<string, Candle[]>(
-    featured.map((symbol, i) => [symbol, bars[i].ok ? bars[i].data : []]),
-  )
-  const nameBySymbol = new Map<string, string>(
-    assets.ok ? assets.data.map((asset) => [asset.symbol, asset.name]) : [],
-  )
-
+  const candles = bars.ok ? bars.data : new Map<string, Candle[]>()
+  const trends = Object.fromEntries([...candles.entries()].map(([symbol, list]) => [symbol, list.map((c) => c.close)]))
+  const benchmarks = quotes.ok ? quotes.data.filter((q) => BENCHMARKS.includes(q.symbol)) : []
+  const movers = quotes.ok ? topMovers(quotes.data, MOVER_COUNT) : null
   const matches = assets.ok ? searchAssets(assets.data, query) : []
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <header className="mb-8">
-          <div className="flex flex-wrap items-center gap-3">
-            <TrendingUp className="size-6 text-primary" />
-            <h1 className="text-3xl font-semibold tracking-tight">Markets</h1>
-            <Badge variant="outline" className="text-[10px]">
-              Live · Alpaca
-            </Badge>
-          </div>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Live prices and daily history from Alpaca. Simulated trading only — no real money and no
-            broker orders reach a venue.
-          </p>
-        </header>
+    <AppShell>
+      <div className="mb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-semibold tracking-tight">
+            <T k="mkt.title" />
+          </h2>
+          <Badge variant="outline">Live · Alpaca</Badge>
+        </div>
+        <p className="mt-0.5 max-w-2xl text-[0.8125rem] text-muted-foreground">
+          <T k="mkt.subtitle" /> Simulated trading only — no real money and no broker orders.
+        </p>
+      </div>
 
-        <section className="mb-8">
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Featured</h2>
+      {quotes.ok ? (
+        <div className="grid gap-4">
+          <section aria-label="Benchmarks" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {benchmarks.map((quote) => (
+              <QuoteCard
+                key={quote.symbol}
+                quote={quote}
+                name={quote.name}
+                candles={candles.get(quote.symbol) ?? []}
+              />
+            ))}
+          </section>
 
-          {quotes.ok ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {quotes.data.map((quote) => (
-                <QuoteCard
-                  key={quote.symbol}
-                  quote={quote}
-                  name={nameBySymbol.get(quote.symbol)}
-                  candles={candlesBySymbol.get(quote.symbol) ?? []}
-                />
-              ))}
+          <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+            <UniverseTable quotes={quotes.data} trends={trends} />
+            <div className="grid gap-4">
+              <MoversList title="mkt.topGainers" quotes={movers?.gainers ?? []} trends={trends} />
+              <MoversList title="mkt.topLosers" quotes={movers?.losers ?? []} trends={trends} />
+              <SectorHeatmap sectors={sectorMoves(quotes.data)} />
             </div>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-sm text-muted-foreground">
-                {marketUnavailableMessage(quotes.reason, 'Alpaca')}
-              </CardContent>
-            </Card>
-          )}
-        </section>
+          </div>
+        </div>
+      ) : (
+        <Card className="rounded-3xl border-0">
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            {marketUnavailableMessage(quotes.reason, 'Alpaca')}
+          </CardContent>
+        </Card>
+      )}
 
+      <div className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
         {assets.ok ? (
           <AssetTable assets={matches} total={assets.data.length} query={query} />
         ) : (
-          <Card>
+          <Card className="rounded-3xl border-0">
             <CardContent className="p-6 text-sm text-muted-foreground">
               Asset catalogue unavailable. {marketUnavailableMessage(assets.reason, 'Alpaca')}
             </CardContent>
           </Card>
         )}
+        <MarketNews items={news} />
       </div>
-    </main>
+    </AppShell>
   )
 }

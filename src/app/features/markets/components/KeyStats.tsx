@@ -64,7 +64,7 @@ export function KeyStats({
       <CardContent>
         {!metrics.ok ? (
           <p className="mb-4 text-xs text-muted-foreground">
-            Ratios unavailable — {marketUnavailableMessage(metrics.reason)} Day figures below are still live.
+            Ratios unavailable — {marketUnavailableMessage(metrics.reason, 'Finnhub')} Day figures below are still live.
           </p>
         ) : null}
 

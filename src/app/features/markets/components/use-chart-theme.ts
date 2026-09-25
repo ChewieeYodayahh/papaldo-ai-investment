@@ -3,6 +3,8 @@
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 
+import { usePreferences } from '@/app/features/preferences/store'
+
 /**
  * Chart colors, derived from the OKLCH tokens in globals.css.
  *
@@ -83,27 +85,34 @@ export function withAlpha(rgb: string, alpha: number): string {
 
 export function useChartTheme(): ChartTheme | null {
   const { resolvedTheme } = useTheme()
+  const palette = usePreferences((s) => s.palette)
   const [theme, setTheme] = useState<ChartTheme | null>(null)
 
   useEffect(() => {
-    const line = readToken('--chart-2')
-    const border = readToken('--border')
+    // Children's effects run before the root layout's, so a new palette
+    // attribute may not be on <html> yet. One frame later it is.
+    const frame = requestAnimationFrame(() => {
+      const line = readToken('--chart-2')
+      const border = readToken('--border')
 
-    setTheme({
-      line: css(line),
-      areaTop: css(line, 0.28),
-      areaBottom: css(line, 0),
-      up: css(readToken('--chart-2')),
-      down: css(readToken('--destructive')),
-      text: css(readToken('--muted-foreground')),
-      // The border token is already semi-transparent in dark mode, so fade
-      // relative to whatever alpha it resolved to rather than assuming 1.
-      grid: css(border, border.a * 0.6),
-      border: css(border),
-      transparent: 'rgba(0, 0, 0, 0)',
+      setTheme({
+        line: css(line),
+        areaTop: css(line, 0.28),
+        areaBottom: css(line, 0),
+        up: css(readToken('--gain')),
+        down: css(readToken('--loss')),
+        text: css(readToken('--muted-foreground')),
+        // The border token is already semi-transparent in dark mode, so fade
+        // relative to whatever alpha it resolved to rather than assuming 1.
+        grid: css(border, border.a * 0.6),
+        border: css(border),
+        transparent: 'rgba(0, 0, 0, 0)',
+      })
     })
-    // resolvedTheme is the trigger: the tokens themselves change under `.dark`.
-  }, [resolvedTheme])
+    return () => cancelAnimationFrame(frame)
+    // resolvedTheme and palette are the triggers: the tokens change under
+    // `.dark` and under `data-palette`.
+  }, [resolvedTheme, palette])
 
   return theme
 }

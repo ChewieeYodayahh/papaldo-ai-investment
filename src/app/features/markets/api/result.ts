@@ -27,7 +27,13 @@ export async function attempt<T>(label: string, run: () => Promise<T>): Promise<
     const reason: MarketFailure =
       error instanceof FinnhubError || error instanceof AlpacaError ? error.reason : 'upstream-error'
     // Server-side only. The reason reaches the browser; the detail does not.
-    console.error(`[markets] ${label} unavailable (${reason}):`, error)
+    // A missing key is a setup state, not a fault, and the panel already says
+    // so -- warn rather than error, so the dev overlay is not a wall of red.
+    if (reason === 'not-configured') {
+      console.warn(`[markets] ${label} unavailable: ${error instanceof Error ? error.message : reason}`)
+    } else {
+      console.error(`[markets] ${label} unavailable (${reason}):`, error)
+    }
     return { ok: false, reason }
   }
 }

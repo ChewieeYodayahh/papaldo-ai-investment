@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { AppShell } from '@/app/features/shell/components/AppShell'
 
 import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import { isBuyable } from '../api/universe'
@@ -53,23 +54,23 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
 
   if (!overview.ok) {
     return (
-      <main className="min-h-screen bg-background text-foreground">
-        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <AppShell>
+        <div>
           <Card>
             <CardContent className="p-6 text-sm text-muted-foreground">
-              No price for {symbol}. {marketUnavailableMessage(overview.reason)}
+              No price for {symbol}. {marketUnavailableMessage(overview.reason, 'Alpaca')}
             </CardContent>
           </Card>
         </div>
-      </main>
+      </AppShell>
     )
   }
 
   const { quote, profile, metrics, earnings } = overview.data
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <AppShell>
+      <div className="mx-auto max-w-6xl">
         <SymbolHeader quote={quote} profile={profile} />
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -124,6 +125,6 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
           advice.
         </p>
       </div>
-    </main>
+    </AppShell>
   )
 }

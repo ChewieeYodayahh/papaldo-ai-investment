@@ -13,7 +13,7 @@ export function SymbolNews({ items, symbol }: { items: MarketResult<FinnhubNewsI
       </CardHeader>
       <CardContent>
         {!items.ok ? (
-          <p className="text-sm text-muted-foreground">{marketUnavailableMessage(items.reason)}</p>
+          <p className="text-sm text-muted-foreground">{marketUnavailableMessage(items.reason, 'Finnhub')}</p>
         ) : items.data.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No headlines for {symbol} in the last 30 days.

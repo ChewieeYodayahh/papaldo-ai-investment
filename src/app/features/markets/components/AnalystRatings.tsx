@@ -25,7 +25,7 @@ export function AnalystRatings({ ratings }: { ratings: MarketResult<FinnhubRecom
 
 function Body({ ratings }: { ratings: MarketResult<FinnhubRecommendation | null> }) {
   if (!ratings.ok) {
-    return <p className="text-sm text-muted-foreground">{marketUnavailableMessage(ratings.reason)}</p>
+    return <p className="text-sm text-muted-foreground">{marketUnavailableMessage(ratings.reason, 'Finnhub')}</p>
   }
   if (!ratings.data) {
     return <p className="text-sm text-muted-foreground">No analyst coverage published for this symbol.</p>

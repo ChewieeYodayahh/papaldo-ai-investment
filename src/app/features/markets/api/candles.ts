@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { getDailyBars, type AlpacaBar, type AssetClass } from '@/app/core/services/alpaca'
+import { getDailyBars, getDailyBarsMany, type AlpacaBar, type AssetClass } from '@/app/core/services/alpaca'
 
 import { attempt, type MarketResult } from './result'
 
@@ -22,4 +22,9 @@ export async function getCandles(
   days = 400,
 ): Promise<MarketResult<Candle[]>> {
   return attempt(`${symbol} daily bars`, () => getDailyBars(symbol, assetClass, days))
+}
+
+/** Recent daily bars for many equities in one Alpaca request. */
+export async function getCandlesMany(symbols: string[], days = 45): Promise<MarketResult<Map<string, Candle[]>>> {
+  return attempt(`${symbols.length} symbols' daily bars`, () => getDailyBarsMany(symbols, days))
 }

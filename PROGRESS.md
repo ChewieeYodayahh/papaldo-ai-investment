@@ -5,6 +5,83 @@ domain vocabulary and architecture rules.
 
 ---
 
+## Phase 5 — Dashboard redesign, app shell, peso toggle (2026-09-25)
+
+Built from Carlos's mockups (Home, See-all dialog, Settings menus, quiz
+intro) with Helios/ForexDrift as reference only.
+
+**Environment.** This clone had no `node_modules` and no `.env.local`.
+Supabase URL + publishable key were restored from the Supabase MCP;
+`EXCHANGE_RATE_APIKEY` added. **`ALPACA_*` and `FINNHUB_API_KEY` are
+still blank locally** — every market panel shows its "not configured" state
+until they are pasted back.
+
+**New:**
+- `features/shell` — floating collapsible sidebar (Home, Portfolio, Market,
+  Tools "Soon", About), random per-request greeting, notification bell
+  (the user's own fills; unread = newer than last opened), settings gear
+  (Profile dialog, Themes: mode / palette / font, Language), user card or
+  Log in / Sign up when signed out. Wraps dashboard, portfolio, markets and
+  symbol pages.
+- `features/preferences` — Zustand store persisted to localStorage
+  (`skipHydration` + rehydrate on mount, so no hydration mismatch),
+  `<Money>` for every on-screen amount, copy dictionaries in English /
+  Slang / Brainrot for shell, dashboard and markets. Disclaimers and errors
+  stay plain English in every register.
+- `core/services/exchange-rate.ts` — ExchangeRate-API USD→PHP, cached 6h.
+  Errors come back as HTTP 200 + `result: "error"`; tested.
+- Palettes: forest (default, dark-first — `defaultTheme` is now `dark`),
+  orchid, midnight, each light + dark, plus `--gain/--loss/--highlight`.
+- Dashboard: Total Holdings (live-priced, $/₱), Risk Appetite + quiz intro
+  dialog, Markets gainers/losers, My Portfolio tiles + See-all dialog
+  (sector pie, top holdings), Performance chart.
+- `/portfolio` — detailed total, performance, positions table, sector
+  allocation, order history. Added to middleware protection.
+- `/markets` — benchmark ETFs, the 41-name buyable universe with trend
+  lines and sector filter, top gainers/losers, sector heatmap, then the
+  catalogue search and news.
+
+**Performance history is reconstructed, not stored.** Starting cash is
+today's cash with every fill undone; each day replays fills and prices
+holdings at that day's close. `portfolio-math.ts`, hand-worked tests.
+
+**Fixed on the way:** `safeEnd()` in `alpaca.ts` produced a
+millisecond-unique URL, so Next's data cache never hit on any bars request.
+Now floored to 15 minutes. Holdings used to be priced only if they were on
+the watchlist; they now get their own quotes.
+
+**Deliberately not built:** Supabase Realtime tickers (prices come from
+Alpaca; nothing writes quotes to Supabase for a channel to carry), 1D range
+(daily closes cannot draw it), inflation-adjusted value (no PH CPI source),
+"Complete your profile" button (middleware makes it unreachable), Tools page.
+
+**Open for Carlos:** add `EXCHANGE_RATE_APIKEY` to Vercel; paste Alpaca and
+Finnhub keys into `.env.local`; the FX key came through chat, rotate it when
+convenient.
+
+**Same day, second pass (Carlos's review):**
+- **Framed layout.** The app now sits in one rounded container (max 1440px)
+  with the page background around it, after the Helios reference; the
+  content scrolls inside the frame. Type scale cut to 12/13/14/16/20/28px,
+  and inside the shell the root size scales with the viewport (13.5–15px).
+  Figures use tabular digits in the UI face; Geist Mono made large amounts
+  far wider than their labels.
+- **"Finnhub returned an error" on a price was wrong twice over.** Prices
+  are Alpaca. `getSymbolOverview` rethrew a failed quote as a plain Error,
+  collapsing "not configured" into "upstream-error", and
+  `marketUnavailableMessage` defaulted its provider to Finnhub. Both
+  fixed; the provider argument is now required so it cannot recur.
+- A missing key now logs a warning, not an error, so the dev overlay
+  stops counting it as an issue.
+- The performance line marks each position to its latest fill between
+  bars (it used the first fill, which drew a dip nothing caused), and the
+  y-axis keeps at least 2% headroom so small moves look small.
+
+Typecheck clean, lint clean (two pre-existing warnings), 44 tests pass,
+production build green on 20 routes.
+
+---
+
 ## The ISQ stops being a gate (2026-09-11)
 
 Carlos's call: a new account should land on the dashboard and be *invited* to

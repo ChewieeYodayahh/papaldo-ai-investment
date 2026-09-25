@@ -28,6 +28,19 @@ import { createClient } from './server'
 export type SessionUser = {
   id: string
   email: string | null
+  /** Full name from the identity provider (Google), when it supplied one. */
+  fullName: string | null
+  /** Provider avatar URL, when it supplied one. */
+  avatarUrl: string | null
+}
+
+function metadataString(metadata: unknown, ...keys: string[]): string | null {
+  if (!metadata || typeof metadata !== 'object') return null
+  for (const key of keys) {
+    const value = (metadata as Record<string, unknown>)[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return null
 }
 
 export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
@@ -36,9 +49,14 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const { data, error } = await supabase.auth.getClaims()
   if (error || !data?.claims?.sub) return null
 
+  // user_metadata rides in the signed JWT, so reading it here costs nothing
+  // extra. Email sign-ups have none; Google fills both fields.
+  const metadata = data.claims.user_metadata
   return {
     id: data.claims.sub,
     email: typeof data.claims.email === 'string' ? data.claims.email : null,
+    fullName: metadataString(metadata, 'full_name', 'name'),
+    avatarUrl: metadataString(metadata, 'avatar_url', 'picture'),
   }
 })
 

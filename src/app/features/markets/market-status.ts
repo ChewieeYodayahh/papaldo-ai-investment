@@ -13,8 +13,13 @@ import type { MarketFailure } from './api/result'
  *
  * Outside production the message also names the environment variable, because
  * the only person seeing it then is the one who can set it.
+ *
+ * `provider` is required. It used to default to Finnhub, and the symbol page
+ * leaned on that default for its *Alpaca* price -- so a missing Alpaca key was
+ * reported as "Finnhub returned an error". Prices are Alpaca; Finnhub is news
+ * and the three research cards.
  */
-export function marketUnavailableMessage(reason: MarketFailure, provider = 'Finnhub'): string {
+export function marketUnavailableMessage(reason: MarketFailure, provider: 'Alpaca' | 'Finnhub'): string {
   const envVar = provider === 'Alpaca' ? 'ALPACA_API_KEY_ID / ALPACA_API_SECRET_KEY' : 'FINNHUB_API_KEY'
 
   switch (reason) {

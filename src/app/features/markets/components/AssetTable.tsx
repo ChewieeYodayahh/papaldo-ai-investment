@@ -26,9 +26,9 @@ export function AssetTable({
   query: string
 }) {
   return (
-    <Card>
+    <Card className="rounded-2xl border-0 py-4">
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">Tradable assets</CardTitle>
+        <CardTitle className="text-lg font-medium">All US stocks</CardTitle>
         <p className="mt-1 text-xs text-muted-foreground">
           {total.toLocaleString('en-US')} active, tradable US equities on NASDAQ and NYSE, from Alpaca’s
           own catalogue.

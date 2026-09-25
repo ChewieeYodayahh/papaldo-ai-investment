@@ -1,107 +1,81 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 
-import { getProfile } from '@/app/features/auth/api/profile'
-import { SignOutButton } from '@/app/features/auth/components/SignOutButton'
-import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
-import { getOrderHistory } from '@/app/features/trading/api/orders'
-import { getPortfolio } from '@/app/features/trading/api/portfolio'
-import { OrderHistory } from '@/app/features/trading/components/OrderHistory'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
+import type { RiskBand } from '@/app/features/onboarding/types'
+import { getShellData } from '@/app/features/shell/api/shell'
+import { AppShell } from '@/app/features/shell/components/AppShell'
+import { getPortfolio } from '@/app/features/trading/api/portfolio'
 
+import { RiskAppetiteCard } from '../components/RiskAppetiteCard'
 import {
-  MarketNewsPanel,
-  NewsSkeleton,
-  PortfolioPanels,
-  PortfolioPanelsSkeleton,
-  StripSkeleton,
-  WatchlistPanel,
-} from '../components/MarketPanels'
+  CardSkeleton,
+  MarketMoversPanel,
+  PerformancePanel,
+  PortfolioPreviewPanel,
+  TotalHoldingsPanel,
+} from '../components/panels'
 
 /**
- * Home dashboard.
+ * Home dashboard (redesigned 2026-09-25 from Carlos's mockups).
  *
- * Two tiers, on purpose. Everything the database already knows -- name, risk
- * band, cash, holdings, order history -- is awaited here in a single
- * `Promise.all` and paints straight away. Anything that waits on Alpaca or
- * Finnhub streams in behind Suspense, so a slow or dead market-data provider
- * costs those panels and nothing else.
+ * Two tiers, as before. What the database knows -- risk band, name, cash and
+ * positions -- is awaited here in one `Promise.all` and paints straight away.
+ * Anything priced by Alpaca streams in behind Suspense.
  *
- * The database reads are genuinely cheap now: identity is resolved once per
- * request by `getSessionUser`, which verifies the JWT locally rather than
- * paying a round trip to Supabase Auth per module (four of them, before).
- *
- * Portfolio numbers are real reads. Holdings move only through
- * `place_order()`; nothing here fabricates a position.
+ * Nothing here is fabricated: the total is cash plus positions at live
+ * prices, movers come from the buyable universe, and the performance line is
+ * rebuilt from the account's own fills (see `reconstructHistory`).
  */
 export async function DashboardPage() {
-  const [profile, riskProfile, portfolio, orders] = await Promise.all([
-    getProfile(),
-    getCurrentRiskProfile(),
+  const [portfolio, riskProfile, shell] = await Promise.all([
     getPortfolio(),
-    getOrderHistory(),
+    getCurrentRiskProfile(),
+    getShellData(),
   ])
 
+  const band = (riskProfile?.band ?? null) as RiskBand | null
+
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {profile?.username ? `Welcome back, ${profile.username}` : 'Dashboard'}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Simulated trading only — no real money, no broker orders.
-            </p>
+    <AppShell>
+      {portfolio ? (
+        <div className="grid gap-4">
+          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[1fr_1fr_1.1fr]">
+            <div className="grid content-start gap-4">
+              <Suspense fallback={<CardSkeleton />}>
+                <TotalHoldingsPanel portfolio={portfolio} />
+              </Suspense>
+              <RiskAppetiteCard band={band} firstName={shell.user?.firstName ?? 'there'} />
+            </div>
+
+            <Suspense fallback={<CardSkeleton className="h-full" />}>
+              <MarketMoversPanel />
+            </Suspense>
+
+            <div className="lg:col-span-2 xl:col-span-1">
+              <Suspense fallback={<CardSkeleton className="h-full" />}>
+                <PortfolioPreviewPanel portfolio={portfolio} hasRiskProfile={Boolean(band)} />
+              </Suspense>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-xs">
-              Risk profile: {riskProfile?.band ?? 'Not assessed'}
-            </Badge>
-            <SignOutButton />
-          </div>
-        </header>
 
-        {portfolio ? (
-          <Suspense fallback={<PortfolioPanelsSkeleton />}>
-            <PortfolioPanels portfolio={portfolio} hasRiskProfile={Boolean(riskProfile)} />
+          <Suspense fallback={<CardSkeleton className="h-[300px]" />}>
+            <PerformancePanel portfolio={portfolio} />
           </Suspense>
-        ) : (
-          <Card className="mb-6">
-            <CardContent className="p-6 text-sm text-muted-foreground">
-              No portfolio found for this account. Accounts created before portfolios shipped have no row
-              until the backfill migration is applied — signing out and back in will not create one, because
-              the seeding trigger fires on signup only. Contact support.
-            </CardContent>
-          </Card>
-        )}
 
-        <div className="mb-6">
-          <Suspense fallback={<StripSkeleton />}>
-            <WatchlistPanel />
-          </Suspense>
-        </div>
-
-        <div className="mb-6">
-          <OrderHistory orders={orders} />
-        </div>
-
-        <Suspense fallback={<NewsSkeleton />}>
-          <MarketNewsPanel />
-        </Suspense>
-
-        {/* Only the retake link lives down here. The first-time invitation is
-            the CTA in My Assets, where someone with no positions is already
-            looking -- two calls to the same action compete with each other. */}
-        {riskProfile ? (
-          <p className="mt-8 text-sm text-muted-foreground">
-            <Link href="/isq" className="underline">
-              Retake the questionnaire
-            </Link>
+          <p className="text-xs text-muted-foreground">
+            Simulated trading only — no real money, no broker orders.
           </p>
-        ) : null}
-      </div>
-    </main>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            No portfolio found for this account. Accounts created before portfolios shipped have no row
+            until the backfill migration is applied — signing out and back in will not create one, because
+            the seeding trigger fires on signup only. Contact support.
+          </CardContent>
+        </Card>
+      )}
+    </AppShell>
   )
 }

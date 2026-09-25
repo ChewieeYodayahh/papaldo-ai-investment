@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Noto_Sans, Figtree } from 'next/font/google'
 import { ThemeProvider } from "next-themes"
 import './globals.css'
 import { cn } from "@/lib/utils";
+import { PreferencesEffects } from '@/app/features/preferences/components/PreferencesEffects'
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
@@ -31,9 +32,20 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", figtree.variable)} suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" disableTransitionOnChange>
+    // The Geist variables sit on <html>, not <body>: Settings -> Fonts swaps
+    // --font-sans on <html>, and a var() only resolves against what is
+    // declared on the same element or above it.
+    <html
+      lang="en"
+      className={cn('font-sans', figtree.variable, geistSans.variable, geistMono.variable)}
+      suppressHydrationWarning
+    >
+      <body className="antialiased">
+        {/* Dark by default since the Phase 5 redesign -- the forest palette was
+            designed dark-first. Light and system are one click away in
+            Settings -> Themes. */}
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+          <PreferencesEffects />
           {children}
         </ThemeProvider>
       </body>

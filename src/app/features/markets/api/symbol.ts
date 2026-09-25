@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { AlpacaError, type AlpacaFailure } from '@/app/core/services/alpaca'
 import {
   getBasicFinancials,
   getCompanyProfile,
@@ -107,7 +108,10 @@ export async function getSymbolOverview(symbol: string): Promise<MarketResult<Sy
     ])
 
     if (!quote.ok) {
-      throw new Error(`No Alpaca quote for ${symbol} (${quote.reason})`)
+      // Rethrown as an AlpacaError so `attempt` keeps the real reason. A plain
+      // Error collapsed every cause -- a missing key included -- into
+      // 'upstream-error'. getQuote only ever fails with an Alpaca reason.
+      throw new AlpacaError(quote.reason as AlpacaFailure, `No Alpaca quote for ${symbol} (${quote.reason})`)
     }
 
     return {
