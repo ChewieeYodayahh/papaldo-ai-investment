@@ -66,6 +66,26 @@ signed-in page: 1/3 set up your profile, 2/3 take the quiz, 3/3 take your first
 trade (a guided walkthrough; locked until the quiz, because `place_order` needs a
 risk profile to buy). Each tick is read from the database, never from clicks.
 
+**Buyable universe**
+`public.tradable_assets` — the curated set an order may be placed against:
+**50 names** since 2026-09-26 (15 ETF, 17 Technology, 9 Finance, 9 FMCG).
+Each stock carries `market_cap_usd`, refreshed weekly by `python/market_caps.py`.
+
+**Sector heatmap**
+The Perplexity-style treemap on `/markets`: universe **stocks only** (ETFs
+excluded — a fund is a basket of the same names and has no market cap), tile
+area ∝ market cap, colour = today's move on a −3%…+3% scale in 1% steps, sector
+move **cap-weighted**. Model in `features/markets/heatmap.ts`.
+
+**Index benchmarker**
+Tools → Stock Exchange Index Benchmarker: PSEi, NYSE Composite, NASDAQ
+Composite and S&P 500 over the last 15 years, monthly
+(`public.market_benchmarks`). **Normalised** = close ÷ close in the window's
+first month × 100 (every line starts at 100). **YoY** = close ÷ close twelve
+months earlier − 1. **CAGR** = (last ÷ 100)^(12 ÷ months) − 1. Shorter ranges
+(5Y, 10Y) rebase to 100 in the app. The PSEi line comes from Stooq when the
+pipeline can read it, otherwise from **EPHE** (a USD proxy), and says which.
+
 ### Reserved for later phases — do not build yet
 
 **Asset** — an instrument that can be held: a stock, ETF, cryptocurrency or

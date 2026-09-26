@@ -104,6 +104,7 @@ const en = {
   'mkt.topGainers': 'Top Gainers',
   'mkt.topLosers': 'Top Losers',
   'mkt.heatmap': 'Sector Heatmap',
+  'mkt.heatmapNote': 'Tradable stocks by sector · size is market cap · colour is today’s move',
   'mkt.catalogue': 'Browse all US stocks',
   'mkt.news': 'Market News',
 
@@ -195,6 +196,24 @@ const en = {
   'tools.tradeBody': 'A guided tour from the Markets page to your first simulated order.',
   'tools.startTour': 'Start walkthrough',
 
+  // Stock Exchange Index Benchmarker (Tools).
+  'page.benchmarks': 'Index Benchmarker',
+  'bm.title': 'Stock Exchange Index Benchmarker',
+  'bm.subtitle': 'Fifteen years of the PSEi, NYSE, NASDAQ and S&P 500, on one scale.',
+  'bm.cardBody': 'How the PSEi has grown next to the NYSE, NASDAQ and S&P 500 since 2011.',
+  'bm.open': 'Open benchmarker',
+  'bm.growth': 'Cumulative growth',
+  'bm.yoy': 'Year-over-year',
+  'bm.total': 'Total gain',
+  'bm.cagr': 'CAGR',
+  'bm.perYear': 'a year',
+  'bm.volatility': 'Volatility',
+  'bm.latestYoy': 'Last 12 months',
+  'bm.asOf': 'As of {date}',
+  'bm.growthNote': 'Every index starts at 100 on the first month shown, so the lines compare growth, not points.',
+  'bm.yoyNote': 'Each point is the change from the same month a year earlier.',
+  'bm.leader': 'Leader',
+
   // Profile dashboard card titles.
   'prof.details': 'Personal details',
   'prof.work': 'Work & income',
@@ -244,6 +263,7 @@ const slang: Dictionary = {
   'mkt.topLosers': 'Taking a hit',
   'mkt.trade': 'Trade it',
   'mkt.heatmap': 'Heat check',
+  'mkt.heatmapNote': 'Bigger box, bigger company. Green up, red down.',
   'page.profile': 'Me, Myself',
   'page.tools': 'Toolbox',
   'page.quiz': 'Investing Style Quiz',
@@ -284,6 +304,15 @@ const slang: Dictionary = {
   'prof.details': 'The basics',
   'prof.work': 'Work & money',
   'prof.connected': 'Linked accounts',
+  'page.benchmarks': 'Index Face-off',
+  'bm.title': 'Index Face-off',
+  'bm.open': 'Compare them',
+  'bm.growth': 'How much it grew',
+  'bm.yoy': 'Year vs year',
+  'bm.total': 'Total gain',
+  'bm.volatility': 'Swinginess',
+  'bm.latestYoy': 'Past year',
+  'bm.leader': 'Top dog',
 }
 
 const brainrot: Dictionary = {
@@ -344,6 +373,7 @@ const brainrot: Dictionary = {
   'mkt.topGainers': 'Up Only (+1000 Aura)',
   'mkt.topLosers': 'Fanum Taxed',
   'mkt.heatmap': 'Vibe Map',
+  'mkt.heatmapNote': 'Big box = big aura. Green = W, red = cooked.',
   'mkt.catalogue': 'Every stonk in the lore',
   'mkt.news': 'The Tea',
   'pf.subtitle': 'Your whole bag, its aura, and the lore behind it.',
@@ -404,6 +434,17 @@ const brainrot: Dictionary = {
   'prof.security': 'Password & aura protection',
   'prof.save': 'Lock it in',
   'prof.saved': 'Locked in',
+  'page.benchmarks': 'Index Aura Battle',
+  'bm.title': 'Index Aura Battle',
+  'bm.subtitle': 'PSEi vs the Big Three, fifteen years, one scale. Who mogged who?',
+  'bm.cardBody': 'PSEi vs NYSE, NASDAQ and the S&P 500 since 2011. Aura check, no cap.',
+  'bm.open': 'Run the battle',
+  'bm.growth': 'Glow-up',
+  'bm.yoy': 'Yearly aura shift',
+  'bm.total': 'Total W',
+  'bm.volatility': 'Chaos level',
+  'bm.latestYoy': 'This year fr',
+  'bm.leader': 'Main character',
 }
 
 const DICTIONARIES: Record<Language, Dictionary> = { en, slang, brainrot }

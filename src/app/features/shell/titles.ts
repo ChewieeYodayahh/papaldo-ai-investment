@@ -10,6 +10,7 @@ export function titleFor(pathname: string): CopyKey | 'greeting' {
   if (pathname === '/markets') return 'page.markets'
   if (pathname.startsWith('/markets/')) return 'page.trade'
   if (pathname.startsWith('/profile')) return 'page.profile'
+  if (pathname.startsWith('/tools/benchmarks')) return 'page.benchmarks'
   if (pathname.startsWith('/tools')) return 'page.tools'
   if (pathname.startsWith('/isq/results')) return 'page.results'
   if (pathname.startsWith('/isq')) return 'page.quiz'

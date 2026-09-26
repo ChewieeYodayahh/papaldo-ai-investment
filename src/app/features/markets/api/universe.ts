@@ -10,7 +10,7 @@ import { createClient } from '@/app/core/services/supabase/server'
  * Two different lists exist in this app and conflating them causes real bugs:
  *
  *   Alpaca's catalogue  8,515 names. What `/markets` browses. View only.
- *   This universe       41 names. What an order may be placed against.
+ *   This universe       50 names. What an order may be placed against.
  *
  * `place_order` raises `PA007` for anything outside this set, so any symbol
  * the UI *promotes* had better be in it. Before this module existed, the
@@ -27,6 +27,8 @@ export type UniverseAsset = {
   name: string
   sector: string
   riskTier: 'conservative' | 'moderate' | 'aggressive'
+  /** Latest market cap in USD (python/market_caps.py); null for ETFs and until first fetched. */
+  marketCapUsd: number | null
 }
 
 export const getUniverse = cache(async (): Promise<UniverseAsset[]> => {
@@ -34,7 +36,7 @@ export const getUniverse = cache(async (): Promise<UniverseAsset[]> => {
 
   const { data } = await supabase
     .from('tradable_assets')
-    .select('symbol, name, sector, risk_tier')
+    .select('symbol, name, sector, risk_tier, market_cap_usd')
     .eq('active', true)
     .order('symbol')
 
@@ -43,6 +45,7 @@ export const getUniverse = cache(async (): Promise<UniverseAsset[]> => {
     name: row.name,
     sector: row.sector,
     riskTier: row.risk_tier as UniverseAsset['riskTier'],
+    marketCapUsd: row.market_cap_usd === null ? null : Number(row.market_cap_usd),
   }))
 })
 

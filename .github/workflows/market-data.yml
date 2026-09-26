@@ -1,0 +1,61 @@
+name: Market data
+
+# Weekly refresh of the two Python pipelines behind /markets and Tools:
+#
+#   python/market_caps.py  tradable_assets.market_cap_usd  (heatmap tile sizes)
+#   python/benchmarks.py   public.market_benchmarks        (index benchmarker)
+#
+# Weekly is plenty: market caps drift slowly, and the benchmarker is monthly
+# data -- a weekly run only moves the current month's month-to-date close.
+on:
+  schedule:
+    # 07:00 UTC Sunday: US and Philippine markets are both closed, so every
+    # source's latest bar is complete.
+    - cron: '0 7 * * 0'
+  workflow_dispatch:
+
+# Both scripts write to the production database; never let two runs overlap.
+concurrency:
+  group: market-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # A hung Yahoo or Stooq request is the failure worth guarding against.
+    timeout-minutes: 15
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # Reads .python-version (3.12): the scientific stack is reliably
+          # built for it, unlike whatever "latest" is on a given Sunday.
+          python-version-file: '.python-version'
+          cache: 'pip'
+          cache-dependency-path: 'python/requirements.txt'
+
+      - name: Install dependencies
+        run: pip install -r python/requirements.txt
+
+      # Offline tests of the normalisation / YoY maths and the Stooq parser.
+      # A failure stops the job before anything is written.
+      - name: Test the pipeline maths
+        run: python -m unittest discover -s python -v
+
+      - name: Refresh market caps (heatmap)
+        run: python python/market_caps.py
+
+      # The real PSEi comes from Stooq. Stooq answers this runner with a
+      # browser check, so the script uses the committed monthly cache
+      # (python/data/psei_monthly.csv) and adds the current month from Yahoo's
+      # PSEI.PS. The log warns when the cache is more than a month stale:
+      # refresh it by running locally with --stooq-csv and committing it.
+      # EPHE is only the last resort, and the app labels it when used.
+      - name: Refresh index benchmarks
+        run: python python/benchmarks.py

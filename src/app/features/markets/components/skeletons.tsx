@@ -16,17 +16,27 @@ export function MarketsSkeleton() {
         </div>
       </Panel>
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <Panel>
-          <div className="flex items-center justify-between gap-3">
-            <Bar className="h-4 w-36" />
-            <div className="hidden gap-2 sm:flex">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="shimmer h-7 w-16 rounded-full" />
-              ))}
+        <div className="grid min-w-0 gap-4">
+          <Panel>
+            <div className="flex items-center justify-between gap-3">
+              <Bar className="h-4 w-36" />
+              <div className="hidden gap-2 sm:flex">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="shimmer h-7 w-16 rounded-full" />
+                ))}
+              </div>
             </div>
-          </div>
-          <Rows count={8} />
-        </Panel>
+            <Rows count={8} />
+          </Panel>
+          {/* The sector heatmap: same frame ratios as SectorTreemap, so nothing jumps. */}
+          <Panel>
+            <div className="flex items-center justify-between gap-3">
+              <Bar className="h-4 w-32" />
+              <Bar className="h-2.5 w-36" />
+            </div>
+            <Skeleton className="shimmer aspect-[1/2] w-full rounded-xl sm:aspect-[16/10] xl:aspect-[2/1]" />
+          </Panel>
+        </div>
         <div className="grid gap-4">
           <Panel>
             <Bar className="h-4 w-28" />
@@ -34,7 +44,7 @@ export function MarketsSkeleton() {
           </Panel>
           <Panel>
             <Bar className="h-4 w-28" />
-            <Rows count={3} />
+            <Rows count={5} />
           </Panel>
         </div>
       </div>

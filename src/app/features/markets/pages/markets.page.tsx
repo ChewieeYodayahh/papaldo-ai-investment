@@ -3,14 +3,15 @@ import { T } from '@/app/features/preferences/copy'
 
 import { getTradableAssets, searchAssets } from '../api/assets'
 import { getCandlesMany, type Candle } from '../api/candles'
-import { getUniverseQuotes, sectorMoves, topMovers } from '../api/movers'
+import { getUniverseQuotes, topMovers } from '../api/movers'
 import { getMarketHeadlines } from '../api/news'
 import { getUniverse } from '../api/universe'
 import { marketUnavailableMessage } from '../market-status'
 import { AssetTable } from '../components/AssetTable'
 import { MarketNews } from '../components/MarketNews'
-import { MoversList, SectorHeatmap } from '../components/MarketSidePanels'
+import { MoversList } from '../components/MarketSidePanels'
 import { QuoteCard } from '../components/QuoteCard'
+import { SectorTreemap } from '../components/SectorTreemap'
 import { UniverseTable } from '../components/UniverseTable'
 
 /**
@@ -18,10 +19,11 @@ import { UniverseTable } from '../components/UniverseTable'
  * what Papaldo actually has: US equities and ETFs priced by Alpaca).
  *
  * Top to bottom: four benchmark ETFs, the buyable universe with live prices
- * and trend lines beside today's movers and a sector heatmap, then the full
- * Alpaca catalogue search and the news feed.
+ * and trend lines beside today's movers, the sector heatmap under the table
+ * (2026-09-26, after Perplexity Finance), then the full Alpaca catalogue
+ * search and the news feed.
  *
- * Everything moving-related is drawn from the 41-name buyable universe, so
+ * Everything moving-related is drawn from the 50-name buyable universe, so
  * every name promoted here is one `place_order` will accept. The catalogue
  * search below it is the view-only 8,500.
  *
@@ -81,14 +83,18 @@ export async function MarketsPage({ query }: { query: string }) {
           </Card>
 
           <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-            {/* The first-trade walkthrough points here (shell FirstTradeTour). */}
-            <div data-tour="universe" className="min-w-0 rounded-2xl">
-              <UniverseTable quotes={quotes.data} trends={trends} />
+            {/* Left: the table, then the heatmap under it -- which also fills
+                the space the taller movers column used to leave empty. */}
+            <div className="grid min-w-0 gap-4">
+              {/* The first-trade walkthrough points here (shell FirstTradeTour). */}
+              <div data-tour="universe" className="min-w-0 rounded-2xl">
+                <UniverseTable quotes={quotes.data} trends={trends} />
+              </div>
+              <SectorTreemap quotes={quotes.data} />
             </div>
             <div className="grid gap-4">
               <MoversList title="mkt.topGainers" quotes={movers?.gainers ?? []} trends={trends} />
               <MoversList title="mkt.topLosers" quotes={movers?.losers ?? []} trends={trends} />
-              <SectorHeatmap sectors={sectorMoves(quotes.data)} />
             </div>
           </div>
         </div>

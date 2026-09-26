@@ -1,19 +1,38 @@
 import { redirect } from 'next/navigation'
 
 import { getProfile, isSetupComplete } from '@/app/features/auth/api/profile'
+import { getBenchmarks } from '@/app/features/benchmarks/api/benchmarks'
 import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import { T } from '@/app/features/preferences/copy'
 
-import { ProfileToolCard, QuizToolCard, WalkthroughToolCard } from '../components/ToolCards'
+import {
+  BenchmarkToolCard,
+  ProfileToolCard,
+  QuizToolCard,
+  WalkthroughToolCard,
+  type BenchmarkPreview,
+} from '../components/ToolCards'
 
 /**
  * Tools (Carlos, 2026-09-26): the things that shape how someone invests, as
  * cards. The quiz lives here for good -- take it, view the results, retake
- * it -- alongside the profile and the first-trade walkthrough.
+ * it -- alongside the profile, the index benchmarker and the first-trade
+ * walkthrough.
  */
 export async function ToolsPage() {
-  const [profile, risk] = await Promise.all([getProfile(), getCurrentRiskProfile()])
+  const [profile, risk, benchmarks] = await Promise.all([getProfile(), getCurrentRiskProfile(), getBenchmarks()])
   if (!profile) redirect('/login')
+
+  // Each index's total gain over the whole window: the last normalised value
+  // is growth from 100, so gain = last - 100 (in percent).
+  const latest = benchmarks.growth.at(-1)
+  const preview: BenchmarkPreview[] = benchmarks.indexes.flatMap((index) => {
+    const last = latest?.[index.key]
+    return typeof last === 'number'
+      ? [{ key: index.key, label: index.isProxy ? `${index.label} (EPHE)` : index.label, totalGainPct: last - 100 }]
+      : []
+  })
+  const since = benchmarks.growth[0]?.date.slice(0, 4) ?? null
 
   return (
     <>
@@ -22,6 +41,7 @@ export async function ToolsPage() {
       </p>
       <div className="grid items-stretch gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         <QuizToolCard risk={risk ? { band: risk.band, score: risk.score, takenAt: risk.computed_at } : null} />
+        <BenchmarkToolCard preview={preview} since={since} />
         <ProfileToolCard profile={profile} complete={isSetupComplete(profile)} />
         <WalkthroughToolCard quizDone={Boolean(risk)} />
       </div>

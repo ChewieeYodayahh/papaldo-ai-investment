@@ -24,8 +24,10 @@ src/app/                    one folder per route — each page.tsx is a thin
                             link, email-confirmed password change
     onboarding              ISQ (/isq, /isq/results), setup journey
     dashboard               home + /portfolio pages, valuation, perf history
-    markets
-    tools                   /tools cards (quiz, profile, first-trade tour)
+    markets                 incl. heatmap.ts + SectorTreemap (d3-hierarchy)
+    benchmarks              /tools/benchmarks + GET /api/benchmarks: index
+                            benchmarker over public.market_benchmarks
+    tools                   /tools cards (quiz, benchmarker, profile, tour)
     shell                   AppShell (sidebar frame) / PublicShell (top-bar
                             frame, signed out), header, bell, settings, and
                             first-time setup: Get Started dock, welcome
@@ -41,6 +43,10 @@ src/components/*.jsx        React Bits components
 src/components/skeleton-blocks.tsx   Bar/Panel/Rows/FieldBlock for loading.tsx
 src/lib/                    utils.ts cn(), env.ts, initials.ts
 supabase/migrations/
+python/                     market-data pipelines (Python 3.12, python/.venv):
+                            benchmarks.py -> market_benchmarks, market_caps.py
+                            -> tradable_assets.market_cap_usd; run weekly by
+                            .github/workflows/market-data.yml
 ```
 
 Never put a file named `page.tsx` under `src/app/features/` — the App Router
@@ -71,8 +77,15 @@ would publish it as a `/features/...` route. Feature pages are `*.page.tsx`.
   `auth`, `trading`, `preferences` and `onboarding` (read-only: the risk
   profile behind the Get Started checklist); pages import `shell`, never the
   reverse, so `onboarding` must never import `shell`. `tools` is a page
-  feature and may import `auth`, `onboarding` and `shell`. `preferences`
-  imports no feature.
+  feature and may import `auth`, `onboarding`, `benchmarks` and `shell`.
+  `preferences` imports no feature.
+- Market data the app does not fetch live (index history, market caps) is
+  written by `python/` pipelines with the service-role key and only *read*
+  by the app. Those tables grant `anon`/`authenticated` SELECT only. Never add
+  a client write path to them, and never put the service key in a
+  `NEXT_PUBLIC_` variable.
+- Never script past a site's bot or browser check (Stooq's included). A
+  pipeline that meets one logs it and falls back to the next source.
 - Money on screen goes through `<Money usd={...} />`, which converts to PHP
   at render time. Never store or compute a converted figure server-side.
   One exception: self-reported incomes (`users.annual_income` / `ideal_income`)
@@ -93,7 +106,12 @@ would publish it as a `/features/...` route. Feature pages are `*.page.tsx`.
 ```
 npm run dev (Turbopack, http://localhost:3001) · npm run lint
 npm run typecheck · npm run build · npm test
+python/.venv/Scripts/python -m unittest discover -s python
+python/.venv/Scripts/python python/benchmarks.py --dry-run
 ```
+
+Create the venv with `uv venv python/.venv --python 3.12` and
+`uv pip install --python python/.venv/Scripts/python.exe -r python/requirements.txt`.
 
 `NEXT_PUBLIC_SITE_URL` only builds OAuth/email redirect URLs; the dev port is
 pinned by `--port 3001` in package.json. Keep the two in step.

@@ -15,7 +15,7 @@ import { getUniverse, type UniverseAsset } from './universe'
  * dashboard and the markets page share it, and `cache()` makes that one
  * request per render.
  */
-export type UniverseQuote = Quote & Pick<UniverseAsset, 'name' | 'sector'>
+export type UniverseQuote = Quote & Pick<UniverseAsset, 'name' | 'sector' | 'marketCapUsd'>
 
 export const getUniverseQuotes = cache(async (): Promise<MarketResult<UniverseQuote[]>> => {
   const universe = await getUniverse()
@@ -29,6 +29,7 @@ export const getUniverseQuotes = cache(async (): Promise<MarketResult<UniverseQu
       ...quote,
       name: bySymbol.get(quote.symbol)?.name ?? quote.symbol,
       sector: bySymbol.get(quote.symbol)?.sector ?? 'Other',
+      marketCapUsd: bySymbol.get(quote.symbol)?.marketCapUsd ?? null,
     })),
   }
 })
@@ -46,21 +47,4 @@ export function topMovers(quotes: UniverseQuote[], count: number): Movers {
     gainers: byChange.filter((q) => q.changePercent > 0).slice(0, count),
     losers: byChange.filter((q) => q.changePercent < 0).reverse().slice(0, count),
   }
-}
-
-export type SectorMove = { sector: string; changePercent: number; symbols: UniverseQuote[] }
-
-/** Equal-weighted average move per sector, for the heatmap. */
-export function sectorMoves(quotes: UniverseQuote[]): SectorMove[] {
-  const groups = new Map<string, UniverseQuote[]>()
-  for (const quote of quotes) {
-    groups.set(quote.sector, [...(groups.get(quote.sector) ?? []), quote])
-  }
-  return [...groups.entries()]
-    .map(([sector, symbols]) => ({
-      sector,
-      changePercent: symbols.reduce((sum, q) => sum + q.changePercent, 0) / symbols.length,
-      symbols: symbols.sort((a, b) => b.changePercent - a.changePercent),
-    }))
-    .sort((a, b) => b.symbols.length - a.symbols.length)
 }

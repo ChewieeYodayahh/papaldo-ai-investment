@@ -3,11 +3,80 @@
     python -m unittest discover -s python
 """
 
+import tempfile
 import unittest
+from pathlib import Path
+from unittest import mock
 
 import pandas as pd
 
-from benchmarks import transform
+from benchmarks import extend_with_latest, parse_stooq_csv, read_cache, stooq_closes, transform, write_cache
+
+STOOQ_SAMPLE = """Date,Open,High,Low,Close,Volume
+2026-07-31,6100,6250,6010,6200.5,1000
+2026-08-29,6200,6300,5900,5950.25,1200
+2026-09-25,5950,6000,5800,5825.97,900
+"""
+
+
+class StooqTest(unittest.TestCase):
+    def test_month_end_rows_become_calendar_months(self) -> None:
+        closes = parse_stooq_csv(STOOQ_SAMPLE)
+        self.assertEqual([d.date().isoformat() for d in closes.index], ["2026-07-01", "2026-08-01", "2026-09-01"])
+        self.assertEqual(closes.iloc[-1], 5825.97)
+
+    def test_a_daily_file_keeps_each_months_last_close_even_unsorted(self) -> None:
+        daily = "Date,Open,High,Low,Close,Volume\n2026-09-25,1,1,1,5825.97,1\n2026-08-29,1,1,1,5950.25,1\n2026-09-01,1,1,1,6000,1\n2026-08-01,1,1,1,6100,1\n"
+        closes = parse_stooq_csv(daily)
+        self.assertEqual([d.date().isoformat() for d in closes.index], ["2026-08-01", "2026-09-01"])
+        self.assertEqual(list(closes), [5950.25, 5825.97])
+
+    def browser_check(self):
+        page = b"<!DOCTYPE html><html><body>This site requires JavaScript to verify your browser.</body></html>"
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = page
+        return mock.patch("urllib.request.urlopen", return_value=response)
+
+    def test_a_browser_check_with_no_cache_is_treated_as_no_data(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, self.browser_check(), \
+                mock.patch("benchmarks.STOOQ_CACHE", Path(tmp) / "none.csv"):
+            self.assertTrue(stooq_closes("^psei", None).empty)
+
+    def test_a_browser_check_falls_back_to_the_cache_topped_up_from_yahoo(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cache = Path(tmp) / "psei.csv"
+            write_cache(parse_stooq_csv(STOOQ_SAMPLE), cache)
+            yahoo = pd.Series([5900.0], index=pd.DatetimeIndex(["2026-10-01"]))
+            with self.browser_check(), mock.patch("benchmarks.STOOQ_CACHE", cache), \
+                    mock.patch("benchmarks.yahoo_closes", return_value=yahoo):
+                closes = stooq_closes("^psei", None)
+        self.assertEqual(closes.index.max().date().isoformat(), "2026-10-01")
+        self.assertEqual(closes.iloc[-1], 5900.0)
+        self.assertEqual(len(closes), 4)
+
+    def test_a_hand_downloaded_file_refreshes_the_cache(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source, cache = Path(tmp) / "psei_d.csv", Path(tmp) / "cache.csv"
+            source.write_text(STOOQ_SAMPLE, encoding="utf-8")
+            with mock.patch("benchmarks.STOOQ_CACHE", cache):
+                stooq_closes("^psei", str(source))
+            self.assertEqual(list(read_cache(cache)), [6200.5, 5950.25, 5825.97])
+
+
+class ExtendTest(unittest.TestCase):
+    cached = pd.Series([1.0, 2.0], index=pd.DatetimeIndex(["2026-08-01", "2026-09-01"]))
+
+    def test_adds_only_the_month_right_after_the_cache(self) -> None:
+        next_month = pd.Series([3.0], index=pd.DatetimeIndex(["2026-10-01"]))
+        self.assertEqual(list(extend_with_latest(self.cached, next_month)), [1.0, 2.0, 3.0])
+
+    def test_never_bridges_a_gap(self) -> None:
+        two_ahead = pd.Series([3.0], index=pd.DatetimeIndex(["2026-11-01"]))
+        self.assertEqual(list(extend_with_latest(self.cached, two_ahead)), [1.0, 2.0])
+
+    def test_never_overwrites_a_cached_month(self) -> None:
+        same = pd.Series([9.0], index=pd.DatetimeIndex(["2026-09-01"]))
+        self.assertEqual(list(extend_with_latest(self.cached, same)), [1.0, 2.0])
 
 
 def monthly(start: str, values: list[float]) -> pd.Series:

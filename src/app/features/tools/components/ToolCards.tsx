@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, ClipboardList, Lock, Route, UserRound } from 'lucide-react'
+import { ArrowRight, ChartLine, ClipboardList, Lock, Route, UserRound } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -121,6 +121,61 @@ export function ProfileToolCard({ profile, complete }: { profile: UserProfile; c
           className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-10 rounded-full px-5')}
         >
           {complete ? t('tools.editProfile') : t('gs.profile')}
+        </Link>
+      </CardFooter>
+    </Card>
+  )
+}
+
+export type BenchmarkPreview = { key: string; label: string; totalGainPct: number }
+
+/**
+ * The Stock Exchange Index Benchmarker. The bars are each index's total gain
+ * over the full window, scaled to the leader -- a glance, not the chart.
+ */
+export function BenchmarkToolCard({ preview, since }: { preview: BenchmarkPreview[]; since: string | null }) {
+  const t = useCopy()
+  const best = Math.max(...preview.map((p) => p.totalGainPct), 1)
+
+  return (
+    <Card className={CARD}>
+      <CardHeader className="px-5 sm:px-6">
+        <div className="flex items-start justify-between gap-3">
+          <ToolIcon icon={ChartLine} />
+          <Badge variant="outline" className="rounded-full">
+            {since ? `Since ${since}` : 'PSEi · NYSE · NASDAQ · S&P'}
+          </Badge>
+        </div>
+        <CardTitle className="pt-3 text-lg font-semibold">{t('bm.title')}</CardTitle>
+        <CardDescription className="text-[0.8125rem]">{t('bm.cardBody')}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 px-5 sm:px-6">
+        {preview.length ? (
+          <ul className="space-y-2.5">
+            {preview.map((p) => (
+              <li key={p.key} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-3 text-sm">
+                <span className="truncate text-muted-foreground">{p.label}</span>
+                <span className="h-1.5 overflow-hidden rounded-full bg-muted">
+                  <span
+                    className="block h-full rounded-full bg-primary"
+                    style={{ width: `${Math.max(2, (Math.max(p.totalGainPct, 0) / best) * 100)}%` }}
+                  />
+                </span>
+                <span className="figure w-16 text-right font-medium">
+                  {p.totalGainPct > 0 ? '+' : ''}
+                  {Math.round(p.totalGainPct)}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No benchmark data yet.</p>
+        )}
+      </CardContent>
+      <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
+        <Link href="/tools/benchmarks" className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+          {t('bm.open')}
+          <ArrowRight data-icon="inline-end" />
         </Link>
       </CardFooter>
     </Card>

@@ -1,13 +1,13 @@
 import { Bar, Panel } from '@/components/skeleton-blocks'
 import { Skeleton } from '@/components/ui/skeleton'
 
-/** `/tools` while it loads: the subtitle line and three tool cards. */
+/** `/tools` while it loads: the subtitle line and four tool cards. */
 export function ToolsSkeleton() {
   return (
     <>
       <Bar className="mb-4 h-3 w-80 max-w-full" />
       <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <Panel key={i} className="py-5">
             <div className="flex items-start justify-between">
               <Skeleton className="shimmer size-11 rounded-xl" />

@@ -5,6 +5,139 @@ domain vocabulary and architecture rules.
 
 ---
 
+## Phase 7 — Index benchmarker, sector heatmap, 50-name universe (2026-09-26)
+
+**Fixes (committed in V0.3.1).**
+- **Google sign-in 500 on Vercel.** Production answered `POST
+  /api/auth/oauth/google` with an empty HTTP 500 (localhost: 200).
+  `siteUrl()` *threw* in production when `NEXT_PUBLIC_SITE_URL` was unset,
+  the route did not catch it, and the button parsed the empty body as a
+  "network error". Now `siteUrl(origin)` falls back to the request's own
+  origin, all three auth routes that build redirects always answer JSON, and
+  the button and `useFormSubmit` tell a server fault ("HTTP 500, our side")
+  from a real connection failure.
+- **Welcome carousel clipped.** `DialogContent` is a grid and a grid track
+  grows to its content, so the four-slide strip widened the column and every
+  slide rendered shifted right. Pinned the track with
+  `grid-cols-[minmax(0,1fr)]`.
+
+**Universe 41 → 50.** Nine Technology names (AVGO, ORCL, CRM, ADBE, CSCO,
+QCOM, IBM, INTC, PLTR), each checked in Alpaca's catalogue through the app
+(active, tradable, fractionable) and stored under Alpaca's own name.
+`tradable_assets` gained `market_cap_usd` + `market_cap_as_of`. Migration
+`universe_fifty_and_market_caps`, applied live.
+
+**Python pipelines** (`python/`, 3.12 venv via uv; yfinance, pandas,
+supabase):
+- `benchmarks.py` — monthly closes → rolling 12-month YoY on the full history
+  → inner join on common months → last 15 years → each index ÷ its first
+  month × 100. Upserts on `(price_date, ticker)`, then prunes months that
+  slid out of the window (they would otherwise sit on an old baseline).
+- `market_caps.py` — `fast_info.marketCap` for the universe stocks.
+- Both support `--dry-run` and `--emit-sql`; `benchmarks.py` also takes
+  `--stooq-csv FILE`. 7 offline unit tests (`python -m unittest discover -s
+  python`).
+- `.github/workflows/market-data.yml` runs tests, then both scripts, weekly
+  (Sunday 07:00 UTC) and on demand.
+
+**PSEi source (Carlos: "use Stooq when possible").** Yahoo has no PSEi
+history (`^PSEI` does not exist; `PSEI.PS` returns one day), nor does Alpha
+Vantage. Stooq has it as `^psei`, but its CSV endpoint answers scripted
+requests with a JavaScript proof-of-work browser check. The pipeline tries
+Stooq first and **never solves the check**; it logs it and falls back to
+Yahoo `PSEI.PS`, then **EPHE** (iShares MSCI Philippines ETF, USD, since
+2010). Every row stores its `source_symbol`, and the app labels the line
+"PSEi (EPHE)" with a note. For the real PSEi now: download
+https://stooq.com/q/d/?s=^psei&i=m in a browser and run `python
+python/benchmarks.py --stooq-csv <file>`.
+
+**Data loaded.** `market_benchmarks` (new table, anon/authenticated SELECT
+only, verified with privilege checks) holds 724 rows, 2011-09 → 2026-09.
+There was no service key on this machine, so the pipeline's output was
+loaded through the Supabase MCP with SQL generated from it, and verified by
+per-index checksums computed separately on both sides: 4 × 181 rows, and the
+sums of raw closes, normalised values and YoY all match to the fourth
+decimal. Market caps written for all 35 stocks. Over 15 years: NASDAQ
++1,020.7% (CAGR 17.5%), S&P 500 +584.4% (13.7%), NYSE +252.1% (8.8%), PSEi
+proxy +9.8% (0.6%).
+
+**Benchmarker** (`features/benchmarks`, `/tools/benchmarks`, card on Tools):
+- `GET /api/benchmarks` returns `{ asOf, indexes, growth, yoy }`, both series
+  grouped by month (`[{ date, PSEI, NYSE, NASDAQ, SP500 }]`), with
+  `s-maxage=3600`.
+- Page: summary cards (total gain + CAGR, or last-12-month YoY +
+  annualised volatility), a Growth / YoY toggle, 5Y / 10Y / 15Y ranges
+  (shorter ranges rebase to 100 in `math.ts`), and a Recharts line chart on
+  chart tokens. Draw-in animation off: it replayed on every toggle and never
+  ran in a background tab.
+- 8 unit tests (pivot, rebase, CAGR, volatility, latest YoY).
+
+**Sector heatmap** (`/markets`, under the Tradable table; the old side-panel
+tiles are gone):
+- `npm install d3-hierarchy` + `-D @types/d3-hierarchy` for the squarified
+  layout (Recharts' Treemap has no sector header strips).
+- Stocks only, area ∝ market cap (sector median when a cap is missing),
+  7-step −3%…+3% colour mixed from `--gain`/`--loss`, cap-weighted sector
+  move, tiles link to the trade page.
+- Phone: a single strict treemap squeezed Finance and FMCG into ~20 px tiles
+  (only 9 of 35 were 44 px or more). Sectors now stack full-width with a
+  minimum height of half the width: 19 tiles are 44 px or more, 29 are 32 px
+  or more, and there is no horizontal overflow at 375 px.
+- 6 unit tests in `heatmap.test.ts`; `sectorMoves` and its test removed with
+  the component.
+
+**Verified:** typecheck and lint clean, 81 TS tests + 7 Python tests pass,
+production build green on 28 routes. In the browser: `/markets` heatmap at
+desktop and 375 px width; `GET /api/benchmarks`. The benchmarker page itself
+sits behind login, and the pane had no session, so it was checked by mounting
+the same page on a temporary public route, since deleted: cards, both views,
+the 5Y rebase (S&P +79.8% = 7,743 ÷ 4,308) and the proxy note.
+
+**Open for Carlos:**
+- Vercel: set `NEXT_PUBLIC_SITE_URL=https://papaldo-ai-investment.vercel.app`
+  and add it to Supabase's redirect allow list, then redeploy. The code no
+  longer needs the var to avoid the 500, but Supabase still refuses to
+  redirect to origins that are not on the list.
+- GitHub: confirm `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` exist as
+  Actions secrets, then run "Market data" once by hand.
+- Refresh the PSEi cache about monthly (see "Real PSEi loaded" below).
+- `model-portfolios.yml` still points at the uncommitted
+  `python/model_portfolios.py` (skipped, as asked).
+
+**Real PSEi loaded (same day, Carlos's Stooq download).** Carlos
+downloaded `^psei_d.csv` (daily, 1986-01-02 → 2026-09-25, 10,149 rows; the
+last close, 5,825.97, matches Yahoo's single PSEI.PS point). The pipeline now
+turns daily files into month-end closes; it sorts first rather than trusting
+file order. The 181 PSEi rows were replaced through the MCP (no service key
+here) and the checksums match; the other three indices were unchanged. Over 15
+years the real PSEi is **+45.7% (CAGR 2.5%)**, against the EPHE proxy's
++9.8%: EPHE is priced in dollars, so the peso's slide was in it.
+- **So the Sunday job does not undo this**, the Stooq monthly closes are
+  committed as `python/data/psei_monthly.csv` (489 months, about 10 KB), and
+  are rewritten on every `--stooq-csv` run. Scheduled runs are blocked by
+  Stooq's check, so they read the cache, add the current month from Yahoo's
+  PSEI.PS (only the month straight after the cache, so no gap is bridged),
+  and warn once the cache is over a month stale. Simulated a scheduled run:
+  identical PSEi output. EPHE is now only the last resort.
+- A test pointed at the cache wrote its sample into the real file, because
+  the path was a default argument bound at import. The path now resolves at
+  call time, the file was rebuilt from the download, and 13 Python tests
+  pass without touching it.
+- Refresh: download https://stooq.com/q/d/?s=^psei&i=m, run `python
+  python/benchmarks.py --stooq-csv <file>` (with the service key, or
+  `--dry-run` / `--emit-sql`), and commit `python/data/psei_monthly.csv`.
+
+**Graphify `--update`** (incremental, thanks to last run's manifest): 34
+changed files, none deleted. 33 code files went through the free AST pass;
+the edited `dashboard/README.md` was re-extracted for 108,051 tokens, and all
+of its edges resolve to real nodes. Result: 1,416 nodes · 4,050 edges · 70
+communities (+76 nodes, +231 edges, −6 nodes). Community names carry over
+from the last run by member overlap. Five new ones (Benchmarker Chart & Math,
+Benchmarks API, Sector Heatmap, Auth Forms & Profile Fields, Profile &
+Dashboard Cards) and the halves of split ones were named by their files.
+
+---
+
 ## Phase 6 — First-time setup, profile dashboard, public frame, ISQ rewrite (2026-09-26)
 
 Carlos's eleven-item brief, with Investopedia's "Get Started" flow as the

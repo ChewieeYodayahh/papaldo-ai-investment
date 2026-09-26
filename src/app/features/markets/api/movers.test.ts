@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { sectorMoves, topMovers, type UniverseQuote } from './movers'
+import { topMovers, type UniverseQuote } from './movers'
 
 function quote(symbol: string, changePercent: number, sector = 'Technology'): UniverseQuote {
   return {
     symbol,
     name: symbol,
     sector,
+    marketCapUsd: null,
     price: 100,
     open: 100,
     high: 100,
@@ -38,10 +39,3 @@ describe('topMovers', () => {
   })
 })
 
-describe('sectorMoves', () => {
-  it('averages each sector with equal weights', () => {
-    const moves = sectorMoves([quote('A', 2, 'ETF'), quote('B', -1, 'ETF'), quote('C', 4, 'FMCG')])
-    expect(moves.find((m) => m.sector === 'ETF')?.changePercent).toBeCloseTo(0.5)
-    expect(moves.find((m) => m.sector === 'FMCG')?.changePercent).toBeCloseTo(4)
-  })
-})

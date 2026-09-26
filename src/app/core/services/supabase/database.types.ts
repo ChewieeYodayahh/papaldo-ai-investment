@@ -199,6 +199,8 @@ export type Database = {
           active: boolean
           asset_class: string
           created_at: string
+          market_cap_as_of: string | null
+          market_cap_usd: number | null
           name: string
           risk_tier: string
           sector: string
@@ -208,6 +210,8 @@ export type Database = {
           active?: boolean
           asset_class: string
           created_at?: string
+          market_cap_as_of?: string | null
+          market_cap_usd?: number | null
           name: string
           risk_tier: string
           sector: string
@@ -217,10 +221,45 @@ export type Database = {
           active?: boolean
           asset_class?: string
           created_at?: string
+          market_cap_as_of?: string | null
+          market_cap_usd?: number | null
           name?: string
           risk_tier?: string
           sector?: string
           symbol?: string
+        }
+        Relationships: []
+      }
+      market_benchmarks: {
+        Row: {
+          id: string
+          normalized_growth_value: number
+          price_date: string
+          raw_close_price: number
+          source_symbol: string
+          ticker: string
+          updated_at: string
+          yoy_return_pct: number | null
+        }
+        Insert: {
+          id?: string
+          normalized_growth_value: number
+          price_date: string
+          raw_close_price: number
+          source_symbol: string
+          ticker: string
+          updated_at?: string
+          yoy_return_pct?: number | null
+        }
+        Update: {
+          id?: string
+          normalized_growth_value?: number
+          price_date?: string
+          raw_close_price?: number
+          source_symbol?: string
+          ticker?: string
+          updated_at?: string
+          yoy_return_pct?: number | null
         }
         Relationships: []
       }
