@@ -29,9 +29,13 @@ export function supabaseAnonKey(): string {
  * Falls back to localhost only in development; outside development a missing
  * value fails loudly like the Supabase keys, rather than silently producing a
  * broken production redirect.
+ *
+ * This value only builds redirect URLs. It does not choose the port the dev
+ * server listens on -- `next dev` never reads it. The port is pinned in the
+ * package.json scripts (`--port 3001`), and the two have to agree.
  */
 export function siteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
-  if (process.env.NODE_ENV === 'development') return 'http://localhost:3000'
+  if (process.env.NODE_ENV === 'development') return 'http://localhost:3001'
   return required('NEXT_PUBLIC_SITE_URL')
 }

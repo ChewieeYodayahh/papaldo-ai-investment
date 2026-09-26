@@ -22,5 +22,14 @@ export async function middleware(request: NextRequest) {
  * what it enforces) and they have to be changed together.
  */
 export const config = {
-  matcher: ['/dashboard/:path*', '/portfolio/:path*', '/isq/:path*', '/onboarding/:path*', '/login', '/sign-up'],
+  matcher: [
+    '/dashboard/:path*',
+    '/portfolio/:path*',
+    '/isq/:path*',
+    '/onboarding/:path*',
+    '/profile/:path*',
+    '/tools/:path*',
+    '/login',
+    '/sign-up',
+  ],
 }

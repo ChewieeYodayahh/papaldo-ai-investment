@@ -25,8 +25,9 @@ Everything. Nothing on either page is sample data.
 
 - Inflation-adjusted value (mockup, Portfolio page): needs a Philippine CPI
   series and no wired provider has one.
-- "Complete your user profile" button: the middleware makes a complete
-  profile a precondition for reaching the dashboard, so it could never show.
+- "Complete your user profile" button: that step is Get Started 1/3 in the
+  shell's checklist dock, on every signed-in page (2026-09-26); a second
+  entry point on Home would compete with it.
 
 ## Layout
 

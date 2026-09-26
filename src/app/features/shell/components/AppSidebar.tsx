@@ -12,7 +12,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import {
   Sidebar,
   SidebarContent,
@@ -28,18 +27,14 @@ import { Spinner } from '@/components/ui/spinner'
 import { useCopy, type CopyKey } from '@/app/features/preferences/copy'
 import { cn } from '@/lib/utils'
 
-type NavItem = { href: string; label: CopyKey; icon: LucideIcon; disabled?: boolean }
+type NavItem = { href: string; label: CopyKey; icon: LucideIcon; also?: string[] }
 
-/**
- * Tools has no page yet, so it is shown, labelled "Soon" and inert rather
- * than linked to a 404 or left out -- it is in the design, and hiding it would
- * make the nav shift the day it ships.
- */
+/** `also`: routes that belong to an item -- the quiz and its results live under Tools. */
 const NAV: NavItem[] = [
   { href: '/dashboard', label: 'nav.home', icon: House },
   { href: '/portfolio', label: 'nav.portfolio', icon: LayoutGrid },
   { href: '/markets', label: 'nav.market', icon: ChartNoAxesCombined },
-  { href: '/tools', label: 'nav.tools', icon: Wrench, disabled: true },
+  { href: '/tools', label: 'nav.tools', icon: Wrench, also: ['/isq'] },
 ]
 
 /** A spinner on the one nav item whose page is loading. Must render inside its <Link>. */
@@ -86,34 +81,20 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarMenu className="gap-1">
             {NAV.map((item) => {
-              const active = !item.disabled && pathname.startsWith(item.href)
+              const active = [item.href, ...(item.also ?? [])].some((prefix) => pathname.startsWith(prefix))
               const Icon = item.icon
               return (
                 <SidebarMenuItem key={item.href}>
-                  {item.disabled ? (
-                    <SidebarMenuButton
-                      aria-disabled
-                      tooltip={`${t(item.label)} · ${t('nav.soon')}`}
-                      className="h-9 cursor-not-allowed opacity-60 hover:bg-transparent"
-                    >
-                      <Icon />
-                      <span>{t(item.label)}</span>
-                      <Badge variant="outline" className="ml-auto h-4.5 border-sidebar-border px-1.5 text-[0.6875rem] text-sidebar-foreground/80">
-                        {t('nav.soon')}
-                      </Badge>
-                    </SidebarMenuButton>
-                  ) : (
-                    <SidebarMenuButton
-                      isActive={active}
-                      tooltip={t(item.label)}
-                      render={<Link href={item.href} />}
-                      className="h-9 data-active:bg-linear-to-r data-active:from-sidebar-accent data-active:to-sidebar-accent/40"
-                    >
-                      <Icon />
-                      <span>{t(item.label)}</span>
-                      <PendingSpinner />
-                    </SidebarMenuButton>
-                  )}
+                  <SidebarMenuButton
+                    isActive={active}
+                    tooltip={t(item.label)}
+                    render={<Link href={item.href} />}
+                    className="h-9 data-active:bg-linear-to-r data-active:from-sidebar-accent data-active:to-sidebar-accent/40"
+                  >
+                    <Icon />
+                    <span>{t(item.label)}</span>
+                    <PendingSpinner />
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               )
             })}

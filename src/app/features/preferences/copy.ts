@@ -9,10 +9,13 @@ import { usePreferences, type Language } from './store'
  *   slang     casual English
  *   brainrot  Gen Alpha, per Carlos's glossary (2026-09-25)
  *
- * Scope is the app shell, the dashboard and the markets page. Legal-ish text
- * -- the "simulated trading only" disclaimers, error messages, the ISQ itself
- * -- stays in plain English in every register: a joke is fine on a label,
- * not on the sentence telling someone no real money is involved.
+ * Scope is every label a user navigates by: the app shell, the public top bar
+ * and landing headlines, dashboard, markets, Tools, the profile page's card
+ * titles, and Get Started / the first-trade walkthrough. Legal-ish text --
+ * the "simulated trading only" disclaimers, error messages, form field
+ * labels, the ISQ questions themselves -- stays in plain English in every
+ * register: a joke is fine on a label, not on the sentence telling someone no
+ * real money is involved.
  *
  * `{name}` placeholders are filled by `t(key, { name })`.
  */
@@ -22,7 +25,6 @@ const en = {
   'nav.market': 'Market',
   'nav.tools': 'Tools',
   'nav.about': 'About Papaldo Ka',
-  'nav.soon': 'Soon',
 
   'header.notifications': 'Notifications',
   'header.noNotifications': 'Nothing yet. Your simulated fills will show up here.',
@@ -88,7 +90,7 @@ const en = {
   'dash.topHoldings': 'Top Holdings',
   'dash.bySector': 'By sector',
 
-  'mkt.subtitle': 'Live US stock and ETF prices from Alpaca. Pick something to simulate a trade.',
+  'mkt.subtitle': 'US stocks and ETFs, priced through the trading day. Pick something to simulate a trade.',
   'mkt.indexes': 'Benchmarks',
   'mkt.universe': 'Tradable on Papaldo',
   'mkt.all': 'All',
@@ -111,6 +113,95 @@ const en = {
   'page.portfolio': 'Portfolio',
   'page.markets': 'Markets',
   'page.trade': 'Trade',
+  'page.profile': 'Profile',
+  'page.tools': 'Tools',
+  'page.quiz': 'Risk Profile Quiz',
+  'page.results': 'Your Risk Profile',
+  'page.setup': 'Set Up Your Profile',
+
+  // Public top nav (landing page, and /markets when signed out).
+  'pub.how': 'How it works',
+  'pub.why': 'Why Papaldo',
+  'pub.markets': 'Markets',
+  'pub.faq': 'FAQ',
+  'pub.login': 'Log in',
+  'pub.getStarted': 'Get Started',
+  'pub.menu': 'Menu',
+  'pub.back': 'About Papaldo Ka',
+
+  // Landing headlines. Disclaimers under them stay plain English.
+  'land.badge': 'Safe investing simulation for every Filipino',
+  'land.title': 'Test your investing instincts before you risk a peso.',
+  'land.body':
+    'Answer six quick questions, get your risk profile, and practice trading with simulated funds — no real money, no broker, no pressure.',
+  'land.cta': 'Get started — it’s free',
+  'land.secondary': 'See how it works',
+  'land.ctaTitle': 'Ready to understand your investing style?',
+
+  // Get Started checklist (first-time setup, after Investopedia's).
+  'gs.button': 'Get Started',
+  'gs.title': 'Get started',
+  'gs.subtitle': 'Begin your investing journey',
+  'gs.profile': 'Set up your profile',
+  'gs.quiz': 'Take the quiz',
+  'gs.trade': 'Take your first trade',
+  'gs.tradeLocked': 'Unlocks after the quiz',
+  'gs.progress': '{done} of 3 done',
+  'gs.allDone': 'All set. Nice work.',
+  'gs.hide': 'Hide checklist',
+
+  // Welcome carousel, shown once.
+  'wel.next': 'Next',
+  'wel.start': 'Let’s go',
+  'wel.1.title': 'Welcome to Papaldo Ka',
+  'wel.1.body': 'Your account comes loaded with simulated US-dollar cash. Practice investing with it — nothing you do here touches real money.',
+  'wel.2.title': 'Your Profile',
+  'wel.2.body': 'Tell us what you do and what you earn, and set an income goal. It keeps your dashboard grounded in your real life.',
+  'wel.3.title': 'Portfolio & Markets',
+  'wel.3.body': 'Watch your holdings and performance in real time, and browse every stock and ETF you can trade on Papaldo.',
+  'wel.4.title': 'Three steps to start',
+  'wel.4.body': 'Set up your profile, take the six-question quiz, then make your first simulated trade. The Get Started checklist walks you through it.',
+
+  // First-trade walkthrough coach marks.
+  'tour.step': 'Step {n} of 2',
+  'tour.pick.title': 'Pick a stock',
+  'tour.pick.body': 'Every name in this table can be bought on Papaldo. Click one to open its trade page — NVDA is a popular first pick.',
+  'tour.ticket.title': 'Place your order',
+  'tour.ticket.body': 'Choose Buy, enter how many shares (1 to 10 is plenty), then place it. It is simulated — no real money moves.',
+  'tour.quizFirst.title': 'One step first',
+  'tour.quizFirst.body': 'Buying unlocks once you have a risk profile. Take the six-question quiz, then come back to trade.',
+  'tour.toQuiz': 'Take the quiz',
+  'tour.exit': 'Exit walkthrough',
+  'tour.done.title': 'Mission accomplished!',
+  'tour.done.body': 'You placed your first simulated trade. Review it in your portfolio, research more names, and make another trade whenever you like.',
+  'tour.another': 'Make another trade',
+  'tour.finish': 'Finish walkthrough',
+
+  // Tools dashboard.
+  'tools.subtitle': 'Everything that sharpens how you invest, in one place.',
+  'tools.youAre': 'You are',
+  'tools.band.Low': 'a Conservative Investor',
+  'tools.band.Medium': 'a Moderate Investor',
+  'tools.band.High': 'an Aggressive Investor',
+  'tools.notTaken': 'You have not taken the quiz yet.',
+  'tools.taken': 'Taken {date} · score {score}/100',
+  'tools.viewResults': 'View Results',
+  'tools.retake': 'Re-take Quiz',
+  'tools.take': 'Take Quiz',
+  'tools.profileTitle': 'Your Profile',
+  'tools.profileBody': 'Occupation, income and your income goal.',
+  'tools.editProfile': 'Edit profile',
+  'tools.tradeTitle': 'First-trade walkthrough',
+  'tools.tradeBody': 'A guided tour from the Markets page to your first simulated order.',
+  'tools.startTour': 'Start walkthrough',
+
+  // Profile dashboard card titles.
+  'prof.details': 'Personal details',
+  'prof.work': 'Work & income',
+  'prof.connected': 'Connected accounts',
+  'prof.security': 'Password & security',
+  'prof.save': 'Save changes',
+  'prof.saved': 'Saved',
 } as const
 
 export type CopyKey = keyof typeof en
@@ -153,6 +244,46 @@ const slang: Dictionary = {
   'mkt.topLosers': 'Taking a hit',
   'mkt.trade': 'Trade it',
   'mkt.heatmap': 'Heat check',
+  'page.profile': 'Me, Myself',
+  'page.tools': 'Toolbox',
+  'page.quiz': 'Investing Style Quiz',
+  'page.results': 'Your Style',
+  'page.setup': 'Set Yourself Up',
+  'pub.how': 'How it works',
+  'pub.why': 'Why us',
+  'pub.markets': 'The Market',
+  'pub.faq': 'Questions',
+  'pub.getStarted': "Let's go",
+  'land.badge': 'Practice investing, zero stress',
+  'land.title': 'Try investing before you bet a single peso.',
+  'land.cta': "Jump in — it's free",
+  'land.secondary': 'Show me how',
+  'land.ctaTitle': 'Ready to find your investing style?',
+  'gs.button': "Let's go",
+  'gs.title': "Let's get you set",
+  'gs.subtitle': 'Three quick steps',
+  'gs.profile': 'Fill in your deets',
+  'gs.quiz': 'Find your style',
+  'gs.trade': 'Make your first move',
+  'gs.tradeLocked': 'Do the quiz first',
+  'gs.allDone': "You're all set. Nice.",
+  'wel.1.title': 'Welcome in!',
+  'wel.start': "Let's do this",
+  'tour.pick.title': 'Pick your fighter',
+  'tour.ticket.title': 'Make the move',
+  'tour.done.title': 'Nailed it!',
+  'tour.another': 'Go again',
+  'tools.band.Low': 'a play-it-safe investor',
+  'tools.band.Medium': 'a middle-of-the-road investor',
+  'tools.band.High': 'a go-big investor',
+  'tools.viewResults': 'See my results',
+  'tools.retake': 'Run it again',
+  'tools.take': 'Take the quiz',
+  'tools.profileTitle': 'Your deets',
+  'tools.tradeTitle': 'First-trade tour',
+  'prof.details': 'The basics',
+  'prof.work': 'Work & money',
+  'prof.connected': 'Linked accounts',
 }
 
 const brainrot: Dictionary = {
@@ -205,7 +336,7 @@ const brainrot: Dictionary = {
   'page.portfolio': 'Asset Flex',
   'page.markets': 'The Stonks',
   'page.trade': 'Ape In Zone',
-  'mkt.subtitle': 'Live US stonks from Alpaca. Pick one and ape in (simulated, chill).',
+  'mkt.subtitle': 'US stonks, fresh all day. Pick one and ape in (simulated, chill).',
   'mkt.indexes': 'The Big Dawgs',
   'mkt.universe': 'Copable on Papaldo',
   'mkt.change': 'Aura shift',
@@ -216,6 +347,63 @@ const brainrot: Dictionary = {
   'mkt.catalogue': 'Every stonk in the lore',
   'mkt.news': 'The Tea',
   'pf.subtitle': 'Your whole bag, its aura, and the lore behind it.',
+  'page.profile': 'My Lore',
+  'page.tools': 'Sigma Tools',
+  'page.quiz': 'Mewing & Risk Assessment',
+  'page.results': 'Aura Reading',
+  'page.setup': 'Lore Setup',
+  'pub.how': 'How it cooks',
+  'pub.why': 'Why it’s goated',
+  'pub.markets': 'The Stonks',
+  'pub.faq': 'Lore Drops',
+  'pub.login': 'Lock in',
+  'pub.getStarted': 'Start the Grind',
+  'pub.back': 'Back to the lore',
+  'land.badge': 'Paper-trade era, no cap',
+  'land.title': 'Test your aura before you risk a single peso.',
+  'land.body':
+    'Six questions read your investing aura, then you paper-trade with simulated bread. No real money, no broker, no crash out.',
+  'land.cta': 'Start the Grind — free fr',
+  'land.secondary': 'How it cooks',
+  'land.ctaTitle': 'Ready to find your investing aura?',
+  'gs.button': 'Start the Grind',
+  'gs.title': 'Lock In',
+  'gs.subtitle': 'Three side quests, big W',
+  'gs.profile': 'Build your lore',
+  'gs.quiz': 'Take the Mewing Quiz',
+  'gs.trade': 'Ape into your first stonk',
+  'gs.tradeLocked': 'Quiz first, then ape',
+  'gs.progress': '{done}/3 side quests cleared',
+  'gs.allDone': 'All quests cleared. Sigma.',
+  'wel.1.title': 'Welcome to the lore',
+  'wel.1.body': 'Your bag comes pre-loaded with simulated bread. Ape in all you want — none of it is real money, no cap.',
+  'wel.3.title': 'Asset Flex & Stonks',
+  'wel.4.title': 'Three side quests',
+  'wel.start': 'Bet',
+  'tour.pick.title': 'Choose your main character',
+  'tour.pick.body': 'Every stonk in here is copable on Papaldo. Tap one — NVDA is a certified first pick.',
+  'tour.ticket.title': 'Ape in',
+  'tour.done.title': '+1000 Aura. Mission accomplished!',
+  'tour.another': 'Run it back',
+  'tour.finish': 'GG, finish',
+  'tools.youAre': 'You are giving',
+  'tools.band.Low': 'Safe Mode energy',
+  'tools.band.Medium': 'Lowkey Balanced energy',
+  'tools.band.High': 'Full Send Sigma energy',
+  'tools.notTaken': 'NPC status: quiz not taken.',
+  'tools.viewResults': 'Check the aura',
+  'tools.retake': 'Run it back',
+  'tools.take': 'Start the Mewing',
+  'tools.profileTitle': 'Your Lore',
+  'tools.editProfile': 'Edit the lore',
+  'tools.tradeTitle': 'First Ape tutorial',
+  'tools.startTour': 'Bet, start',
+  'prof.details': 'The Lore',
+  'prof.work': 'The Grind & the Bread',
+  'prof.connected': 'Linked accs',
+  'prof.security': 'Password & aura protection',
+  'prof.save': 'Lock it in',
+  'prof.saved': 'Locked in',
 }
 
 const DICTIONARIES: Record<Language, Dictionary> = { en, slang, brainrot }

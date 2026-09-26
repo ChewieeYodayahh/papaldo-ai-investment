@@ -7,7 +7,9 @@ import { z } from 'zod'
  *
  * Validation is deliberately loose: `contact` accepts any non-empty string
  * (mobiles, landlines, foreign numbers) and `username` has a length floor but
- * no character-set rule.
+ * no character-set rule. `occupation` is picked from a dropdown in the UI but
+ * any non-empty string is accepted here, because accounts created before the
+ * dropdown hold free-text values that must keep saving.
  */
 
 const username = z
@@ -20,23 +22,64 @@ const email = z.email('Enter a valid email address.').trim()
 
 const password = z.string().min(8, 'Password must be at least 8 characters.')
 
-const contact = z.string().trim().min(1, 'Contact number is required.')
+const contact = z.string().trim().min(1, 'Contact number is required.').max(40, 'That number is too long.')
 
-const occupation = z.string().trim().min(1, 'Occupation is required.')
+const occupation = z.string().trim().min(1, 'Pick an occupation.').max(80, 'Keep it under 80 characters.')
 
-export const signUpSchema = z.object({ username, email, password, contact, occupation })
+export const INCOME_CURRENCIES = ['USD', 'PHP'] as const
+export type IncomeCurrency = (typeof INCOME_CURRENCIES)[number]
+
+/**
+ * An amount in the currency the user typed it in. Stored as-is: this is the
+ * user's own figure, not a price, so it is never converted server-side.
+ */
+const income = z.object({
+  amount: z.number('Enter an amount.').nonnegative('Income cannot be negative.').max(1e11, 'That amount is too large.'),
+  currency: z.enum(INCOME_CURRENCIES),
+})
+export type Income = z.infer<typeof income>
+
+/**
+ * Sign-up asks only for what an account needs to exist and be addressed.
+ * Contact, occupation and income are step 1 of the in-app setup (Get Started
+ * 1/3), so a new account reaches the dashboard in one form.
+ */
+export const signUpSchema = z.object({ username, email, password })
 
 export const loginSchema = z.object({
   email,
   password: z.string().min(1, 'Password is required.'),
 })
 
-/** Fields collected after a Google sign-in, which supplies only an email. */
-export const completeProfileSchema = z.object({ username, contact, occupation })
+/**
+ * Any subset of the editable profile. The profile dashboard saves one card at
+ * a time and the setup journey one step at a time, so every field is
+ * optional; `null` clears an income.
+ */
+export const profileUpdateSchema = z
+  .object({
+    username: username.optional(),
+    contact: contact.optional(),
+    occupation: occupation.optional(),
+    annualIncome: income.nullable().optional(),
+    idealIncome: income.nullable().optional(),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), {
+    message: 'Nothing to save.',
+    path: ['form'],
+  })
+
+export const passwordChangeSchema = z
+  .object({ password, confirm: z.string() })
+  .refine((value) => value.password === value.confirm, {
+    message: 'The two passwords do not match.',
+    path: ['confirm'],
+  })
 
 export type SignUpInput = z.infer<typeof signUpSchema>
 export type LoginInput = z.infer<typeof loginSchema>
-export type CompleteProfileInput = z.infer<typeof completeProfileSchema>
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>
 
 /** Flattens a ZodError into `{ fieldName: firstMessage }` for form display. */
 export function fieldErrors(error: z.ZodError): Record<string, string> {

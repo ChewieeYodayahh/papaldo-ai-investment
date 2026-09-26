@@ -1,7 +1,7 @@
-import { CompleteProfilePage } from '@/app/features/onboarding/pages/profile.page'
+import { ProfileSetupPage } from '@/app/features/onboarding/pages/setup.page'
 
-export const metadata = { title: 'Complete your profile' }
+export const metadata = { title: 'Set up your profile' }
 
 export default function Page() {
-  return <CompleteProfilePage />
+  return <ProfileSetupPage />
 }

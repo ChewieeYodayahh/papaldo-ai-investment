@@ -39,7 +39,7 @@ export function Footer() {
               <h3 className="mb-4 text-sm font-semibold">{column.title}</h3>
               <ul className="space-y-2">
                 {column.links.map((link) => (
-                  <li key={link.href}>
+                  <li key={link.label}>
                     <a
                       href={link.href}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"

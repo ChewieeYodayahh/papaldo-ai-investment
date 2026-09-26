@@ -6,6 +6,9 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { getShellData } from '../api/shell'
 import { AppHeader } from './AppHeader'
 import { AppSidebar } from './AppSidebar'
+import { FirstTimeSetup } from './FirstTimeSetup'
+import { PageTitle } from './PageTitle'
+import { PublicShell } from './PublicShell'
 
 /** Written by the shadcn SidebarProvider whenever the sidebar is toggled. */
 const SIDEBAR_COOKIE = 'sidebar_state'
@@ -24,11 +27,27 @@ const SIDEBAR_COOKIE = 'sidebar_state'
  * never scroll away. Below md there is no frame: the sidebar is a sheet and
  * the page scrolls normally.
  *
- * Works signed out too (`/markets` is public): the header swaps the user card
- * for Log in / Sign up and drops the bell.
+ * Signed out (only `/markets` is public) there is no sidebar at all: the page
+ * gets the same frame as the landing page, with its top bar (Carlos,
+ * 2026-09-26). Signed in, the Get Started checklist rides along on every page.
  */
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  const [{ user, fx, notifications, greetingSeed }, cookieStore] = await Promise.all([getShellData(), cookies()])
+  const [{ user, fx, notifications, greetingSeed, setup }, cookieStore] = await Promise.all([
+    getShellData(),
+    cookies(),
+  ])
+
+  if (!user) {
+    return (
+      <PublicShell fx={fx}>
+        <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 pb-8 md:px-6">
+          <PageTitle />
+          {children}
+        </div>
+      </PublicShell>
+    )
+  }
+
   // The provider writes this cookie but never reads it back. Each route has
   // its own layout, so without this the sidebar re-expanded on every page.
   const sidebarOpen = cookieStore.get(SIDEBAR_COOKIE)?.value !== 'false'
@@ -42,13 +61,14 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         >
           <AppSidebar />
           <SidebarInset className="min-w-0 bg-transparent md:overflow-y-auto">
-            <div className="w-full px-4 pb-6 md:pr-5 md:pl-2">
+            <div className="w-full px-4 pb-24 md:pr-5 md:pl-2">
               <AppHeader user={user} notifications={notifications} greetingSeed={greetingSeed} />
               {children}
             </div>
           </SidebarInset>
         </SidebarProvider>
       </div>
+      {setup ? <FirstTimeSetup setup={setup} orders={notifications} /> : null}
     </FxProvider>
   )
 }

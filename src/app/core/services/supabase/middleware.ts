@@ -5,15 +5,15 @@ import { supabaseAnonKey, supabaseUrl } from '@/lib/env'
 
 import type { Database } from './database.types'
 
-/** Routes that require a session. */
-const PROTECTED_PREFIXES = ['/dashboard', '/portfolio', '/isq', '/onboarding']
+/** Routes that require a session. Keep in step with the matcher in src/middleware.ts. */
+const PROTECTED_PREFIXES = ['/dashboard', '/portfolio', '/isq', '/onboarding', '/profile', '/tools']
 
 /** Routes that a signed-in user should be bounced away from. */
 const AUTH_ROUTES = ['/login', '/sign-up']
 
 /**
  * Refreshes the Supabase session cookie and enforces the one remaining
- * required step: complete your profile, then the dashboard opens.
+ * required step: have a username, then the dashboard opens.
  *
  * The forwarding is deliberately one-directional. `/isq` is always reachable,
  * whether or not it has been taken -- we only push people forward past steps
@@ -66,23 +66,20 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('username, contact, occupation')
-    .eq('id', user.id)
-    .maybeSingle()
+  const { data: profile } = await supabase.from('users').select('username').eq('id', user.id).maybeSingle()
 
-  const profileComplete = Boolean(profile?.username && profile.contact && profile.occupation)
-
-  if (!profileComplete) {
+  // Only a username is required -- the app cannot address a user without one,
+  // and a first Google sign-in is the only way to arrive without it. Contact,
+  // occupation and income are the optional setup journey (Get Started 1/3)
+  // since 2026-09-26, and the questionnaire stopped being a gate on
+  // 2026-09-11. Both are invitations, not redirects.
+  if (!profile?.username) {
     return path === '/onboarding/profile' ? supabaseResponse : redirectTo(request, '/onboarding/profile')
   }
 
-  // The questionnaire is no longer a gate. `/isq` stays reachable and the
-  // dashboard invites people to it, but nobody is held there -- so this is the
-  // only remaining forced step, and it exists because the app cannot address a
-  // user it has no username for.
-  if (isAuthRoute || path === '/onboarding/profile') {
+  // `/onboarding/profile` stays reachable once a username exists: it is the
+  // setup journey, opened from the Get Started checklist.
+  if (isAuthRoute) {
     return redirectTo(request, '/dashboard')
   }
 

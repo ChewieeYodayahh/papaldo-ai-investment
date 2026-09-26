@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Noto_Sans, Figtree } from 'next/font/google'
+import { Geist, Geist_Mono, Figtree } from 'next/font/google'
 
 import { ThemeProvider } from "next-themes"
 import './globals.css'

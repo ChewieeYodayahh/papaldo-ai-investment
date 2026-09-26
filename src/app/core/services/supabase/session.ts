@@ -36,15 +36,35 @@ export type SessionUser = {
   sessionId: string | null
   /** Unix seconds of the sign-in itself (from `amr`), not of the latest token refresh. */
   signedInAt: number | null
+  /**
+   * How this session was authenticated, from the signed `amr` claim: e.g.
+   * `password`, `oauth`, or `recovery` after an emailed reset link.
+   */
+  authMethods: AuthMethod[]
+  /** Identity providers linked to the account (`app_metadata.providers`), e.g. `email`, `google`. */
+  providers: string[]
+}
+
+export type AuthMethod = { method: string; timestamp: number }
+
+function authMethods(amr: unknown): AuthMethod[] {
+  if (!Array.isArray(amr)) return []
+  return amr.flatMap((entry) => {
+    if (!entry || typeof entry !== 'object') return []
+    const { method, timestamp } = entry as { method?: unknown; timestamp?: unknown }
+    return typeof method === 'string' && typeof timestamp === 'number' ? [{ method, timestamp }] : []
+  })
 }
 
 /** Earliest authentication timestamp in the JWT's `amr` claim, if any. */
-function signedInAt(amr: unknown): number | null {
-  if (!Array.isArray(amr)) return null
-  const times = amr
-    .map((entry) => (entry && typeof entry === 'object' ? (entry as { timestamp?: unknown }).timestamp : null))
-    .filter((t): t is number => typeof t === 'number')
-  return times.length ? Math.min(...times) : null
+function signedInAt(methods: AuthMethod[]): number | null {
+  return methods.length ? Math.min(...methods.map((m) => m.timestamp)) : null
+}
+
+function providers(appMetadata: unknown): string[] {
+  if (!appMetadata || typeof appMetadata !== 'object') return []
+  const list = (appMetadata as { providers?: unknown }).providers
+  return Array.isArray(list) ? list.filter((p): p is string => typeof p === 'string') : []
 }
 
 function metadataString(metadata: unknown, ...keys: string[]): string | null {
@@ -65,13 +85,16 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   // user_metadata rides in the signed JWT, so reading it here costs nothing
   // extra. Email sign-ups have none; Google fills both fields.
   const metadata = data.claims.user_metadata
+  const methods = authMethods(data.claims.amr)
   return {
     id: data.claims.sub,
     email: typeof data.claims.email === 'string' ? data.claims.email : null,
     fullName: metadataString(metadata, 'full_name', 'name'),
     avatarUrl: metadataString(metadata, 'avatar_url', 'picture'),
     sessionId: typeof data.claims.session_id === 'string' ? data.claims.session_id : null,
-    signedInAt: signedInAt(data.claims.amr),
+    signedInAt: signedInAt(methods),
+    authMethods: methods,
+    providers: providers(data.claims.app_metadata),
   }
 })
 

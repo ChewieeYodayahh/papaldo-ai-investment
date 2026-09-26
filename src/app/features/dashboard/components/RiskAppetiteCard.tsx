@@ -18,9 +18,8 @@ import { cn } from '@/lib/utils'
  * 2026-09-11), and the dialog is where it can be given.
  *
  * There is no "Complete your user profile" button here although the mockup
- * has one: the middleware will not let anyone reach the dashboard with an
- * incomplete profile, so the button could never be shown to someone it
- * applies to.
+ * has one: that step lives in the Get Started checklist (shell), which is on
+ * every signed-in page, so a second entry point here would compete with it.
  */
 export function RiskAppetiteCard({ band, firstName }: { band: RiskBand | null; firstName: string }) {
   const t = useCopy()

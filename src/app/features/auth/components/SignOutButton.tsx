@@ -2,22 +2,32 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { LogOut } from 'lucide-react'
 
-import { Button } from '@/components'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
-export function SignOutButton() {
+/** Signs out through the API route, then lands on the landing page. */
+export function useSignOut() {
   const router = useRouter()
   const [pending, setPending] = useState(false)
 
-  async function handleClick() {
+  async function signOut() {
     setPending(true)
     await fetch('/api/auth/sign-out', { method: 'POST' })
-    router.push('/login')
+    router.push('/')
     router.refresh()
   }
 
+  return { pending, signOut }
+}
+
+export function SignOutButton({ className }: { className?: string }) {
+  const { pending, signOut } = useSignOut()
+
   return (
-    <Button type="button" variant="secondary" onClick={handleClick} disabled={pending}>
+    <Button type="button" variant="outline" onClick={signOut} disabled={pending} className={cn('rounded-full px-4', className)}>
+      <LogOut data-icon="inline-start" />
       {pending ? 'Signing out…' : 'Sign out'}
     </Button>
   )

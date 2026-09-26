@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 
 import { updateProfile } from '@/app/features/auth/api/profile'
-import { completeProfileSchema, fieldErrors } from '@/app/features/auth/schema'
+import { fieldErrors, profileUpdateSchema } from '@/app/features/auth/schema'
 
-export async function POST(request: Request) {
-  const parsed = completeProfileSchema.safeParse(await request.json())
+/** Saves any subset of the profile: one card of the profile page, or one setup step. */
+export async function PATCH(request: Request) {
+  const parsed = profileUpdateSchema.safeParse(await request.json())
   if (!parsed.success) {
     return NextResponse.json(
       { ok: false, message: 'Please fix the highlighted fields.', fieldErrors: fieldErrors(parsed.error) },

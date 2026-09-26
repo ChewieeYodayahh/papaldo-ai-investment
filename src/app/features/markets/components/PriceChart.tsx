@@ -3,7 +3,6 @@
 import { CandlestickSeries, createChart, type IChartApi, type ISeriesApi } from 'lightweight-charts'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -115,9 +114,6 @@ export function PriceChart({ candles }: { candles: Candle[] }) {
           <CardTitle className="text-sm font-medium text-muted-foreground">Price</CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">Daily candles</p>
         </div>
-        <Badge variant="outline" className="shrink-0 text-[10px]">
-          Live · Alpaca
-        </Badge>
       </CardHeader>
 
       <CardContent>

@@ -10,7 +10,7 @@ const FEATURES = [
     icon: <Gauge className="size-5" />,
     title: "Know your risk.",
     description:
-      "Six questions adapted from Manulife's Client Suitability Assessment map you to a Low, Medium, or High risk profile.",
+      "Six questions adapted from Manulife's Client Suitability Assessment map you to a Conservative, Moderate or Aggressive profile.",
   },
   {
     icon: <TrendingUp className="size-5" />,

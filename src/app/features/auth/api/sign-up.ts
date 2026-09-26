@@ -9,8 +9,9 @@ import { signUpSchema, type SignUpInput } from '../schema'
  * Email/password registration.
  *
  * The profile row is created by the `handle_new_user` trigger from the
- * metadata passed here, so username/contact/occupation land in public.users
- * without a second round trip.
+ * metadata passed here, so the username lands in public.users without a
+ * second round trip. Contact and occupation are left null for the in-app
+ * setup (Get Started 1/3); the trigger already treats them as optional.
  *
  * Username uniqueness is enforced by the `users_username_lower_key` index
  * rather than a pre-flight check: RLS only lets a user read their own row, and
@@ -28,8 +29,6 @@ export async function signUpWithPassword(input: SignUpInput): Promise<AuthResult
     options: {
       data: {
         username: parsed.username,
-        contact: parsed.contact,
-        occupation: parsed.occupation,
       },
     },
   })

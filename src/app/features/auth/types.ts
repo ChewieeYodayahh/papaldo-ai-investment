@@ -1,11 +1,12 @@
+import type { Income } from './schema'
+
 /**
  * Where a signed-in user should be sent next.
  *
- * There is no 'isq' step any more (Carlos, 2026-09-11). Completing the profile
- * is still required -- the app cannot address someone it has no username for --
- * but the questionnaire is now an invitation on the dashboard, not a toll gate
- * in front of it. A new account lands on the dashboard and is asked, not
- * redirected.
+ * There is no 'isq' step any more (Carlos, 2026-09-11), and since 2026-09-26
+ * 'complete-profile' means only "has no username yet" -- which in practice is
+ * a first Google sign-in. Contact, occupation and income moved into the
+ * optional Get Started setup (1/3); nobody is held for them.
  */
 export type OnboardingStep = 'complete-profile' | 'dashboard'
 
@@ -19,4 +20,6 @@ export type UserProfile = {
   username: string | null
   contact: string | null
   occupation: string | null
+  annualIncome: Income | null
+  idealIncome: Income | null
 }

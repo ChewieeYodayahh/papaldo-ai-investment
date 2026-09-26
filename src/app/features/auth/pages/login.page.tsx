@@ -1,23 +1,30 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 
+import { FieldSeparator } from '@/components/ui/field'
+import { AuthLayout } from '@/app/features/auth/components/AuthLayout'
 import { GoogleButton } from '@/app/features/auth/components/GoogleButton'
 import { LoginForm } from '@/app/features/auth/components/LoginForm'
-import { PageShell } from '@/components'
 
 export function LoginPage() {
   return (
-    <PageShell title="Sign in" subtitle="Welcome back to Papaldo.">
-      <LoginForm />
-
-      <div className="my-6 text-center text-xs text-muted-foreground">or</div>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Log in to your simulated portfolio."
+      footer={
+        <>
+          New to Papaldo Ka?{' '}
+          <Link href="/sign-up" className="font-medium text-foreground underline underline-offset-4 hover:text-highlight">
+            Get started
+          </Link>
+        </>
+      }
+    >
       <GoogleButton label="Continue with Google" />
-
-      <p className="mt-6 text-sm text-muted-foreground">
-        No account yet?{' '}
-        <Link href="/sign-up" className="underline">
-          Create one
-        </Link>
-      </p>
-    </PageShell>
+      <FieldSeparator className="my-6 *:data-[slot=field-separator-content]:bg-card">or with email</FieldSeparator>
+      <Suspense fallback={null}>
+        <LoginForm />
+      </Suspense>
+    </AuthLayout>
   )
 }

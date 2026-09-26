@@ -86,9 +86,6 @@ export function SymbolHeader({
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Badge variant="outline" className="text-[10px]">
-          Live · Finnhub
-        </Badge>
-        <Badge variant="outline" className="text-[10px]">
           Simulated — no broker orders
         </Badge>
       </div>

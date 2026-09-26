@@ -364,6 +364,21 @@ html[data-font="system"] {
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
+
+  /*
+   * The first-trade walkthrough's spotlight (FirstTradeTour). A ring around the
+   * element and a huge spread shadow that dims everything else in its scroll
+   * area -- one declaration instead of an overlay with a cut-out, and the
+   * element underneath stays clickable.
+   */
+  [data-tour-active] {
+    position: relative;
+    z-index: 30;
+    box-shadow:
+      0 0 0 3px var(--primary),
+      0 0 0 9999px color-mix(in oklch, var(--background) 62%, transparent) !important;
+    transition: box-shadow 0.3s ease;
+  }
 }
 @keyframes shimmer {
   100% {

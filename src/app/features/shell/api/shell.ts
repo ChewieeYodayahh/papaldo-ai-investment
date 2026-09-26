@@ -4,7 +4,8 @@ import { cache } from 'react'
 
 import { getUsdToPhp } from '@/app/core/services/exchange-rate'
 import { getSessionUser } from '@/app/core/services/supabase/session'
-import { getProfile } from '@/app/features/auth/api/profile'
+import { getProfile, isSetupComplete } from '@/app/features/auth/api/profile'
+import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import type { Fx } from '@/app/features/preferences/components/Money'
 import { getOrderHistory } from '@/app/features/trading/api/orders'
 import type { Order } from '@/app/features/trading/types'
@@ -20,6 +21,12 @@ export type ShellUser = {
   occupation: string | null
 }
 
+/**
+ * The Get Started checklist, read fresh from the database on every render:
+ * 1/3 profile fields filled, 2/3 a risk profile exists, 3/3 an order filled.
+ */
+export type SetupProgress = { profile: boolean; quiz: boolean; trade: boolean }
+
 export type ShellData = {
   user: ShellUser | null
   fx: Fx
@@ -27,6 +34,8 @@ export type ShellData = {
   notifications: Order[]
   /** Constant for one five-minute window of this session; see greetings.ts. */
   greetingSeed: number
+  /** Null when signed out. */
+  setup: SetupProgress | null
 }
 
 const NOTIFICATION_COUNT = 8
@@ -47,7 +56,7 @@ const NOTIFICATION_COUNT = 8
 export const getShellData = cache(async (): Promise<ShellData> => {
   const session = await getSessionUser()
 
-  const [profile, fx, notifications] = await Promise.all([
+  const [profile, fx, notifications, riskProfile] = await Promise.all([
     session ? getProfile() : null,
     getUsdToPhp().then(
       (rate): Fx => ({ rate: rate.rate, asOf: rate.asOf }),
@@ -57,6 +66,7 @@ export const getShellData = cache(async (): Promise<ShellData> => {
       },
     ),
     session ? getOrderHistory(NOTIFICATION_COUNT) : [],
+    session ? getCurrentRiskProfile() : null,
   ])
 
   const user: ShellUser | null = session
@@ -81,5 +91,8 @@ export const getShellData = cache(async (): Promise<ShellData> => {
     fx,
     notifications,
     greetingSeed: greetingSeed(session),
+    setup: session
+      ? { profile: isSetupComplete(profile), quiz: Boolean(riskProfile), trade: notifications.length > 0 }
+      : null,
   }
 })

@@ -15,10 +15,13 @@ them is a bug — fix it rather than inventing a synonym.
 ### In use today
 
 **ISQ — Investment Suitability Questionnaire**
-The six-item questionnaire every user completes after registering. Its wording is
-transcribed verbatim from Manulife's *Client Suitability Assessment*, so it is a
-spec, not a draft: do not paraphrase questions or choices. Lives in
-`src/app/features/onboarding/questions.ts`.
+The six-item risk quiz, step 2/3 of Get Started and a card in Tools. The six
+topics and their low-to-high risk ordering come from Manulife's *Client
+Suitability Assessment*; since 2026-09-26 the **wording is our own plain-language
+rewrite** (Carlos's call) with **exactly three choices per question**, each a
+short title, a one-line description and an icon. The verbatim transcription it
+replaced is in git history. Lives in `src/app/features/onboarding/questions.ts`.
+Question text stays plain English in every language register.
 
 **Risk profile**
 The output of scoring an ISQ submission: a **band** plus a 0–100 **score**. There
@@ -30,8 +33,9 @@ are exactly three bands, matching the source questionnaire's result screen:
 | `Medium` | 34–66 |
 | `High` | 67–100 |
 
-Note this deliberately replaces the "Conservative → Aggressive" wording used in the
-original project brief. The source questionnaire uses Low/Medium/High and that won.
+The bands are stored as Low/Medium/High (the source questionnaire's words). On
+screen they read as **Conservative / Moderate / Aggressive** — "You are an
+Aggressive Investor" — via the copy dictionaries; never store the display word.
 
 A user has exactly **one current risk profile** (`public.risk_profiles`, one row per
 user). It is the single source of truth any recommendation feature should read.
@@ -43,13 +47,24 @@ available for analysis. Enforced at the database level — the table has no UPDA
 policy and `authenticated` holds no UPDATE grant.
 
 **User profile**
-`public.users` — a mirror of `auth.users` holding username, email, contact and
-occupation. It is *not* an auth table: sessions, passwords and OAuth identities are
-Supabase Auth's business. A profile row is created by the `handle_new_user` trigger.
+`public.users` — a mirror of `auth.users` holding username, email, contact,
+occupation, and (since 2026-09-26) annual and ideal income, each with its own
+currency (`USD` or `PHP`, as typed — never converted). It is *not* an auth table:
+sessions, passwords and OAuth identities are Supabase Auth's business. A profile
+row is created by the `handle_new_user` trigger. Edited on `/profile`.
 
-A profile is **complete** when username, contact and occupation are all non-null.
-Email/password sign-up fills all three at once; Google sign-in cannot, so those
-users pass through `/onboarding/profile` first.
+Two thresholds, deliberately different:
+- **Addressable** — has a username. The only thing the middleware enforces.
+  Email sign-up sets it; a first Google sign-in is held at `/onboarding/profile`
+  until it has one.
+- **Setup complete** — username, contact, occupation, annual and ideal income all
+  set. Drives the Get Started 1/3 tick. Never a redirect.
+
+**Get Started**
+The first-time setup checklist (after Investopedia's), a floating dock on every
+signed-in page: 1/3 set up your profile, 2/3 take the quiz, 3/3 take your first
+trade (a guided walkthrough; locked until the quiz, because `place_order` needs a
+risk profile to buy). Each tick is read from the database, never from clicks.
 
 ### Reserved for later phases — do not build yet
 
@@ -76,16 +91,18 @@ by `src/app/features/auth/api/profile.ts#resolveOnboardingStep`:
 ```
 sign up / sign in
       ↓
-profile incomplete?  → /onboarding/profile
+no username?         → /onboarding/profile   (first Google sign-in only)
       ↓
-no risk profile?     → /isq
-      ↓
-                       /dashboard
+                       /dashboard            ← everyone lands here
+                           │
+                           └─ Get Started dock: 1/3 /onboarding/profile
+                                                2/3 /isq
+                                                3/3 walkthrough from /markets
 ```
 
-The forwarding is **one-directional**. Users are pushed forward past steps they have
-not finished, never back from steps they have — which is what keeps `/isq` reachable
-for retakes.
+The only forced step is the username; the questionnaire stopped being a gate on
+2026-09-11 and the other profile fields on 2026-09-26. `/isq` and
+`/onboarding/profile` stay reachable at any time for retakes and edits.
 
 ---
 
@@ -104,9 +121,14 @@ weight a whole number:
 | 5 | 0, 5, 10, 15, 20 |
 | 6 | 0, 4, 8, 12, 16, 20 |
 
-Why normalise at all: without it the 6-option question (Q3) would carry more than
-twice the influence of the 3-option ones (Q1, Q4) purely because it lists more
-options. Equal weighting per question is the intent.
+Since the 2026-09-26 rewrite every question has three choices, so only the first
+row is in use; the rule stays general so a future longer question still
+normalises. Why normalise at all: without it a 6-option question would carry more
+than twice the influence of a 3-option one purely because it lists more options.
+Equal weighting per question is the intent.
+
+Old `isq_responses` rows (append-only) keep the retired choice ids; the results
+page shows those answers as "from an earlier version" rather than failing.
 
 Choices are declared in **on-screen order, which runs from lowest to highest risk in
 every question**, and weights are derived from that position rather than typed by
@@ -194,7 +216,8 @@ floor with no character-set rule.
 ```
 auth.users  (Supabase Auth — passwords, sessions, OAuth identities)
     │  1:1, via handle_new_user trigger
-    ├── public.users            profile: username, email, contact, occupation
+    ├── public.users            profile: username, email, contact, occupation,
+    │                           annual/ideal income + their currencies
     │
     │  1:N, append-only
     ├── public.isq_responses    every submission ever, with answers + score

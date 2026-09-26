@@ -14,12 +14,12 @@ export const NETWORK_ERROR =
   'Could not reach the server. Check your connection and try again.'
 
 /**
- * Posts a JSON payload to one of the `app/api` routes and threads the pending
+ * Sends a JSON payload to one of the `app/api` routes and threads the pending
  * state, the top-level message, and per-field errors back into a form.
  *
  * Components never touch Supabase; this is the only way they reach the server.
  */
-export function useFormSubmit(endpoint: string) {
+export function useFormSubmit(endpoint: string, method: 'POST' | 'PATCH' = 'POST') {
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState<string | undefined>()
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -31,7 +31,7 @@ export function useFormSubmit(endpoint: string) {
 
     try {
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method,
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),
       })

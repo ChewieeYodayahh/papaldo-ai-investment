@@ -59,7 +59,7 @@ export function Trust() {
           </div>
 
           <motion.div variants={item}>
-            <Card className="border-primary/20 bg-primary/[0.03]">
+            <Card className="rounded-2xl border-0 bg-primary/[0.06] ring-1 ring-primary/25">
               <CardHeader>
                 <div className="mb-2 inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <BadgeCheck className="size-5" />

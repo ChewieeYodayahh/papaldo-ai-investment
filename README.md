@@ -13,7 +13,7 @@ RLS) · Zod · Vitest.
 ```bash
 npm install
 cp .env.example .env.local   # fill in the Supabase values
-npm run dev                   # http://localhost:3000
+npm run dev                   # http://localhost:3001 (Turbopack)
 ```
 
 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are required.

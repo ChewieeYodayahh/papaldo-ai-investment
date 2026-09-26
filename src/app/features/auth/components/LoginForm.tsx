@@ -1,18 +1,30 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 import { useFormSubmit } from '../hooks/use-form-submit'
 import { ONBOARDING_PATHS } from '../routes'
+import type { OnboardingStep } from '../types'
 
+/** Why the callback bounced someone back here, in words. */
+const CALLBACK_ERRORS: Record<string, string> = {
+  missing_code: 'Google did not send a sign-in code. Please try again.',
+  oauth_failed: 'Google sign-in could not be completed. Please try again.',
+}
+
+/**
+ * Reads `?error=` itself (rather than taking it from the route) so `/login`
+ * stays a prerendered page; the page wraps it in Suspense for that.
+ */
 export function LoginForm() {
   const router = useRouter()
+  const callbackError = useSearchParams().get('error') ?? undefined
   const { pending, message, errors, submit } = useFormSubmit('/api/auth/login')
   const [values, setValues] = useState({ email: '', password: '' })
 
@@ -20,49 +32,60 @@ export function LoginForm() {
     event.preventDefault()
     const result = await submit(values)
     if (result) {
-      router.push(ONBOARDING_PATHS[result.next as keyof typeof ONBOARDING_PATHS] ?? '/dashboard')
+      // Straight to Home: the quiz lives in Get Started now, not after login.
+      router.push(ONBOARDING_PATHS[result.next as OnboardingStep] ?? '/dashboard')
       router.refresh()
     }
   }
 
+  const banner = message ?? (callbackError ? (CALLBACK_ERRORS[callbackError] ?? callbackError) : undefined)
+
   return (
-    <Card className="mx-auto max-w-md shadow-sm">
-      <CardHeader className="text-center">
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Continue to your simulation.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {message ? (
-          <div role="alert" className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-            {message}
-          </div>
-        ) : null}
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" autoComplete="email"
-              value={values.email} disabled={pending}
-              onChange={(e) => setValues({ ...values, email: e.target.value })}
-              aria-invalid={!!errors.email || undefined}
-              aria-describedby={errors.email ? 'email-error' : undefined}
-              className={errors.email ? 'border-destructive focus-visible:ring-destructive/50' : ''} />
-            {errors.email ? <p id="email-error" role="alert" className="mt-1 text-sm text-destructive">{errors.email}</p> : null}
-          </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" autoComplete="current-password"
-              value={values.password} disabled={pending}
-              onChange={(e) => setValues({ ...values, password: e.target.value })}
-              aria-invalid={!!errors.password || undefined}
-              aria-describedby={errors.password ? 'password-error' : undefined}
-              className={errors.password ? 'border-destructive focus-visible:ring-destructive/50' : ''} />
-            {errors.password ? <p id="password-error" role="alert" className="mt-1 text-sm text-destructive">{errors.password}</p> : null}
-          </div>
-          <Button type="submit" disabled={pending} className="w-full">
-            {pending ? 'Signing in…' : 'Sign in'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <form onSubmit={handleSubmit} noValidate>
+      {banner ? (
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{banner}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <FieldGroup className="gap-5">
+        <Field data-invalid={Boolean(errors.email) || undefined}>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={values.email}
+            disabled={pending}
+            onChange={(event) => setValues({ ...values, email: event.target.value })}
+            aria-invalid={Boolean(errors.email) || undefined}
+            className="h-11 rounded-xl px-3.5 text-[0.9375rem]"
+          />
+          <FieldError>{errors.email}</FieldError>
+        </Field>
+
+        <Field data-invalid={Boolean(errors.password) || undefined}>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            value={values.password}
+            disabled={pending}
+            onChange={(event) => setValues({ ...values, password: event.target.value })}
+            aria-invalid={Boolean(errors.password) || undefined}
+            className="h-11 rounded-xl px-3.5 text-[0.9375rem]"
+          />
+          <FieldError>{errors.password}</FieldError>
+        </Field>
+
+        <Button type="submit" size="lg" disabled={pending} className="mt-1 h-11 w-full rounded-full text-[0.9375rem] font-semibold">
+          {pending ? 'Logging in…' : 'Log in'}
+        </Button>
+      </FieldGroup>
+    </form>
   )
 }

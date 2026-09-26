@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { Bar, Panel, Rows } from '@/app/features/dashboard/components/skeletons'
+import { Bar, Panel, Rows } from '@/components/skeleton-blocks'
 
 /** Loading placeholders for /markets and /markets/[symbol]. See dashboard/components/skeletons.tsx. */
 

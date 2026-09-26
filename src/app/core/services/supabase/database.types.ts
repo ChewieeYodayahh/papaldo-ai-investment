@@ -226,28 +226,40 @@ export type Database = {
       }
       users: {
         Row: {
+          annual_income: number | null
+          annual_income_currency: string | null
           contact: string | null
           created_at: string
           email: string
           id: string
+          ideal_income: number | null
+          ideal_income_currency: string | null
           occupation: string | null
           updated_at: string
           username: string | null
         }
         Insert: {
+          annual_income?: number | null
+          annual_income_currency?: string | null
           contact?: string | null
           created_at?: string
           email: string
           id: string
+          ideal_income?: number | null
+          ideal_income_currency?: string | null
           occupation?: string | null
           updated_at?: string
           username?: string | null
         }
         Update: {
+          annual_income?: number | null
+          annual_income_currency?: string | null
           contact?: string | null
           created_at?: string
           email?: string
           id?: string
+          ideal_income?: number | null
+          ideal_income_currency?: string | null
           occupation?: string | null
           updated_at?: string
           username?: string | null

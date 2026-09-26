@@ -8,6 +8,25 @@ const nextConfig: NextConfig = {
    * Pin it to this project.
    */
   outputFileTracingRoot: path.join(__dirname),
+
+  /*
+   * `npm run dev` runs Turbopack (see package.json); `npm run build` stays on
+   * webpack, whose persistent cache logs "Serializing big strings (259kiB)
+   * impacts deserialization performance" for the compiled Tailwind stylesheet.
+   * That is a note about webpack's own cache format, not about our bundle, and
+   * there is no knob on our side that shrinks a generated stylesheet into a
+   * Buffer. Keep real errors, drop the infrastructure chatter.
+   */
+  webpack(config) {
+    config.infrastructureLogging = { ...config.infrastructureLogging, level: 'error' }
+    return config
+  },
+
+  // `npm run dev` is Turbopack. Pin its root for the same stray-lockfile
+  // reason as outputFileTracingRoot above. Having any turbopack key also tells
+  // Next the webpack hook is build-only, which silences its "Webpack is
+  // configured while Turbopack is not" warning (an empty object does not count).
+  turbopack: { root: path.join(__dirname) },
 }
 
 export default nextConfig

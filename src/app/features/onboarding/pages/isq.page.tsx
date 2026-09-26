@@ -1,20 +1,12 @@
 import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
 import { IsqForm } from '@/app/features/onboarding/components/IsqForm'
-import { PageShell } from '@/components'
 
+/**
+ * `/isq`, inside the app frame (Carlos, 2026-09-26): the user is signed in,
+ * so the quiz sits in the same outer container as every other page. Reached
+ * from Get Started (2/3) and from Tools; never forced after login.
+ */
 export async function IsqPage() {
   const existing = await getCurrentRiskProfile()
-
-  return (
-    <PageShell
-      title="Investment Suitability Questionnaire"
-      subtitle={
-        existing
-          ? `You are currently assessed as ${existing.band} risk. Retaking the questionnaire replaces that result.`
-          : 'Six questions. Your answers set the risk profile we use to shape your portfolio.'
-      }
-    >
-      <IsqForm />
-    </PageShell>
-  )
+  return <IsqForm retake={Boolean(existing)} />
 }

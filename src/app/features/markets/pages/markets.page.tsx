@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { T } from '@/app/features/preferences/copy'
 
@@ -56,12 +55,9 @@ export async function MarketsPage({ query }: { query: string }) {
   return (
     <>
       {/* The page name lives in the header (AppHeader); this is only the context line. */}
-      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <Badge variant="outline">Live · Alpaca</Badge>
-        <p className="max-w-3xl text-[0.8125rem] text-muted-foreground">
-          <T k="mkt.subtitle" /> Simulated trading only — no real money and no broker orders.
-        </p>
-      </div>
+      <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
+        <T k="mkt.subtitle" /> Simulated trading only — no real money and no broker orders.
+      </p>
 
       {quotes.ok ? (
         <div className="grid gap-4">
@@ -85,7 +81,10 @@ export async function MarketsPage({ query }: { query: string }) {
           </Card>
 
           <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-            <UniverseTable quotes={quotes.data} trends={trends} />
+            {/* The first-trade walkthrough points here (shell FirstTradeTour). */}
+            <div data-tour="universe" className="min-w-0 rounded-2xl">
+              <UniverseTable quotes={quotes.data} trends={trends} />
+            </div>
             <div className="grid gap-4">
               <MoversList title="mkt.topGainers" quotes={movers?.gainers ?? []} trends={trends} />
               <MoversList title="mkt.topLosers" quotes={movers?.losers ?? []} trends={trends} />

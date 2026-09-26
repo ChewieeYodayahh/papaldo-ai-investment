@@ -3,87 +3,70 @@
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 import { useFormSubmit } from '../hooks/use-form-submit'
 import { ONBOARDING_PATHS } from '../routes'
 import type { OnboardingStep } from '../types'
 
 const FIELDS = [
-  { name: 'username', label: 'Username', type: 'text', autoComplete: 'username' },
-  { name: 'email', label: 'Email', type: 'email', autoComplete: 'email' },
-  { name: 'password', label: 'Password', type: 'password', autoComplete: 'new-password' },
-  { name: 'contact', label: 'Contact number', type: 'tel', autoComplete: 'tel' },
-  { name: 'occupation', label: 'Occupation', type: 'text', autoComplete: 'organization-title' },
+  { name: 'username', label: 'Username', type: 'text', autoComplete: 'username', hint: 'At least 3 characters.' },
+  { name: 'email', label: 'Email', type: 'email', autoComplete: 'email', hint: undefined },
+  { name: 'password', label: 'Password', type: 'password', autoComplete: 'new-password', hint: 'At least 8 characters.' },
 ] as const
 
+/**
+ * Three fields and you are in. Contact, occupation and income are Get
+ * Started 1/3 inside the app, so the first thing a new account sees is Home.
+ */
 export function SignUpForm() {
   const router = useRouter()
   const { pending, message, errors, submit } = useFormSubmit('/api/auth/sign-up')
-  const [values, setValues] = useState<Record<string, string>>({
-    username: '',
-    email: '',
-    password: '',
-    contact: '',
-    occupation: '',
-  })
+  const [values, setValues] = useState<Record<string, string>>({ username: '', email: '', password: '' })
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const result = await submit(values)
     if (result) {
-      router.push(ONBOARDING_PATHS[result.next as OnboardingStep] ?? '/onboarding/profile')
+      router.push(ONBOARDING_PATHS[result.next as OnboardingStep] ?? '/dashboard')
       router.refresh()
     }
   }
 
   return (
-    <Card className="mx-auto max-w-md shadow-sm">
-      <CardHeader className="text-center">
-        <CardTitle>Create your account</CardTitle>
-        <CardDescription>Free simulation — no real money.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {message ? (
-          <div role="alert" className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-            {message}
-          </div>
-        ) : null}
+    <form onSubmit={handleSubmit} noValidate>
+      {message ? (
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      ) : null}
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          {FIELDS.map(({ name, label, type, autoComplete }) => (
-            <div key={name}>
-              <Label htmlFor={name}>
-                {label}
-                {errors[name] ? (
-                  <span id={`${name}-error`} className="ml-1 text-xs text-destructive" role="alert">
-                    {errors[name]}
-                  </span>
-                ) : null}
-              </Label>
-              <Input
-                id={name}
-                name={name}
-                type={type}
-                value={values[name]}
-                onChange={(e) => setValues({ ...values, [name]: e.target.value })}
-                autoComplete={autoComplete}
-                aria-invalid={!!errors[name] || undefined}
-                aria-describedby={errors[name] ? `${name}-error` : undefined}
-                className={errors[name] ? 'border-destructive focus-visible:ring-destructive/50' : ''}
-                disabled={pending}
-              />
-            </div>
-          ))}
+      <FieldGroup className="gap-5">
+        {FIELDS.map(({ name, label, type, autoComplete, hint }) => (
+          <Field key={name} data-invalid={Boolean(errors[name]) || undefined}>
+            <FieldLabel htmlFor={name}>{label}</FieldLabel>
+            <Input
+              id={name}
+              name={name}
+              type={type}
+              autoComplete={autoComplete}
+              value={values[name]}
+              disabled={pending}
+              onChange={(event) => setValues({ ...values, [name]: event.target.value })}
+              aria-invalid={Boolean(errors[name]) || undefined}
+              className="h-11 rounded-xl px-3.5 text-[0.9375rem]"
+            />
+            {errors[name] ? <FieldError>{errors[name]}</FieldError> : hint ? <FieldDescription>{hint}</FieldDescription> : null}
+          </Field>
+        ))}
 
-          <Button type="submit" disabled={pending} className="w-full">
-            {pending ? 'Creating account…' : 'Create account'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        <Button type="submit" size="lg" disabled={pending} className="mt-1 h-11 w-full rounded-full text-[0.9375rem] font-semibold">
+          {pending ? 'Creating account…' : 'Create account'}
+        </Button>
+      </FieldGroup>
+    </form>
   )
 }

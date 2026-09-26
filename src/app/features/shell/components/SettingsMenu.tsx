@@ -1,8 +1,10 @@
 'use client'
 
-import { Globe, Palette as PaletteIcon, Settings, UserRound } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Globe, LogOut, Palette as PaletteIcon, Settings, UserRound } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
+import { useSignOut } from '@/app/features/auth/components/SignOutButton'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -36,14 +38,18 @@ const FONT_LABELS: Record<Font, string> = {
 }
 
 /**
- * The header gear: Profile, Themes (mode, palette, font) and Language.
+ * The header gear: Profile, Themes (mode, palette, font), Language and, when
+ * signed in, Sign out. Also in the public top bar, where only the display
+ * settings show.
  *
  * Palette swatches are painted by rendering a tiny element under that
  * palette's own `data-palette` attribute, so the preview is the real token --
  * no second copy of the colour lives in this file.
  */
-export function SettingsMenu({ onOpenProfile, signedIn }: { onOpenProfile: () => void; signedIn: boolean }) {
+export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
   const t = useCopy()
+  const router = useRouter()
+  const { signOut } = useSignOut()
   const { theme, setTheme } = useTheme()
   const palette = usePreferences((s) => s.palette)
   const setPalette = usePreferences((s) => s.setPalette)
@@ -69,7 +75,7 @@ export function SettingsMenu({ onOpenProfile, signedIn }: { onOpenProfile: () =>
       <DropdownMenuContent align="end" className="w-56">
         {signedIn ? (
           <>
-            <DropdownMenuItem onClick={onOpenProfile}>
+            <DropdownMenuItem onClick={() => router.push('/profile')}>
               <UserRound />
               {t('header.profile')}
             </DropdownMenuItem>
@@ -139,6 +145,16 @@ export function SettingsMenu({ onOpenProfile, signedIn }: { onOpenProfile: () =>
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+
+        {signedIn ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={signOut}>
+              <LogOut />
+              {t('header.signout')}
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )

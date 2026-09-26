@@ -5,6 +5,156 @@ domain vocabulary and architecture rules.
 
 ---
 
+## Phase 6 — First-time setup, profile dashboard, public frame, ISQ rewrite (2026-09-26)
+
+Carlos's eleven-item brief, with Investopedia's "Get Started" flow as the
+reference (adapted to our navigation and palettes).
+
+**Build and dev [1][2].**
+- Both lint warnings fixed: `claude.ts` now actually passes `model` to the
+  adapter (it was accepted and dropped); unused `Noto_Sans` import removed.
+- webpack's "Serializing big strings (107/259kiB)" lines are its own cache
+  notes about the compiled Tailwind stylesheet, not our bundle; silenced via
+  `infrastructureLogging: 'error'` in `next.config.ts` (errors still show).
+- Removed three dependencies nothing imported: `@alpacahq/alpaca-trade-api`
+  (we call Alpaca's REST directly), `@google/generative-ai` (superseded by
+  `@google/genai`), and `cn` (we use `lib/utils`).
+- **Port:** `NEXT_PUBLIC_SITE_URL` never chose the dev port — it only builds
+  redirect URLs. `npm run dev` / `start` now pass `--port 3001`; `siteUrl()`'s
+  dev fallback, `.env.example`, README and `.claude/launch.json` follow.
+- **Dev is Turbopack** (`next dev --turbopack`), with `turbopack.root` pinned
+  for the same stray-lockfile reason as `outputFileTracingRoot`.
+- Measured: dev "Ready" 2.0s → 1.5s. Production build: warm-cache compile
+  7.3s (was 20s in Carlos's log), ~26s wall; zero warnings; 26 routes; `/`,
+  `/login`, `/sign-up` still static. First build after this change set was 47s
+  (cold cache), which is expected once.
+
+**Public frame [4][11].** `PublicShell` gives the landing page and signed-out
+`/markets` the *same* outer container as the app (backdrop, equal gap,
+rounded viewport-high frame) with an Investopedia-style top bar: wordmark,
+How it works / Why Papaldo / Markets / FAQ, the settings gear (theme, palette,
+font, language all work signed out), Log in, and a filled **Get Started**.
+`AppShell` renders it automatically when there is no user, so signed-out
+Markets has no sidebar and gets its page title from `PageTitle`. Landing
+headlines, nav and CTAs are in all three registers; the hero mock now mirrors
+the real Home cards. "Live · Alpaca" / "Live · Finnhub" badges are gone, and
+the Markets subtitle no longer names a provider.
+
+**Login and sign-up [5].** No top nav: an obvious back pill top-left ("About
+Papaldo Ka" → landing), centered PAPALDO KA wordmark, then a card with Google
+first, "or with email", and full-width Email / Password on shadcn `Field`.
+`/login` stays prerendered (callback errors are read client-side behind
+Suspense). Sign-up is now username, email, password only.
+
+**Profile dashboard [6]** at `/profile` (replaces the read-only dialog; the
+header user card and Settings → Profile open it). Full-size cards on a page
+that scrolls: details (username, contact), work & income (searchable,
+scrollable combobox of 100 occupations incl. Student / Salesperson / Content
+Creator / OFW; annual and ideal income each with a ₱ / $ switch), connected
+accounts (link Google), and password & security.
+- Password change is **email-confirmed**: we send Supabase's recovery link;
+  the callback trades it for a session whose signed `amr` says `recovery`, and
+  only within 15 minutes of that does `changePassword` accept a new password.
+  (Not `reauthenticate()` + nonce: Supabase only verifies that nonce when
+  "secure password change" is on *and* the session is over 24h old.)
+- Every Supabase round trip now returns through `/api/auth/callback`; flows
+  that must come back to `/profile` store an allow-listed return path in a
+  short-lived cookie (`auth/api/return-to.ts`) instead of a `?next=` that
+  would need its own redirect-allow-list entry. Open-redirect guard tested.
+
+**Migration `user_income_fields`** (applied live via MCP, mirrored in
+`supabase/migrations/20260926120000_user_income_fields.sql`): four nullable
+columns on `users` plus non-negative, currency-valid and amount-needs-currency
+checks. No grant change needed. Verified with a role-switched query: a
+stranger's JWT sees 0 rows and updates 0 rows; `anon` has no privilege. The
+generated types were spliced into `database.types.ts` by hand rather than
+overwriting it — see "Drift found" below.
+
+**Get Started, 3 steps [7][9][10].** A floating pill (bottom-right; our
+sidebar owns the left) opens a checklist card styled after Investopedia's:
+1/3 Set up your profile, 2/3 Take the quiz, 3/3 Take your first trade. Ticks
+come from the database via `getShellData().setup`, never from clicks. Step 3
+is locked until the quiz, because `place_order` refuses buys without a risk
+profile. Plus a one-time welcome carousel on first Home visit.
+- **1/3** `/onboarding/profile` is now a three-step journey (about you → work
+  → income), each step saving on Continue, inside the app frame.
+- **3/3** is a guided walkthrough: coach marks (the shadcn Popover, now with
+  an `anchor` prop) spotlight the universe table on `/markets`, then the order
+  ticket on the symbol page; steps advance by navigation, and it finishes with
+  "Mission accomplished!" when an order fills after the walkthrough started.
+- **The gate changed:** only a username is required now (a first Google
+  sign-in is the only way to lack one). Contact and occupation moved from
+  sign-up into 1/3. After login everyone lands on `/dashboard`.
+
+**ISQ rewrite [8]** — Carlos answered the framing questions: plain-language
+rewrite, exactly **three choices per question**, each with a title, a one-line
+description and an icon. Same six topics and low→high ordering, weights
+0/10/20. One question per screen inside the app frame on the questionnaire
+primitive (keys 1–3), with the result shown in place. New `/isq/results`
+(answers resolved to today's wording; pre-rewrite answers show as "from an
+earlier version"). The quiz also lives in **Tools** (now enabled in the
+sidebar) as a card: "You are an Aggressive Investor", score meter, date,
+View Results + Re-take Quiz, or Take Quiz.
+
+**Skeletons** for every new route (`/profile`, `/tools`, `/isq`,
+`/isq/results`, `/onboarding`), built from the new shared
+`components/skeleton-blocks.tsx` (dashboard and markets now use it too).
+
+**Cleanups on the way:** deleted `components/index.tsx` (legacy primitives
+with hardcoded grays — dark-on-dark in dark mode; the order ticket's error was
+its last user), `ProfileDialog`, the old landing header and complete-profile
+form. Fixed a pre-existing duplicate-key error in the landing footer.
+`AGENTS.md` had drifted from `CLAUDE.md` (it missed all of Phase 5) and is
+synced again.
+
+**Verified:** typecheck and lint clean (0 warnings); 68 tests pass (was 51;
+new: ISQ three-choice shape and ids, return-path guard, setup completeness,
+income parsing, the 100-occupation list, schemas). In the browser: landing,
+signed-out Markets (no sidebar, title, no badges), login and sign-up on
+desktop and phone width with no horizontal overflow, light mode on the login
+card. Google sign-in reached Google's account chooser from `localhost:3001`,
+so the provider **is** enabled now.
+
+**Not verified in a browser:** every signed-in page (`/profile`, `/tools`,
+`/isq`, `/onboarding/profile`, Get Started dock, walkthrough, welcome). The
+preview pane had no session, and creating accounts or typing passwords is off
+limits for the agent. They compile in the production build and typecheck;
+they need a look with a real session. The password email and Google linking
+were not exercised end to end (both send real traffic to Supabase/Google).
+
+**Drift found (not caused here, not fixed):** the live DB has a migration
+`tradable_assets_readable_when_signed_out` that is not in
+`supabase/migrations/`, and the repo's `20260912000000_market_outlooks.sql` was
+never applied live — so `database.types.ts` describes a `market_outlooks`
+table production does not have.
+
+**Open for Carlos:**
+- Supabase → Authentication → URL Configuration: add `http://localhost:3001/**`
+  (the dev port moved) and the Vercel origin.
+- Supabase → Sign In / Providers: turn on **Enable manual linking**, or
+  "Link Google" on the profile page answers "Manual linking is disabled".
+- Supabase's built-in mailer is rate-limited to a few emails an hour; set up
+  custom SMTP before real users change passwords.
+- Look over the signed-in pages with your account (list above).
+- The `frontend-design` skill named in the brief is not installed on this
+  machine or account; the design followed the existing tokens and card style.
+
+**Graphify (post-execution, as requested).** Rebuilt `graphify-out/` over
+`src` in full rather than `--update`: the previous run saved no manifest, so
+an incremental pass could not have pruned deleted files. 1,346 nodes · 3,893
+edges · 61 labelled communities (+390 nodes, +1,646 edges, −47 nodes, −264
+edges vs. before). AST extraction is free; the one doc (dashboard README)
+cost 110,803 tokens. **`graphify-out/manifest.json` now exists**, so from now
+on `graphify --update` re-extracts only changed files — that is the token
+saving. Health check: 4 dangling-endpoint edges, 3 self-loops, 30 same-pair
+collapses (import + re-export, calls + contains). graphify's AST cache lives
+in `src/graphify-out/cache/` (gitignored); exclude it when grepping `src`.
+One file changed after the rebuild: `features/dashboard/README.md` (its note
+on the unbuilt profile button was stale — the graph surfaced it). The next
+`graphify --update` re-extracts just that file.
+
+---
+
 ## Phase 5 — Dashboard redesign, app shell, peso toggle (2026-09-25)
 
 Built from Carlos's mockups (Home, See-all dialog, Settings menus, quiz

@@ -3,30 +3,31 @@ import type { IsqChoice, IsqQuestion } from './types'
 /**
  * The six-item Investment Suitability Questionnaire.
  *
- * Question and choice wording is transcribed VERBATIM from Manulife's Client
- * Suitability Assessment. Do not paraphrase: the wording is the spec. If a
- * question needs to change, change it here and update CONTEXT.md.
+ * Rewritten in plain language on 2026-09-26 (Carlos's call). The six topics
+ * and their low-to-high risk ordering still follow Manulife's Client
+ * Suitability Assessment, but the wording is now ours and every question has
+ * exactly three choices -- one per risk band -- each with a short title, a
+ * one-line description and an icon. The verbatim transcription it replaces
+ * is in git history (before this date) if the source wording is ever needed.
  *
- * Choices are listed in the same order they appear on screen, which in every
- * question runs from lowest risk to highest. Weights are derived from that
- * position rather than typed by hand -- see `withPoints` below.
+ * Choices are listed in on-screen order, lowest risk first. Weights are
+ * derived from that position rather than typed by hand -- see `withPoints`.
+ * Reordering a question's choices changes its scoring; that is deliberate.
+ *
+ * Choice ids are new with this version. Old `isq_responses` rows keep their
+ * old ids (the table is append-only), so the results page must tolerate ids
+ * it cannot find here.
  */
 
 /**
- * Every question is normalized onto a 0-20 scale so that each contributes
- * equally to the final score regardless of how many options it offers.
- *
- * 20 is the least common multiple of the gap counts across the questionnaire
- * (3 choices -> 2 gaps, 5 -> 4, 6 -> 5), which is what keeps every weight a
- * whole number:
- *
- *   3 choices -> 0, 10, 20
- *   5 choices -> 0, 5, 10, 15, 20
- *   6 choices -> 0, 4, 8, 12, 16, 20
+ * Every question is normalized onto a 0-20 scale so each contributes equally
+ * to the final score. With three choices everywhere the weights are simply
+ * 0, 10, 20; the general rule is kept so a future question with 5 or 6
+ * choices still normalizes (20 is the LCM of 2, 4 and 5 gaps).
  */
 export const NORMALIZED_MAX = 20
 
-function withPoints(choices: Array<{ id: string; label: string }>): IsqChoice[] {
+function withPoints(choices: Array<Omit<IsqChoice, 'points'>>): IsqChoice[] {
   const gaps = choices.length - 1
   if (gaps < 1 || NORMALIZED_MAX % gaps !== 0) {
     throw new Error(
@@ -40,118 +41,92 @@ function withPoints(choices: Array<{ id: string; label: string }>): IsqChoice[] 
 export const ISQ_QUESTIONS: IsqQuestion[] = [
   {
     id: 'age',
-    prompt: 'How old are you now?',
+    prompt: 'How old are you?',
+    helperText: 'The longer your money has to grow, the more ups and downs it can ride out.',
     choices: withPoints([
-      { id: 'age_56_up', label: '56 years old and up' },
-      { id: 'age_36_55', label: '36 to 55 years old' },
-      { id: 'age_18_35', label: '18 to 35 years old' },
+      { id: 'age_56_up', label: '56 or older', description: 'Closer to using this money than growing it', icon: 'sunset' },
+      { id: 'age_36_55', label: '36 to 55', description: 'Building up, with retirement on the horizon', icon: 'briefcase' },
+      { id: 'age_18_35', label: '18 to 35', description: 'Decades ahead for your money to grow', icon: 'sprout' },
     ]),
   },
   {
     id: 'experience',
-    prompt: 'How would you describe your years of investment experience?',
-    helperText:
-      'If you choose "No experience", Question 3 is set to "I have not invested in any financial instrument in the past" by default.',
+    prompt: 'How long have you been investing?',
+    helperText: 'Picking “Not yet” also answers the next question for you.',
     choices: withPoints([
-      { id: 'exp_none', label: 'No experience' },
-      { id: 'exp_under_1y', label: 'Less than 1 year' },
-      { id: 'exp_1_to_3y', label: '1 to less than 3 Years' },
-      { id: 'exp_3_to_5y', label: '3 to less than 5 Years' },
-      { id: 'exp_5y_plus', label: '5 years or more' },
+      { id: 'exp_none', label: 'Not yet', description: 'This would be my first time', icon: 'footprints' },
+      { id: 'exp_under_3y', label: 'Less than 3 years', description: 'I have tried a few things', icon: 'compass' },
+      { id: 'exp_3y_plus', label: '3 years or more', description: 'I have seen markets rise and fall', icon: 'mountain' },
     ]),
   },
   {
     id: 'instruments',
-    prompt: 'Which of the following financial instruments have you invested in the past?',
+    prompt: 'What have you invested in before?',
+    helperText: 'Pick the riskiest one you have held.',
     choices: withPoints([
-      { id: 'inst_none', label: 'I have not invested in any financial instrument in the past' },
-      { id: 'inst_bonds', label: 'Bonds/Fixed Income' },
-      { id: 'inst_bonds_fx', label: 'Bonds/Fixed income, or Foreign Currencies' },
       {
-        id: 'inst_bonds_fx_balanced',
-        label: 'Bonds/Fixed income, Foreign Currencies, or Balanced Funds',
+        id: 'inst_savings',
+        label: 'Nothing, or savings and bonds',
+        description: 'Bank or time deposits, Pag-IBIG MP2, bonds',
+        icon: 'piggy-bank',
       },
       {
-        id: 'inst_bonds_fx_balanced_equity',
-        label: 'Bonds/Fixed income, Foreign Currencies, Balanced Funds, or Stocks/ Equity Funds',
+        id: 'inst_funds_fx',
+        label: 'Funds or foreign currency',
+        description: 'UITFs, mutual funds, dollar accounts',
+        icon: 'layers',
       },
       {
-        id: 'inst_bonds_fx_balanced_equity_leverage',
-        label:
-          'Bonds/Fixed income, Foreign Currencies, Balanced Funds, Stocks/ Equity Funds, or Leverage Instruments',
+        id: 'inst_equity_leverage',
+        label: 'Stocks, crypto or leverage',
+        description: 'Individual shares, crypto, margin or options',
+        icon: 'candlestick',
       },
     ]),
   },
   {
     id: 'horizon',
-    prompt: 'What is the intended time period for your investment?',
-    helperText: 'Our products are suitable for medium to long term goals.',
+    prompt: 'How long can you leave this money invested?',
+    helperText: 'Investing suits goals at least five years away.',
     choices: withPoints([
-      { id: 'horizon_medium', label: 'Medium Term (at least 5 years)' },
-      { id: 'horizon_medium_long', label: 'Medium to Long Term (6 to 10 years)' },
-      { id: 'horizon_long', label: 'Long Term (11 years or more)' },
+      { id: 'horizon_5y', label: 'About 5 years', description: 'A medium-term goal', icon: 'hourglass' },
+      { id: 'horizon_6_10y', label: '6 to 10 years', description: 'Medium to long term', icon: 'calendar' },
+      { id: 'horizon_11y_plus', label: '11 years or more', description: 'A long-term goal', icon: 'telescope' },
     ]),
   },
   {
     id: 'volatility',
-    prompt:
-      'How comfortable are you with changes in the value of your investments, including the possibility of losing some of the original amount you invested?',
-    helperText:
-      'For example, if you invest ₱100,000, a 10% change means your investment could increase or decrease by ₱10,000.',
+    prompt: 'If your ₱100,000 dipped to ₱90,000 in a bad month, you would…',
+    helperText: 'There is no wrong answer. This is about what you could live with.',
     choices: withPoints([
-      { id: 'vol_0_to_2', label: 'I can tolerate minimal fluctuation in my investment of 0% to -2%' },
-      { id: 'vol_5', label: 'I can tolerate fluctuations in my investments of around +/-5%' },
-      { id: 'vol_10', label: 'I can tolerate fluctuations in my investments of around +/-10%' },
-      {
-        id: 'vol_15',
-        label: 'I can tolerate significant changes in my investment of around +/-15%',
-      },
-      {
-        id: 'vol_20_plus',
-        label: 'I can tolerate significant changes in my investment of +/-20% or more',
-      },
+      { id: 'vol_pull_out', label: 'Pull out', description: 'I can’t stomach losing money', icon: 'shield' },
+      { id: 'vol_wait', label: 'Wait it out', description: 'Small dips are fine if it recovers', icon: 'scale' },
+      { id: 'vol_buy_more', label: 'Buy more while it’s cheap', description: 'Big swings don’t scare me', icon: 'rocket' },
     ]),
   },
   {
     id: 'objective',
-    prompt: 'Which of the following best describes your overall investment objective?',
+    prompt: 'What do you want this money to do?',
     choices: withPoints([
-      {
-        id: 'obj_capital_preservation',
-        label: 'Capital Preservation: Keep investment losses at a minimum with little concern for returns',
-      },
-      {
-        id: 'obj_income',
-        label: 'Income Orientation: Earn a modest income or aim to beat inflation',
-      },
-      {
-        id: 'obj_income_growth',
-        label: 'Income and Growth: Achieve a balance of modest income and capital appreciation',
-      },
-      {
-        id: 'obj_growth',
-        label: 'Growth Orientation: Aim for returns with a focus on capital appreciation',
-      },
-      {
-        id: 'obj_aggressive_growth',
-        label: 'Aggressive Growth: Seek maximum returns, possibly from high-risk financial investments',
-      },
+      { id: 'obj_protect', label: 'Protect it', description: 'Keep losses small, even if returns are small', icon: 'shield' },
+      { id: 'obj_balance', label: 'Grow it steadily', description: 'Beat inflation with some income and some growth', icon: 'scale' },
+      { id: 'obj_grow_fast', label: 'Grow it fast', description: 'Chase the biggest returns and accept big risks', icon: 'rocket' },
     ]),
   },
 ]
 
 /**
- * On the source questionnaire, answering Q2 with "No experience" pre-selects
- * the matching "have not invested" answer on Q3. Encoded as data and consumed
- * today only by the form's auto-select (`IsqForm`); `scoreIsq` does not enforce
- * the pairing, so it is a UI convenience, not a server-side invariant.
+ * Answering Q2 with "Not yet" pre-selects the matching "Nothing, or savings
+ * and bonds" answer on Q3, as the source questionnaire did. Consumed only by
+ * the form's auto-select (`IsqForm`); `scoreIsq` does not enforce the
+ * pairing, so it is a UI convenience, not a server-side invariant.
  */
 export const ANSWER_DEPENDENCIES = [
   {
     whenQuestionId: 'experience',
     whenChoiceId: 'exp_none',
     thenQuestionId: 'instruments',
-    thenChoiceId: 'inst_none',
+    thenChoiceId: 'inst_savings',
   },
 ] as const
 

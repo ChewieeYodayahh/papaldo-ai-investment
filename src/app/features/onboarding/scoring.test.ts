@@ -35,7 +35,7 @@ describe('question weights', () => {
     }
   })
 
-  it('covers exactly the six questions from the source questionnaire', () => {
+  it('covers exactly the six topics from the source questionnaire', () => {
     expect(ISQ_QUESTIONS.map((question) => question.id)).toEqual([
       'age',
       'experience',
@@ -44,6 +44,27 @@ describe('question weights', () => {
       'volatility',
       'objective',
     ])
+  })
+
+  it('offers exactly three choices per question, weighted 0 / 10 / 20', () => {
+    for (const question of ISQ_QUESTIONS) {
+      expect(question.choices.map((choice) => choice.points)).toEqual([0, 10, 20])
+    }
+  })
+
+  it('gives every choice a title, a description and an icon', () => {
+    for (const question of ISQ_QUESTIONS) {
+      for (const choice of question.choices) {
+        expect(choice.label.trim()).not.toBe('')
+        expect(choice.description.trim()).not.toBe('')
+        expect(choice.icon).toBeTruthy()
+      }
+    }
+  })
+
+  it('uses choice ids that are unique across the whole questionnaire', () => {
+    const ids = ISQ_QUESTIONS.flatMap((question) => question.choices.map((choice) => choice.id))
+    expect(new Set(ids).size).toBe(ids.length)
   })
 })
 
@@ -56,11 +77,23 @@ describe('scoreIsq', () => {
     expect(scoreIsq(allHighest)).toMatchObject({ totalScore: 100, band: 'High' })
   })
 
-  it('weights each question equally regardless of its option count', () => {
-    // Middle option throughout. The 6-option question has no exact middle, so
-    // index 2 (8 points) is used there: (10+10+8+10+10+10)/6 * 5 = 48.33 -> 48.
-    const middle = answerAll((count) => Math.floor((count - 1) / 2))
-    expect(scoreIsq(middle)).toMatchObject({ totalScore: 48, band: 'Medium' })
+  it('scores the middle choice throughout as exactly 50 / Medium', () => {
+    const middle = answerAll(() => 1)
+    expect(scoreIsq(middle)).toMatchObject({ totalScore: 50, band: 'Medium' })
+  })
+
+  it('lands on the band edges the way the thresholds say', () => {
+    // Two middles, four lowest: (10+10)/6 * 5 = 16.67 -> 17, Low.
+    const mostlyLow = answerAll(() => 0).map((answer, i) =>
+      i < 2 ? { ...answer, choiceId: ISQ_QUESTIONS[i].choices[1].id } : answer,
+    )
+    expect(scoreIsq(mostlyLow)).toMatchObject({ totalScore: 17, band: 'Low' })
+
+    // Four highest, two middles: (20*4+10*2)/6 * 5 = 83.33 -> 83, High.
+    const mostlyHigh = answerAll(() => 2).map((answer, i) =>
+      i < 2 ? { ...answer, choiceId: ISQ_QUESTIONS[i].choices[1].id } : answer,
+    )
+    expect(scoreIsq(mostlyHigh)).toMatchObject({ totalScore: 83, band: 'High' })
   })
 
   it('resolves points from the question bank, not from the caller', () => {
@@ -77,12 +110,18 @@ describe('scoreIsq', () => {
 
   it('rejects a choice that belongs to another question', () => {
     const answers = [...allLowest]
-    answers[0] = { questionId: 'age', choiceId: 'obj_growth' }
+    answers[0] = { questionId: 'age', choiceId: 'obj_grow_fast' }
     expect(() => scoreIsq(answers)).toThrow(IsqValidationError)
   })
 
   it('rejects a duplicated question', () => {
     expect(() => scoreIsq([...allLowest, allLowest[0]])).toThrow(IsqValidationError)
+  })
+
+  it('rejects choice ids from the retired verbatim version', () => {
+    const answers = [...allLowest]
+    answers[1] = { questionId: 'experience', choiceId: 'exp_1_to_3y' }
+    expect(() => scoreIsq(answers)).toThrow(IsqValidationError)
   })
 })
 

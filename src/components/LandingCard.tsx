@@ -30,10 +30,10 @@ export function LandingCard({
   if (href) {
     return (
       <a href={href} className="block h-full not-prose">
-        <Card className="h-full hover:shadow-lg transition-shadow">{body}</Card>
+        <Card className="h-full rounded-2xl border-0 transition-shadow hover:shadow-lg">{body}</Card>
       </a>
     )
   }
 
-  return <Card className="hover:shadow-lg transition-shadow">{body}</Card>
+  return <Card className="h-full rounded-2xl border-0 transition-shadow hover:shadow-lg">{body}</Card>
 }

@@ -1,26 +1,27 @@
 import Link from 'next/link'
 
+import { FieldSeparator } from '@/components/ui/field'
+import { AuthLayout } from '@/app/features/auth/components/AuthLayout'
 import { GoogleButton } from '@/app/features/auth/components/GoogleButton'
 import { SignUpForm } from '@/app/features/auth/components/SignUpForm'
-import { PageShell } from '@/components'
 
 export function SignUpPage() {
   return (
-    <PageShell
-      title="Create your account"
-      subtitle="Then answer six questions so we can work out your investor risk profile."
+    <AuthLayout
+      title="Get started"
+      subtitle="Free and simulated — no real money, ever."
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-foreground underline underline-offset-4 hover:text-highlight">
+            Log in
+          </Link>
+        </>
+      }
     >
+      <GoogleButton label="Sign up with Google" />
+      <FieldSeparator className="my-6 *:data-[slot=field-separator-content]:bg-card">or with email</FieldSeparator>
       <SignUpForm />
-
-      <div className="my-6 text-center text-xs text-muted-foreground">or</div>
-      <GoogleButton label="Continue with Google" />
-
-      <p className="mt-6 text-sm text-muted-foreground">
-        Already have an account?{' '}
-        <Link href="/login" className="underline">
-          Sign in
-        </Link>
-      </p>
-    </PageShell>
+    </AuthLayout>
   )
 }

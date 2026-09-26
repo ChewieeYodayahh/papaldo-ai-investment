@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
 import { Compass } from 'lucide-react'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { FormError } from '@/components'
 import { cn } from '@/lib/utils'
 
 import { useFormSubmit } from '@/app/features/auth/hooks/use-form-submit'
@@ -99,7 +99,7 @@ export function OrderTicket({
   // explanation actually applies.
   if (!canBuy && !canSell) {
     return (
-      <Card>
+      <Card data-tour="order-ticket">
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <CardTitle className="text-sm font-medium text-muted-foreground">Trade {symbol}</CardTitle>
           <Badge variant="outline" className="text-[10px]">
@@ -130,7 +130,7 @@ export function OrderTicket({
   }
 
   return (
-    <Card>
+    <Card data-tour="order-ticket">
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
         <CardTitle className="text-sm font-medium text-muted-foreground">Trade {symbol}</CardTitle>
         <Badge variant="outline" className="text-[10px]">
@@ -224,7 +224,11 @@ export function OrderTicket({
             </p>
           ) : null}
 
-          <FormError message={message} />
+          {message ? (
+            <Alert variant="destructive">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          ) : null}
 
           <Button
             type="submit"

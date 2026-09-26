@@ -111,9 +111,9 @@ export class GeminiAdapter implements AIAdapter {
   private apiKey: string
   private model: string
 
-  constructor() {
+  constructor(model = 'gemini-2.5-flash') {
     this.apiKey = process.env.GEMINI_API_KEY || ''
-    this.model = 'gemini-2.5-flash'
+    this.model = model
     if (!this.apiKey) {
       console.warn('WARNING: GEMINI_API_KEY not set. Gemini adapter will fail.')
     }
@@ -145,11 +145,11 @@ export class GeminiAdapter implements AIAdapter {
  * The secondary slot is typed but intentionally undefined —
  * wired for future provider without dead code.
  */
-export function createAdapter(): {
+export function createAdapter(model?: string): {
   primary: AIAdapter
   secondary: AIAdapter | undefined
 } {
-  const primary = new GeminiAdapter()
+  const primary = new GeminiAdapter(model)
   return {
     primary,
     secondary: undefined,
@@ -167,7 +167,8 @@ export async function createMessage({
   model = 'gemini-2.5-flash',
   maxTokens = 1024,
 }: AIRequest): Promise<string> {
-  const { primary } = createAdapter()
+  // `model` used to be accepted and silently dropped; the adapter now honours it.
+  const { primary } = createAdapter(model)
 
   const response = await primary.generate({
     messages,
