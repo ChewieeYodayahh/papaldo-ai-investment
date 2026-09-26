@@ -13,7 +13,7 @@ import { setReturnTo } from './return-to'
  * the rule that no component talks to Supabase directly, while still using
  * stock Supabase Auth rather than a hand-rolled OAuth flow.
  */
-export async function getGoogleAuthUrl(): Promise<
+export async function getGoogleAuthUrl(origin?: string): Promise<
   { ok: true; url: string } | { ok: false; message: string }
 > {
   const supabase = await createClient()
@@ -22,7 +22,7 @@ export async function getGoogleAuthUrl(): Promise<
     provider: 'google',
     options: {
       skipBrowserRedirect: true,
-      redirectTo: `${siteUrl()}/api/auth/callback`,
+      redirectTo: `${siteUrl(origin)}/api/auth/callback`,
       // Always show the account chooser, so "Continue with Google" on a shared
       // machine never silently signs in whoever used it last.
       queryParams: { prompt: 'select_account' },
@@ -43,14 +43,14 @@ export async function getGoogleAuthUrl(): Promise<
  * Providers. With it off Supabase answers "Manual linking is disabled", which
  * is surfaced as-is so the reason is visible rather than swallowed.
  */
-export async function getGoogleLinkUrl(): Promise<{ ok: true; url: string } | { ok: false; message: string }> {
+export async function getGoogleLinkUrl(origin?: string): Promise<{ ok: true; url: string } | { ok: false; message: string }> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.linkIdentity({
     provider: 'google',
     options: {
       skipBrowserRedirect: true,
-      redirectTo: `${siteUrl()}/api/auth/callback`,
+      redirectTo: `${siteUrl(origin)}/api/auth/callback`,
     },
   })
 

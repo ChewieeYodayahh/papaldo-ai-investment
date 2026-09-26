@@ -30,12 +30,26 @@ export function useFormSubmit(endpoint: string, method: 'POST' | 'PATCH' = 'POST
     setErrors({})
 
     try {
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const body = (await response.json()) as ApiResponse
+      let response: Response
+      try {
+        response = await fetch(endpoint, {
+          method,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      } catch {
+        // Only a fetch that never got an answer is a connection problem.
+        setMessage(NETWORK_ERROR)
+        return null
+      }
+
+      // A non-JSON answer (an unhandled server error) is our fault, not the
+      // user's network, and the message should not send them to check it.
+      const body = (await response.json().catch(() => null)) as ApiResponse | null
+      if (!body) {
+        setMessage(`Something went wrong on our side (HTTP ${response.status}). Please try again.`)
+        return null
+      }
 
       if (!body.ok) {
         setMessage(body.message ?? 'Something went wrong. Please try again.')
@@ -44,9 +58,6 @@ export function useFormSubmit(endpoint: string, method: 'POST' | 'PATCH' = 'POST
       }
 
       return body
-    } catch {
-      setMessage(NETWORK_ERROR)
-      return null
     } finally {
       setPending(false)
     }

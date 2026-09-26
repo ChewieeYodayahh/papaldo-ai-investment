@@ -32,19 +32,25 @@ export function GoogleButton({
   async function start() {
     setPending(true)
     setMessage(undefined)
+    let response: Response
     try {
-      const response = await fetch(endpoint, { method: 'POST' })
-      const body = (await response.json()) as { ok: boolean; url?: string; message?: string }
-      if (!body.ok || !body.url) {
-        setMessage(body.message ?? 'Could not start Google sign-in.')
-        setPending(false)
-        return
-      }
-      window.location.assign(body.url)
+      response = await fetch(endpoint, { method: 'POST' })
     } catch {
+      // Only a failed fetch is a network problem.
       setMessage(NETWORK_ERROR)
       setPending(false)
+      return
     }
+
+    // A reply that is not JSON is a server fault, not a connection fault --
+    // saying "check your connection" for it sent people hunting the wrong way.
+    const body = (await response.json().catch(() => null)) as { ok: boolean; url?: string; message?: string } | null
+    if (!body?.ok || !body.url) {
+      setMessage(body?.message ?? `Google sign-in failed on our side (HTTP ${response.status}). Please use email for now.`)
+      setPending(false)
+      return
+    }
+    window.location.assign(body.url)
   }
 
   return (

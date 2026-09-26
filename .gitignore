@@ -145,3 +145,9 @@ graphify-out/
 .claude/skills/provider-switch/scripts/launch-pro.ps1
 .claude/skills/provider-switch/SKILL.md
 .claude/skills/provider-switch/REFERENCE.md
+
+# Python pipelines (python/*.py)
+python/.venv/
+__pycache__/
+*.pyc
+python/out/

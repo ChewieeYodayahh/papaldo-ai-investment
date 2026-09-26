@@ -33,9 +33,17 @@ export function supabaseAnonKey(): string {
  * This value only builds redirect URLs. It does not choose the port the dev
  * server listens on -- `next dev` never reads it. The port is pinned in the
  * package.json scripts (`--port 3001`), and the two have to agree.
+ *
+ * `requestOrigin` is the origin the current request arrived on. When the env
+ * var is unset it is the right answer by definition, and it is what kept
+ * Google sign-in alive on Vercel: without it this threw, the route answered a
+ * bare HTTP 500, and the button reported a network error (2026-09-26). An
+ * explicit NEXT_PUBLIC_SITE_URL still wins, e.g. behind a proxy that rewrites
+ * the host.
  */
-export function siteUrl(): string {
+export function siteUrl(requestOrigin?: string): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
+  if (requestOrigin) return requestOrigin
   if (process.env.NODE_ENV === 'development') return 'http://localhost:3001'
   return required('NEXT_PUBLIC_SITE_URL')
 }

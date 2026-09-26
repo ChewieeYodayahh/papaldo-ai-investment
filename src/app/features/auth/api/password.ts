@@ -27,7 +27,7 @@ import { setReturnTo } from './return-to'
 /** How long after opening the email the new password may be set. */
 export const CONFIRMATION_WINDOW_SECONDS = 15 * 60
 
-export async function sendPasswordConfirmation() {
+export async function sendPasswordConfirmation(origin?: string) {
   const user = await getSessionUser()
   if (!user?.email) {
     return { ok: false as const, message: 'You are not signed in.' }
@@ -35,7 +35,7 @@ export async function sendPasswordConfirmation() {
 
   const supabase = await createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-    redirectTo: `${siteUrl()}/api/auth/callback`,
+    redirectTo: `${siteUrl(origin)}/api/auth/callback`,
   })
   if (error) {
     return { ok: false as const, message: error.message }

@@ -59,11 +59,14 @@ export function WelcomeDialog({ open }: { open: boolean }) {
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? null : markSeen())}>
-      <DialogContent className="gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-lg">
+      {/* DialogContent is a grid, and a grid track grows to its content: without
+          minmax(0,1fr) the four-slide strip widened the column past the dialog
+          and every slide rendered shifted right and clipped (2026-09-26). */}
+      <DialogContent className="grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-lg">
         {/* One title for the dialog; each slide's heading is ordinary text. */}
         <DialogTitle className="sr-only">{t('wel.1.title')}</DialogTitle>
         <DialogDescription className="sr-only">{t('wel.1.body')}</DialogDescription>
-        <Carousel setApi={setApi} opts={{ loop: false }}>
+        <Carousel setApi={setApi} opts={{ loop: false }} className="w-full min-w-0">
           <CarouselContent className="ml-0">
             {SLIDES.map((slide, i) => (
               <CarouselItem key={slide.title} className="pl-0" aria-label={`${i + 1} of ${SLIDES.length}`}>

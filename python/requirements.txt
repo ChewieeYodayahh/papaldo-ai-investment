@@ -1,0 +1,6 @@
+# Market-data pipelines (python/*.py), run by GitHub Actions and locally.
+# Pinned to known-good majors; the weekly/monthly crons should not start
+# failing on a morning nobody touched them.
+yfinance>=0.2.54,<0.3
+pandas>=2.2,<3
+supabase>=2.10,<3
