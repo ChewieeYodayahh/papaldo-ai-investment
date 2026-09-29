@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
-import { logoUrl } from '../logos'
+import { logoUrl } from '@/lib/logos'
 
 /**
  * A ticker's logo, or its monogram when there is none.

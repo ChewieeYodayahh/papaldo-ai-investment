@@ -6,23 +6,21 @@ import { Crown, Info } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Change } from '@/app/features/markets/components/Change'
 import { PILL_LIST, PILL_TRIGGER } from '@/app/features/markets/components/pill-tabs'
 import { useCopy } from '@/app/features/preferences/copy'
+import { pointDot } from '@/lib/chart-dots'
 import { cn } from '@/lib/utils'
 
 import type { BenchmarksPayload, IndexMeta } from '../api/benchmarks'
+import { INDEX_COLOR } from '../colors'
 import { lastMonths, rebase, summarize, type IndexKey, type IndexSummary } from '../math'
 
 /** One chart token per index; no colour is defined in this file. */
-const COLOR: Record<IndexKey, string> = {
-  PSEI: 'var(--chart-1)',
-  NYSE: 'var(--chart-2)',
-  NASDAQ: 'var(--chart-4)',
-  SP500: 'var(--chart-3)',
-}
+const COLOR = INDEX_COLOR
 
 const RANGES = [
   { id: '5Y', months: 60 },
@@ -48,11 +46,22 @@ function displayLabel(index: IndexMeta): string {
  * range (5Y / 10Y / 15Y), so the chart and the cards answer "how much did
  * each grow over this stretch". YoY view: the stored rolling 12-month return,
  * which does not depend on the range's start -- the range only crops it.
+ *
+ * Each index has a checkbox, so any line can be hidden to compare two or
+ * three at a time (at least one stays on). Every month is a dot on its line.
  */
 export function Benchmarker({ data }: { data: BenchmarksPayload }) {
   const t = useCopy()
   const [view, setView] = useState<View>('growth')
   const [range, setRange] = useState<RangeId>('15Y')
+  const [hidden, setHidden] = useState<IndexKey[]>([])
+  const shown = (key: IndexKey) => !hidden.includes(key)
+  const toggle = (key: IndexKey, on: boolean) =>
+    setHidden((current) => {
+      if (on) return current.filter((k) => k !== key)
+      // Never hide the last visible line.
+      return data.indexes.length - current.length > 1 ? [...current, key] : current
+    })
 
   const months = RANGES.find((r) => r.id === range)?.months ?? Infinity
   const growth = useMemo(() => rebase(lastMonths(data.growth, months)), [data.growth, months])
@@ -65,7 +74,9 @@ export function Benchmarker({ data }: { data: BenchmarksPayload }) {
         .filter((s): s is IndexSummary => s !== null),
     [data.indexes, growth, yoy],
   )
-  const leader = summaries.reduce<IndexSummary | null>((best, s) => (!best || s.last > best.last ? s : best), null)
+  const leader = summaries
+    .filter((s) => shown(s.key))
+    .reduce<IndexSummary | null>((best, s) => (!best || s.last > best.last ? s : best), null)
 
   const config = Object.fromEntries(
     data.indexes.map((index) => [index.key, { label: displayLabel(index), color: COLOR[index.key] }]),
@@ -113,7 +124,14 @@ export function Benchmarker({ data }: { data: BenchmarksPayload }) {
           if (!s) return null
           const isLeader = leader?.key === index.key && view === 'growth'
           return (
-            <Card key={index.key} className={cn('rounded-2xl border-0 py-4', isLeader && 'ring-2 ring-primary/50')}>
+            <Card
+              key={index.key}
+              className={cn(
+                'rounded-2xl border-0 py-4 transition-opacity',
+                isLeader && 'ring-2 ring-primary/50',
+                !shown(index.key) && 'opacity-50',
+              )}
+            >
               <CardContent className="space-y-2 px-4">
                 <div className="flex items-center gap-2">
                   <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: COLOR[index.key] }} aria-hidden />
@@ -212,7 +230,8 @@ export function Benchmarker({ data }: { data: BenchmarksPayload }) {
                   type="monotone"
                   stroke={`var(--color-${index.key})`}
                   strokeWidth={index.key === 'PSEI' ? 2.75 : 2}
-                  dot={false}
+                  hide={!shown(index.key)}
+                  dot={pointDot((view === 'growth' ? growth : yoy).length, 'var(--color-' + index.key + ')')}
                   connectNulls
                   // Every view/range switch re-renders the lines; replaying a
                   // draw-in animation each time is noise (and it never starts
@@ -224,14 +243,23 @@ export function Benchmarker({ data }: { data: BenchmarksPayload }) {
             </LineChart>
           </ChartContainer>
 
-          {/* The cards double as the legend on a phone; this row is for wide screens. */}
-          <div className="hidden flex-wrap gap-x-5 gap-y-1 px-1 sm:flex">
-            {data.indexes.map((index) => (
-              <span key={index.key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: COLOR[index.key] }} aria-hidden />
-                {displayLabel(index)}
-              </span>
-            ))}
+          {/* Legend and switches in one row: tick an index to show its line. */}
+          <div className="flex flex-wrap gap-x-5 gap-y-2 px-1" role="group" aria-label={t('bm.showLines')}>
+            {data.indexes.map((index) => {
+              const id = `bm-show-${index.key}`
+              return (
+                <label key={index.key} htmlFor={id} className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+                  <Checkbox
+                    id={id}
+                    checked={shown(index.key)}
+                    onCheckedChange={(checked) => toggle(index.key, Boolean(checked))}
+                    aria-label={t('bm.showIndex', { index: displayLabel(index) })}
+                  />
+                  <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: COLOR[index.key] }} aria-hidden />
+                  <span className={cn(shown(index.key) && 'text-foreground')}>{displayLabel(index)}</span>
+                </label>
+              )
+            })}
           </div>
         </CardContent>
       </Card>

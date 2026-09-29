@@ -146,6 +146,15 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
+        {signedIn ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-normal">{t('header.guestNote')}</DropdownMenuLabel>
+            </DropdownMenuGroup>
+          </>
+        )}
+
         {signedIn ? (
           <>
             <DropdownMenuSeparator />

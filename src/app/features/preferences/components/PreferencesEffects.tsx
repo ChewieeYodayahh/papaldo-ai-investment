@@ -5,9 +5,9 @@ import { useEffect } from 'react'
 import { usePreferences } from '../store'
 
 /**
- * Mounted once in the root layout. Restores saved preferences after hydration
- * (the store skips it so server and client first renders match) and mirrors
- * palette and font onto <html>, where globals.css picks them up.
+ * Mounted once in the root layout. Mirrors palette and font onto <html>,
+ * where globals.css picks them up. Loading saved preferences is
+ * PreferencePersistence's job, since only a signed-in shell may load them.
  *
  * Forest and Figtree are the defaults, so their attributes are removed rather
  * than set -- the stylesheet's `:root` / `.dark` blocks are the forest palette.
@@ -15,10 +15,6 @@ import { usePreferences } from '../store'
 export function PreferencesEffects() {
   const palette = usePreferences((s) => s.palette)
   const font = usePreferences((s) => s.font)
-
-  useEffect(() => {
-    void usePreferences.persist.rehydrate()
-  }, [])
 
   useEffect(() => {
     const root = document.documentElement

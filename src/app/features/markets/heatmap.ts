@@ -1,8 +1,8 @@
 import type { UniverseQuote } from './api/movers'
 
 /**
- * The /markets sector heatmap's data model (Carlos, 2026-09-26, after
- * Perplexity Finance's S&P 500 heatmap). Pure, so it is unit tested; the
+ * The /markets sector heatmap's data model (Carlos, 2026-09-26; restyled
+ * 2026-09-29 after TradingView's Stock Heatmap). Pure, so it is unit tested; the
  * squarified layout itself is d3-hierarchy's, in `SectorTreemap`.
  *
  *   Scope    stocks in the buyable universe only. ETFs are left out: a fund
@@ -15,8 +15,9 @@ import type { UniverseQuote } from './api/movers'
  *   Sector % cap-weighted, like an index: sum(cap * change) / sum(cap). An
  *            equal-weighted mean would let a small name move a sector as much
  *            as NVIDIA does.
- *   Colour   seven steps, -3% .. +3% in 1% bands (the Perplexity legend).
- *            Anything past +/-3% is the strongest step.
+ *   Colour   seven steps, -3% .. +3% in 1% bands: red, a neutral grey at 0,
+ *            green. Anything past +/-3% is the strongest step. The colours
+ *            are --heat-* tokens in globals.css, the same in every palette.
  */
 
 export type HeatTile = {
@@ -99,13 +100,21 @@ export function colorStep(changePercent: number): number {
 }
 
 /**
- * The tile fill for a step, mixed from the palette's gain / loss tokens into
- * the page background -- no colour is defined here, and every palette and
- * both themes get a matching ramp.
+ * The tile fill for a step: a --heat-* token. The first version mixed the
+ * palette's gain/loss colours into the page background, which turned small
+ * losses tan and small gains olive (Carlos, 2026-09-29); a heatmap has to
+ * read as plain red and green.
  */
 export function stepFill(step: number): string {
-  if (step === 0) return 'var(--muted)'
-  const token = step > 0 ? 'var(--gain)' : 'var(--loss)'
-  const strength = [0, 30, 50, 72][Math.abs(step)]
-  return `color-mix(in oklch, ${token} ${strength}%, var(--background))`
+  const clamped = Math.max(-MAX_STEP, Math.min(MAX_STEP, Math.round(step))) || 0
+  if (clamped === 0) return 'var(--heat-0)'
+  return `var(--heat-${clamped > 0 ? 'p' : 'n'}${Math.abs(clamped)})`
+}
+
+/** Compact market cap: 3.21T, 845B, 12.4B. */
+export function formatCap(usd: number): string {
+  if (usd >= 1e12) return `${(usd / 1e12).toFixed(2)}T`
+  if (usd >= 1e9) return `${usd >= 1e11 ? Math.round(usd / 1e9) : (usd / 1e9).toFixed(1)}B`
+  if (usd >= 1e6) return `${Math.round(usd / 1e6)}M`
+  return `${Math.round(usd)}`
 }

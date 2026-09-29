@@ -10,6 +10,7 @@ import { Change } from '@/app/features/markets/components/Change'
 import { PILL_LIST, PILL_TRIGGER } from '@/app/features/markets/components/pill-tabs'
 import { useMoneyFormat } from '@/app/features/preferences/components/Money'
 import { useCopy } from '@/app/features/preferences/copy'
+import { pointDot } from '@/lib/chart-dots'
 
 import type { Point } from '../portfolio-math'
 
@@ -129,6 +130,7 @@ export function PerformanceChart({ points }: { points: Point[] }) {
                 stroke="var(--color-value)"
                 strokeWidth={2.5}
                 fill="url(#performance-fill)"
+                dot={pointDot(visible.length, 'var(--color-value)')}
                 activeDot={{ r: 5, strokeWidth: 0 }}
               />
             </AreaChart>

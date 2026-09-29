@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, ChartLine, ClipboardList, Lock, Route, UserRound } from 'lucide-react'
+import { ArrowRight, Calculator, ChartLine, ClipboardList, Download, Lock, PiggyBank, Route, UserRound } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -225,6 +225,52 @@ export function WalkthroughToolCard({ quizDone }: { quizDone: boolean }) {
           {t('tools.startTour')}
         </Button>
         {quizDone ? null : <span className="text-xs text-muted-foreground">{t('gs.tradeLocked')}</span>}
+      </CardFooter>
+    </Card>
+  )
+}
+
+const SIMPLE_ICONS = { returns: Calculator, savings: PiggyBank, export: Download } as const
+
+/**
+ * A tool card with no live preview: icon, name, one line on what it does, and
+ * the button that opens it. Used for the calculators and the export tool.
+ */
+export function SimpleToolCard({
+  icon,
+  title,
+  body,
+  badge,
+  href,
+  action,
+}: {
+  icon: keyof typeof SIMPLE_ICONS
+  title: string
+  body: string
+  badge?: string
+  href: string
+  action: string
+}) {
+  return (
+    <Card className={CARD}>
+      <CardHeader className="px-5 sm:px-6">
+        <div className="flex items-start justify-between gap-3">
+          <ToolIcon icon={SIMPLE_ICONS[icon]} />
+          {badge ? (
+            <Badge variant="outline" className="rounded-full">
+              {badge}
+            </Badge>
+          ) : null}
+        </div>
+        <CardTitle className="pt-3 text-lg font-semibold">{title}</CardTitle>
+        <CardDescription className="text-[0.8125rem]">{body}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1" />
+      <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
+        <Link href={href} className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+          {action}
+          <ArrowRight data-icon="inline-end" />
+        </Link>
       </CardFooter>
     </Card>
   )

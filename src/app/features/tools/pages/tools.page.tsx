@@ -9,6 +9,7 @@ import {
   BenchmarkToolCard,
   ProfileToolCard,
   QuizToolCard,
+  SimpleToolCard,
   WalkthroughToolCard,
   type BenchmarkPreview,
 } from '../components/ToolCards'
@@ -16,8 +17,8 @@ import {
 /**
  * Tools (Carlos, 2026-09-26): the things that shape how someone invests, as
  * cards. The quiz lives here for good -- take it, view the results, retake
- * it -- alongside the profile, the index benchmarker and the first-trade
- * walkthrough.
+ * it -- alongside the profile, the index benchmarker, the calculators and the
+ * export tool (2026-09-29), and the first-trade walkthrough.
  */
 export async function ToolsPage() {
   const [profile, risk, benchmarks] = await Promise.all([getProfile(), getCurrentRiskProfile(), getBenchmarks()])
@@ -43,6 +44,29 @@ export async function ToolsPage() {
         <QuizToolCard risk={risk ? { band: risk.band, score: risk.score, takenAt: risk.computed_at } : null} />
         <BenchmarkToolCard preview={preview} since={since} />
         <ProfileToolCard profile={profile} complete={isSetupComplete(profile)} />
+        <SimpleToolCard
+          icon="returns"
+          title="Returns calculator"
+          body="Replay real prices: what money in an index, fund or stock would be worth today, and what that buys."
+          badge="Indices · 50 stocks"
+          href="/tools/returns"
+          action="Run the numbers"
+        />
+        <SimpleToolCard
+          icon="savings"
+          title="Savings goal"
+          body="How much to put away each week, fortnight or month to reach a target by a date."
+          href="/tools/savings"
+          action="Plan a goal"
+        />
+        <SimpleToolCard
+          icon="export"
+          title="Export my data"
+          body="Download your trades, holdings, performance and profile as CSV or an HTML report. Nothing leaves your browser."
+          badge="CSV · HTML"
+          href="/tools/export"
+          action="Build a report"
+        />
         <WalkthroughToolCard quizDone={Boolean(risk)} />
       </div>
     </>

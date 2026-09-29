@@ -37,6 +37,18 @@ export async function sendPasswordConfirmation(origin?: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
     redirectTo: `${siteUrl(origin)}/api/auth/callback`,
   })
+  // Recorded for the admin notification log (2026-09-29). Best effort: a
+  // logging failure must not change what the user is told.
+  await supabase
+    .rpc('log_notification', {
+      p_channel: 'email',
+      p_event: 'auth.password_change_link',
+      p_status: error ? 'failed' : 'sent',
+      p_error: error?.message,
+    })
+    .then(({ error: logError }) => {
+      if (logError) console.error('[password] notification log failed:', logError.message)
+    })
   if (error) {
     return { ok: false as const, message: error.message }
   }

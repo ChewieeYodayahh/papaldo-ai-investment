@@ -1,5 +1,7 @@
 ﻿import 'server-only'
 
+import { withIntegrationLog } from './integration-log'
+
 import { GoogleGenAI } from '@google/genai'
 
 /**
@@ -170,11 +172,13 @@ export async function createMessage({
   // `model` used to be accepted and silently dropped; the adapter now honours it.
   const { primary } = createAdapter(model)
 
-  const response = await primary.generate({
-    messages,
-    system,
-    maxTokens,
-  })
+  const response = await withIntegrationLog('gemini', `generate/${model}`, () =>
+    primary.generate({
+      messages,
+      system,
+      maxTokens,
+    }),
+  )
 
   return response.text
 }

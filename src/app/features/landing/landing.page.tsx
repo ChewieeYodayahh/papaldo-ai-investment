@@ -1,3 +1,4 @@
+import { getShellUser } from "@/app/features/shell/api/shell"
 import { PublicShell } from "@/app/features/shell/components/PublicShell"
 
 import { Cta } from "./sections/cta"
@@ -9,13 +10,15 @@ import { Trust } from "./sections/trust"
 
 /**
  * The landing page, inside the same outer frame as the app (PublicShell), so
- * "About Papaldo Ka" and the dashboard read as one product. Static: no
- * session read, so it still prerenders; a signed-in visitor who presses
- * "Log in" is bounced to the dashboard by the middleware.
+ * "About Papaldo Ka" and the dashboard read as one product. It reads the
+ * session so a signed-in visitor sees their account pill instead of "Log in"
+ * (Carlos, 2026-09-29). getClaims verifies the token locally, so the read
+ * costs no network round trip.
  */
-export function LandingPage() {
+export async function LandingPage() {
+  const user = await getShellUser()
   return (
-    <PublicShell>
+    <PublicShell user={user}>
       <main>
         <Hero />
         <Features />

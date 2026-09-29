@@ -151,6 +151,23 @@ html[data-font="system"] {
   --sidebar-ring: oklch(0.88 0.19 135);
 }
 
+/*
+ * Market heatmap scale (/markets), shared by every palette and both modes:
+ * a heatmap is read as red = down, grey = flat, green = up, whatever the
+ * theme (TradingView / Finviz convention, Carlos 2026-09-29). Seven discrete
+ * steps; tile text is --heat-text on all of them (>= 4.3:1).
+ */
+:root {
+  --heat-n3: oklch(0.56 0.2 25);
+  --heat-n2: oklch(0.47 0.15 22);
+  --heat-n1: oklch(0.38 0.09 20);
+  --heat-0: oklch(0.33 0.015 260);
+  --heat-p1: oklch(0.4 0.08 152);
+  --heat-p2: oklch(0.49 0.12 150);
+  --heat-p3: oklch(0.58 0.16 148);
+  --heat-text: oklch(0.99 0 0);
+}
+
 /* ── Orchid (option 1) ────────────────────────────────────────────── */
 [data-palette="orchid"] {
   --background: oklch(0.975 0.008 330);

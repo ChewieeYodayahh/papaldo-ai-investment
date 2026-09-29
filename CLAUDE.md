@@ -2,123 +2,78 @@
 
 AI investment simulation dashboard for Filipino investors. Sign up → 6-item
 Investment Suitability Questionnaire → risk band → simulated portfolio.
-
-Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui + Supabase + Claude API.
+Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui (Base UI) + Supabase; the AI
+service in `core/services/claude.ts` currently calls Gemini.
 
 ## Layout
 
-`@/*` → `./src/*`
+`@/*` → `./src/*`. Routes are thin `src/app/<route>/page.tsx` adapters; the
+logic lives in `src/app/features/<name>/{api,components,pages}` (pages are
+`*.page.tsx`). Route handlers in `src/app/api/*` delegate to `features/*/api`.
 
 ```
-src/app/                    one folder per route — each page.tsx is a thin
-  login/  sign-up/          adapter that imports a feature page and adds
-  dashboard/  portfolio/    metadata. No logic, no data fetching. The app
-  profile/  tools/          routes also carry layout.tsx (renders AppShell)
-  isq/ isq/results/         and loading.tsx (a feature skeleton), same rule.
-  markets/  onboarding/profile/
-  api/                      route handlers — delegate to features/*/api
-  features/<name>/          owns api/ components/ hooks/ pages/ + schema.ts,
-    auth                    types.ts. pages/<name>.page.tsx exports a named
-                            component; only src/app/**/page.tsx is a route.
-                            auth: login/sign-up, /profile dashboard, Google
-                            link, email-confirmed password change
-    onboarding              ISQ (/isq, /isq/results), setup journey
-    dashboard               home + /portfolio pages, valuation, perf history
-    markets                 incl. heatmap.ts + SectorTreemap (d3-hierarchy)
-    benchmarks              /tools/benchmarks + GET /api/benchmarks: index
-                            benchmarker over public.market_benchmarks
-    tools                   /tools cards (quiz, benchmarker, profile, tour)
-    shell                   AppShell (sidebar frame) / PublicShell (top-bar
-                            frame, signed out), header, bell, settings, and
-                            first-time setup: Get Started dock, welcome
-                            carousel, first-trade walkthrough
-    preferences             Zustand store (currency, language, palette, font),
-                            <Money>, copy dictionaries (en / slang / brainrot)
-    landing                 sections/ + landing.page.tsx (inside PublicShell)
-  core/services/            cross-feature only
-    claude.ts  finnhub.ts  alpaca.ts  exchange-rate.ts
-    supabase/               client, server, middleware, session, database.types
-src/components/ui/          shadcn primitives (base-nova / mist)
-src/components/*.jsx        React Bits components
-src/components/skeleton-blocks.tsx   Bar/Panel/Rows/FieldBlock for loading.tsx
-src/lib/                    utils.ts cn(), env.ts, initials.ts
-supabase/migrations/
-python/                     market-data pipelines (Python 3.12, python/.venv):
-                            benchmarks.py -> market_benchmarks, market_caps.py
-                            -> tradable_assets.market_cap_usd; run weekly by
-                            .github/workflows/market-data.yml
+features/  auth         sign-in, session, /profile, users row
+           onboarding   ISQ (/isq, /isq/results), setup journey
+           dashboard    home, /portfolio, valuation, performance
+           markets      /markets, heatmap (d3-hierarchy), symbol pages
+           trading      simulated orders (place_order RPC), order ticket
+           advisory     AI market outlook card (/api/advisory/outlook)
+           benchmarks   /tools/benchmarks over public.market_benchmarks
+           calculators  /tools/returns, /tools/savings, "what it buys"
+           export       /tools/export — CSV/HTML built in the browser
+           tools        /tools cards
+           blog · community · support    public pages (/blog, /community, /support)
+           admin        /admin Developer Dashboard (admins only, 404 otherwise)
+           shell        AppShell / PublicShell, header, sidebar, Get Started
+           preferences  Zustand store, <Money>, copy dictionaries
+           landing      the public home page
+core/services/  alpaca · finnhub · exchange-rate · claude (Gemini) ·
+                integration-log · supabase/{client,server,session,database.types}
+src/components/ui/  shadcn primitives · skeleton-blocks.tsx for loading.tsx
+supabase/migrations/ · python/ (weekly market-data pipelines)
 ```
 
-Never put a file named `page.tsx` under `src/app/features/` — the App Router
-would publish it as a `/features/...` route. Feature pages are `*.page.tsx`.
+## Always
 
-## Rules
+- UI never calls Supabase or the AI service directly: component → `src/app/api/*`
+  → `features/*/api`.
+- Tailwind tokens only, never a hardcoded color; `<Money usd>` for money;
+  never hand-roll a primitive from `src/components/ui/`; every route gets a
+  `loading.tsx`.
+- RLS on every user-scoped table, verified with role-switched queries. No
+  service-role key in the Next app and never in a `NEXT_PUBLIC_` variable.
+- Never script past a site's bot or browser check.
 
-- UI never calls Supabase or Claude directly. Route through `src/app/api/*`,
-  with the logic in the matching `features/*/api` module, not inline in the
-  route handler.
-- Colors: Tailwind tokens only — `bg-primary`, `text-muted-foreground`,
-  `border-border`. Never `bg-blue-500` or a hardcoded hex. Palette is OKLCH,
-  defined at `:root` in `src/app/globals.css`.
-- Light and dark themes both ship. Dark mode was reinstated in Phase 2
-  (`next-themes`, `attribute="class"`, 3-state light/dark/system); the `.dark`
-  OKLCH palette is defined in `src/app/globals.css`. Phase 1 had disabled it
-  because components used a fixed light palette — that is why the token rule
-  above is load-bearing: a hardcoded color renders dark-on-dark.
-- Never hand-roll a primitive that exists in `src/components/ui/`.
-- RLS on every user-scoped table. Verify with role-switched queries; don't
-  assume a policy works because it exists.
-- ISQ scoring is a reconstruction, not from source data. Isolated to
-  `features/onboarding/questions.ts` and `scoring.ts` for that reason — change
-  both together and update the tests. Since 2026-09-26 the wording is our own
-  plain-language rewrite, exactly three choices per question (0/10/20).
-- Cross-feature imports run one way only: `onboarding` and `dashboard` may
-  import `auth`; `auth` imports neither. `shell` wraps pages and may import
-  `auth`, `trading`, `preferences` and `onboarding` (read-only: the risk
-  profile behind the Get Started checklist); pages import `shell`, never the
-  reverse, so `onboarding` must never import `shell`. `tools` is a page
-  feature and may import `auth`, `onboarding`, `benchmarks` and `shell`.
-  `preferences` imports no feature.
-- Market data the app does not fetch live (index history, market caps) is
-  written by `python/` pipelines with the service-role key and only *read*
-  by the app. Those tables grant `anon`/`authenticated` SELECT only. Never add
-  a client write path to them, and never put the service key in a
-  `NEXT_PUBLIC_` variable.
-- Never script past a site's bot or browser check (Stooq's included). A
-  pipeline that meets one logs it and falls back to the next source.
-- Money on screen goes through `<Money usd={...} />`, which converts to PHP
-  at render time. Never store or compute a converted figure server-side.
-  One exception: self-reported incomes (`users.annual_income` / `ideal_income`)
-  are shown in the currency they were entered in (`auth/income.ts`) — they are
-  the user's own figures, not prices, and are never converted.
-- Only a username is required before the app opens (middleware). Contact,
-  occupation and income are the optional setup journey; the quiz is never a
-  gate. After login, everyone lands on `/dashboard`.
-- Gains and losses use `text-gain` / `text-loss` tokens. Palettes live in
-  `globals.css` under `[data-palette=...]`; add a token to every palette. Auth owns credentials, the session,
-  the `users` row and the `OnboardingStep` type. Onboarding owns the two
-  screens a new account walks through and everything only they use.
-- Every new route gets a `loading.tsx` skeleton built from
-  `src/components/skeleton-blocks.tsx`, laid out like the page it replaces.
+Path-scoped detail loads on its own when you touch matching files:
+`.claude/rules/ui.md` (tsx, css) · `features.md` (import directions, routes) ·
+`database.md` (RLS, admin, logs) · `onboarding.md` (ISQ scoring) ·
+`python.md` (pipelines).
 
 ## Commands
 
 ```
-npm run dev (Turbopack, http://localhost:3001) · npm run lint
-npm run typecheck · npm run build · npm test
-python/.venv/Scripts/python -m unittest discover -s python
-python/.venv/Scripts/python python/benchmarks.py --dry-run
+npm run verify        lint + typecheck + unit + Python tests, failures only
+npm run verify:full   the same plus next build
+npm run dev           Turbopack on http://localhost:3001 (preview: papaldo-dev)
+npm run graph         refresh graphify-out/ (AST only, no tokens)
+npm run agents:sync   rebuild AGENTS.md after editing CLAUDE.md or .claude/rules
 ```
-
-Create the venv with `uv venv python/.venv --python 3.12` and
-`uv pip install --python python/.venv/Scripts/python.exe -r python/requirements.txt`.
 
 `NEXT_PUBLIC_SITE_URL` only builds OAuth/email redirect URLs; the dev port is
 pinned by `--port 3001` in package.json. Keep the two in step.
 
+## Working economically
+
+- Questions that need more than ~3 reads → the `explorer` agent (Haiku)
+  returns `path:line` answers instead of file dumps.
+- After edits → `/verify` (forked `verifier`); schema or policy changes →
+  `db-auditor`; page changes → `ui-checker` (text verdict, no screenshots).
+- New feature → `/feature <brief>`; end of session → `/wrap`.
+- Orient from `graphify-out/GRAPH_REPORT.md` and `graphify explain "<Symbol>"`
+  before reading widely. Never read `.env*`, `graphify-out/graph.json` or
+  `package-lock.json`.
+
 ## Deeper context
 
-- `CONTEXT.md` — domain vocabulary, architecture decisions
-- `PROGRESS.md` — phase log, known issues, what's blocked on Carlos
-- `EXTERNAL_SERVICES.md` — every API and MCP server this project touches,
-  runtime vs. dev-time
+`CONTEXT.md` domain vocabulary and decisions · `PROGRESS.md` phase log and what
+is blocked on Carlos · `EXTERNAL_SERVICES.md` every API and MCP server.

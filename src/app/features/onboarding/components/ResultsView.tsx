@@ -21,11 +21,14 @@ export function ResultsView({
   score,
   takenAt,
   answers,
+  children,
 }: {
   band: RiskBand
   score: number
   takenAt: string
   answers: AnsweredQuestion[]
+  /** Rendered between the result and the answers: the recommended assets. */
+  children?: React.ReactNode
 }) {
   const t = useCopy()
   const BandIcon = BAND_ICON[band]
@@ -58,6 +61,8 @@ export function ResultsView({
           </div>
         </CardContent>
       </Card>
+
+      {children}
 
       <Card className="rounded-2xl border-0 py-5">
         <CardHeader className="px-5 sm:px-6">

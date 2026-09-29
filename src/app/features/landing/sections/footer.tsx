@@ -15,8 +15,9 @@ const FOOTER_COLUMNS = [
     title: "Company",
     links: [
       { href: "#trust", label: "About" },
-      { href: "#trust", label: "Careers" },
-      { href: "#trust", label: "Contact" },
+      { href: "/community", label: "Community" },
+      { href: "/blog", label: "Blog" },
+      { href: "/support", label: "Contact support" },
     ],
   },
   {

@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { logIntegration, routePattern as actionFor } from './integration-log'
+
 /**
  * Thin server-only wrapper around the Alpaca Market Data API.
  *
@@ -126,6 +128,7 @@ async function alpacaFetch<T>(
   }
 
   let response: Response
+  const started = performance.now()
   try {
     // revalidate 0 means "do not hand this to Next's data cache at all".
     // Responses over 2MB cannot be cached, and letting Next try logs a
@@ -136,8 +139,17 @@ async function alpacaFetch<T>(
       revalidate === 0 ? { headers, cache: 'no-store' } : { headers, next: { revalidate } },
     )
   } catch (cause) {
+    logIntegration({ target: 'alpaca', action: actionFor(path), ok: false, durationMs: performance.now() - started, error: 'network error' })
     throw new AlpacaError('network-error', `Could not reach Alpaca on ${path}: ${String(cause)}`)
   }
+  logIntegration({
+    target: 'alpaca',
+    action: actionFor(path),
+    ok: response.ok,
+    durationMs: performance.now() - started,
+    httpStatus: response.status,
+    error: response.ok ? undefined : `HTTP ${response.status}`,
+  })
 
   if (!response.ok) {
     // Credentials travel in headers, not the query string, so `path` is safe
@@ -232,6 +244,23 @@ export async function getDailyBars(
     `/v2/stocks/${encodeURIComponent(symbol)}/bars`,
     params,
     900,
+  )
+  return ascendingUnique((data.bars ?? []).map(toBar))
+}
+
+/**
+ * Monthly closes for the returns calculator (Carlos, 2026-09-29), oldest
+ * first. Split-adjusted and price-only, the same basis as the index
+ * benchmarker, so a 4-for-1 split never reads as a 75% crash. The free
+ * plan's history starts in 2016, so ten years is the useful maximum. A
+ * month of bars barely changes, so the response is cached for 12 hours.
+ */
+export async function getMonthlyBars(symbol: string, years = 10): Promise<AlpacaBar[]> {
+  const start = new Date(Date.now() - years * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const data = await alpacaFetch<{ bars?: RawBar[] }>(
+    `/v2/stocks/${encodeURIComponent(symbol)}/bars`,
+    { timeframe: '1Month', start, end: safeEnd(), limit: '1000', adjustment: 'split' },
+    43_200,
   )
   return ascendingUnique((data.bars ?? []).map(toBar))
 }

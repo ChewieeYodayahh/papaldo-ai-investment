@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { logIntegration } from './integration-log'
+
 /**
  * USD -> PHP display conversion, from ExchangeRate-API v6 (Carlos,
  * 2026-09-25). Server-only: the key never reaches the browser.
@@ -69,11 +71,16 @@ export async function getUsdToPhp(): Promise<FxRate> {
   const url = `${BASE_URL}/${apiKey()}/pair/USD/PHP`
 
   let response: Response
+  const started = performance.now()
   try {
     response = await fetch(url, { next: { revalidate: REVALIDATE_SECONDS } })
   } catch {
+    logIntegration({ target: 'exchange-rate', action: 'pair/USD/PHP', ok: false, durationMs: performance.now() - started, error: 'network error' })
     throw new FxError('network-error', 'ExchangeRate-API could not be reached.')
   }
+  // Errors arrive as HTTP 200 with result: "error", so success is judged on the body below.
+  const logged = (ok: boolean, error?: string) =>
+    logIntegration({ target: 'exchange-rate', action: 'pair/USD/PHP', ok, durationMs: performance.now() - started, httpStatus: response.status, error })
 
   let body: PairResponse
   try {
@@ -83,6 +90,7 @@ export async function getUsdToPhp(): Promise<FxRate> {
   }
 
   // The key is in the URL, so no message here ever includes the URL.
+  logged(body.result === 'success', body.result === 'success' ? undefined : body['error-type'])
   if (body.result !== 'success') {
     throw new FxError(failureFor(body['error-type']), `ExchangeRate-API error: ${body['error-type']}.`)
   }

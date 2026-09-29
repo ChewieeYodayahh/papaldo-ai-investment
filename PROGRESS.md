@@ -5,6 +5,106 @@ domain vocabulary and architecture rules.
 
 ---
 
+## Phase 8 — Developer Dashboard, community, calculators, export (2026-09-29)
+
+Carlos's eight-part brief of 2026-09-29. Decisions he made up front: one chat
+room for now; first admin `sirstephenshockwave@gmail.com`; chart lines get a
+dot on every data point; install the official skills and only list the
+community ones.
+
+**Database** (both applied live, types regenerated):
+`20260929120000_admin_logs_support_blog_chat` and
+`20260929130000_integration_logs_gemini_target`.
+- `user_roles` + `private.is_admin()`; the role is not a `users` column
+  because owners can update every column there. `admin_set_role` refuses
+  self-demotion.
+- `audit_log`, written only by triggers on orders, risk profiles, users
+  (changed column *names* only), roles, support, blog and chat.
+- `integration_logs` (`log_integration` RPC), `notification_log`
+  (`log_notification` RPC + an in-app row on every fill), both trimming to 30
+  days.
+- `support_messages` (`submit_support_message`: validated, 3 per 10 min per
+  email, `PPK-XXXXXX` reference), `blog_posts` (published rows public, admin
+  writes, a trigger stamps author and times), `chat_messages` (column grants
+  keep `user_id` from guests; a trigger allows one message per 2 s and 20 a
+  minute).
+- `admin_list_users()`, `admin_stats()` (one call feeds Overview and
+  Resources).
+- RLS verified with 17 role-switched checks (anon, a plain user, the admin)
+  inside a rolled-back transaction. The security advisor flags the
+  SECURITY DEFINER RPCs as callable. That is by design: each one validates its
+  input or checks `is_admin()` itself. See the open items below.
+
+**Features.**
+- **Developer Dashboard** `/admin` (feature `admin`): Overview (needs
+  attention, platform, calls per hour, orders per day, per-service table),
+  Integration logs, Notification log and Audit log (GET-form filters in the
+  URL, 50 per page, CSV export of up to 5,000 rows via `/api/admin/logs/:kind`),
+  Support inbox (resolve / reopen), Users (grant / revoke admin behind a
+  confirmation), Resources (DB size against the 500 MB free plan, tables,
+  calls against free-tier limits, pipeline freshness), Blog (list, **Create
+  an article** editor with Markdown Write / Preview, **Delete** →
+  "Would you like to delete this article? Deletion cannot be undone." Yes /
+  No). Everyone else gets a 404. `requireAdmin()` runs in `AdminShell` and in
+  every page.
+- **Blog** `/blog`, `/blog/[slug]`. **Community** `/community` (one room,
+  4 s polling, admin hide). **Support** `/support`. Guests reach all three
+  from the top bar's Community dropdown and the footer.
+- **Integration logging**: `core/services/integration-log.ts`, wired into
+  Alpaca, Finnhub, the exchange rate and the AI service. Confirmed live: rows
+  arrive while pages load.
+- **Calculators**: `/tools/returns` (real monthly history, 10 years), the
+  compare panel under the benchmarker, `/tools/savings` (sinking fund,
+  weekly / bi-weekly / monthly), "what it buys", share as PNG.
+- **Export** `/tools/export`: persona choice, CSV or HTML, USD or PHP, built
+  in the browser. Nothing reaches the server, and Cancel resets.
+- **Heatmap** redrawn Finviz-style: logos on large tiles, hover cards,
+  sector filter from the legend, search, 60 s refresh while visible. Colours
+  come from the new `--heat-*` tokens.
+- **Account pill** on the landing page when signed in, with a dropdown
+  (Dashboard, Profile, Help & support, Developer dashboard for admins, Sign
+  out). **Guest preferences are no longer saved**: the store persists only
+  when signed in, and guests get the default theme each visit.
+- **Sidebar groups**: Tools and Community open as dropdowns (sub-items dimmed
+  and indented, full on hover).
+- **Quiz results** list recommended ETFs and stocks for the band, each
+  linking to its trading page. **Chart dots** on every line
+  (`lib/chart-dots.ts`). **Benchmarker** gets a checkbox per index.
+- `.claude/settings.json` hooks fixed (SessionStart + Notification had the
+  wrong shape).
+
+**Verification.** `npm run typecheck` and `npm run lint` are clean. `npm test`:
+12 files, 107 tests. `npm run build`: 48 routes. In the browser as a guest,
+`/admin` redirects to sign-in, `/api/admin/*` answers 404, and `/support`,
+`/community`, `/blog` and the Community dropdown render. **Not seen in a
+browser: the admin pages themselves.** They need an admin session, and the
+agent does not sign in. `admin_stats()` was run as the admin in SQL and
+returns what the pages read.
+
+**Graphify.** `graphify update` (code only, no LLM): 1,878 nodes · 5,607
+edges · 99 communities. Against the 2026-09-26 graph: +486 nodes, +1,629
+edges, −24 nodes, −72 edges. No import cycles. Note that `graphify update`
+writes to `src/graphify-out/`; the result was copied to the root
+`graphify-out/` that the skill reads. Community names are now automatic hub
+names; `/graphify --update` in the assistant would relabel them.
+
+**Open items for Carlos.**
+- Sign in as the admin and walk `/admin` (every page, one CSV export, one
+  article created and deleted).
+- `log_integration` is callable with the public anon key, so anyone could
+  write junk log rows (bounded by validation and 30-day trimming). If that
+  matters, move logging behind a server-only secret.
+- Supabase Auth → leaked-password protection is off (a dashboard toggle).
+- `model-portfolios.yml` runs `python/model_portfolios.py` every Sunday; the
+  file does not exist, so that job fails weekly (left alone as asked).
+- `security-review.yml` pins `anthropics/claude-code-security-review@main`;
+  pin a tag or SHA. `ci.yml` does not run the Python tests (only
+  `market-data.yml` does).
+- `core/services/claude.ts` calls Gemini (see EXTERNAL_SERVICES.md): rename
+  it, or add a Claude adapter back.
+
+---
+
 ## Phase 7 — Index benchmarker, sector heatmap, 50-name universe (2026-09-26)
 
 **Fixes (committed in V0.3.1).**

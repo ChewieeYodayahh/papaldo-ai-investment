@@ -15,8 +15,20 @@ exist — see "Corrections made in this pass" at the bottom.
 | **Supabase Auth emails** | `features/auth/api/password.ts` | n/a — Supabase's mailer | Added 2026-09-26. `resetPasswordForEmail` sends the password-change confirmation link; the callback trades it for a session whose `amr` records `recovery`, and only then does `changePassword` accept a new password. Uses Supabase's built-in SMTP, which is **rate-limited to a few emails per hour** — configure custom SMTP before real users rely on it. |
 | **Finnhub** | `core/services/finnhub.ts` | `FINNHUB_API_KEY` (server-only, no `NEXT_PUBLIC_` prefix) | Real-time US market data. Chosen 2026-09-10 over Alpha Vantage specifically because its free tier (~60 req/min) supports on-demand quotes without an ingestion job — AV's free tier is 25 req/day. Seven functions in active use: `getQuote`, `getQuotes`, `getMarketNews`, `getCompanyProfile`, `getBasicFinancials`, `getCompanyNews`, `getRecommendations`. **Known gap: no historical OHLC.** `/stock/candle` and `/crypto/candle` both answer 403 on this plan — confirmed against the live API 2026-09-10. `features/markets/api/candles.mock.ts` fills that one gap with clearly-labeled synthetic data (Carlos's explicit call, 2026-09-10) pending a real provider; every other Finnhub-backed number on the site is live. |
 | **ExchangeRate-API** (v6) | `core/services/exchange-rate.ts` — `getUsdToPhp()`, called once per page by `features/shell/api/shell.ts` | `EXCHANGE_RATE_APIKEY` (server-only, key in the URL path — never logged) | Added 2026-09-25 for the $ / ₱ display toggle, because Alpaca's forex endpoint answers 403. `GET /v6/{key}/pair/USD/PHP`. **Errors arrive as HTTP 200** with `result: "error"` and an `error-type` (`invalid-key`, `quota-reached`, …) — verified live. The provider publishes once a day, so responses are cached 6h. Display only: balances stay USD in the database. Supported codes: vault note *ExchangeRate-API - Supported Currency Codes and Countries*. |
-| **Financial Modeling Prep — logo images** | `features/markets/logos.ts` → `SymbolMark` | none — public image path | Added 2026-09-25. **Loaded by the browser, never by the server**: `https://financialmodelingprep.com/image-stock/{SYMBOL}.png`. Covered all 41 buyable names when probed (ETFs get the issuer's mark); unknown symbols answer 404 and the Avatar falls back to the ticker monogram. Share classes use a hyphen (`BRK-B`). Chosen because Alpaca's logo endpoint is 403 on this plan and Finnhub is reserved for news. Sent with `referrerPolicy="no-referrer"`. |
-| **Claude (Anthropic) API** | `core/services/claude.ts` — `createMessage()` | `ANTHROPIC_API_KEY` (not yet set anywhere — see Known gaps) | **Built, not called by anything yet.** Intentionally unused in this phase: ISQ risk scoring is fully deterministic (`features/onboarding/scoring.ts`), so the app runs with zero AI calls today. This module exists so a later phase (portfolio-recommendation reasoning, plain-language profile narratives) has one integration point instead of scattering `fetch` calls through route handlers. Default model `claude-sonnet-5`, endpoint `api.anthropic.com/v1/messages`. |
+| **Financial Modeling Prep — logo images** | `lib/logos.ts` (moved from `features/markets/` 2026-09-29) → `SymbolMark` | none — public image path | Added 2026-09-25. **Loaded by the browser, never by the server**: `https://financialmodelingprep.com/image-stock/{SYMBOL}.png`. Covered all 41 buyable names when probed (ETFs get the issuer's mark); unknown symbols answer 404 and the Avatar falls back to the ticker monogram. Share classes use a hyphen (`BRK-B`). Chosen because Alpaca's logo endpoint is 403 on this plan and Finnhub is reserved for news. Sent with `referrerPolicy="no-referrer"`. |
+| **Google Gemini API** (the "AI service") | `core/services/claude.ts` — `createMessage()`, despite the file name | `GEMINI_API_KEY` (server-only) | **Corrected 2026-09-29:** the module no longer calls Anthropic. `GeminiAdapter` uses `@google/genai` with `gemini-2.5-flash`, and its one caller is the advisory outlook (`features/advisory/api/outlook.ts`, `POST /api/advisory/outlook`). ISQ scoring stays deterministic. Each call is logged as target `gemini`, action `generate/<model>`. Renaming the file (or restoring a Claude adapter) is Carlos's call; `ANTHROPIC_API_KEY` is not read anywhere. |
+
+**Integration logging (2026-09-29).** Every runtime call above except
+Supabase itself goes through `core/services/integration-log.ts`
+(`withIntegrationLog` / `logIntegration`), which writes one row per real
+network call to `public.integration_logs` through the `log_integration` RPC,
+after the response is sent. It records the target, a route *pattern*
+(`routePattern`: symbols become `:symbol`, version prefixes drop), status,
+duration, HTTP status and a transaction ID — never a URL, query string or
+key. Calls answered in under 5 ms are treated as cache hits and skipped.
+Rows are readable only by admins (`/admin/integrations`) and trim to 30
+days. The Developer Dashboard's Resources page sets each service's 24-hour
+call count beside its published free-tier limit.
 
 ## Pipeline sources — called by `python/`, never by the running app
 
@@ -90,9 +102,9 @@ reading it.
 
 ## Known gaps
 
-- **`ANTHROPIC_API_KEY`** is not in `.env.example` or `.env.local`. Harmless
-  today — `claude.ts` has no caller — but add it once a phase starts using
-  `createMessage()`.
+- **`claude.ts` calls Gemini, not Claude** (see the table). `ANTHROPIC_API_KEY`
+  is unused; the file name is kept until Carlos decides between renaming it
+  and adding a Claude adapter back.
 - **No historical OHLC provider.** `features/markets/api/candles.mock.ts` is
   the placeholder; the named candidate to replace it is Alpaca.
 - **AI Investment Advising Engine** - Use Claude Haiku 4.5 API, where it also reads monthly market insights of the ff allocations of the users, generates its own prospective outlooks from different authoritative sources (fund managers, hedge funds, banks, governments, research tanks), tailor-fits to the risk appetite of the user (e.g. Conservative, Moderate, Aggressive). So we should feature different asset classes for all kinds of risk appetites -> forex (USD, PHP, GBP), fixed-income (Conservative), stocks/equities, commodities, crypto (automatically aggressive),  

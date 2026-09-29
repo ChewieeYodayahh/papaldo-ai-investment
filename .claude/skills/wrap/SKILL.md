@@ -29,9 +29,11 @@ this transcript — anything you leave out is lost.
 4. **Keep the newest phase at the top**, matching the file's existing structure.
 
 5. **Verify before claiming done.** If the session touched code, run
-   `npm run lint`, `npm run typecheck`, and `npm test`, and record the actual
-   result. Never write "verified" for something you did not run — say what was
-   skipped instead.
+   `/verify` (or `npm run verify`) and record the actual result. Never write
+   "verified" for something you did not run — say what was skipped instead.
+
+6. **Refresh the code graph** with `npm run graph` if more than a handful of
+   files changed, so the next session's `explorer` agent works from a current map.
 
 ## Do not
 

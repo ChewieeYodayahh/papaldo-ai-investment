@@ -8,7 +8,11 @@
     "start": "next start --port 3001",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify.mjs",
+    "verify:full": "node scripts/verify.mjs --build",
+    "graph": "node scripts/graph-update.mjs",
+    "agents:sync": "node scripts/sync-agents.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -35,8 +39,10 @@
     "react-day-picker": "^10.0.1",
     "react-dom": "19.1.0",
     "react-icons": "^5.7.0",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^4.12.3",
     "recharts": "^3.8.0",
+    "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.6.0",
     "three": "^0.180.0",

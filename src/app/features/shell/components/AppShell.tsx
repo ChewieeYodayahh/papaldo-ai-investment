@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 
 import { FxProvider } from '@/app/features/preferences/components/Money'
+import { PreferencePersistence } from '@/app/features/preferences/components/PreferencePersistence'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 import { getShellData } from '../api/shell'
@@ -54,12 +55,13 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <FxProvider fx={fx}>
+      <PreferencePersistence signedIn />
       <div data-app-shell className="app-backdrop min-h-svh md:p-(--frame-gap)">
         <SidebarProvider
           defaultOpen={sidebarOpen}
           className="app-frame relative mx-auto min-h-svh max-w-[2000px] md:h-[calc(100svh-2*var(--frame-gap))] md:min-h-0 md:overflow-hidden md:rounded-[1.75rem] md:ring-1 md:ring-foreground/10"
         >
-          <AppSidebar />
+          <AppSidebar isAdmin={user.isAdmin} />
           <SidebarInset className="min-w-0 bg-transparent md:overflow-y-auto">
             <div className="w-full px-4 pb-24 md:pr-5 md:pl-2">
               <AppHeader user={user} notifications={notifications} greetingSeed={greetingSeed} />

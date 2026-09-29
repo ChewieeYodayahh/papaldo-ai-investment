@@ -86,6 +86,45 @@ months earlier − 1. **CAGR** = (last ÷ 100)^(12 ÷ months) − 1. Shorter ran
 (5Y, 10Y) rebase to 100 in the app. The PSEi line comes from Stooq when the
 pipeline can read it, otherwise from **EPHE** (a USD proxy), and says which.
 
+**Returns calculator** (`/tools/returns`, and under the benchmarker)
+Replays real monthly closes (Alpaca, split-adjusted; the index table for the
+four indices): a lump sum plus a monthly deposit bought at each month's close.
+Past returns, never a forecast. **What it buys** turns the ending value into
+everyday goods (iPhones, a Porsche, a house and lot, college for N kids) at
+reference ₱ prices in `calculators/purchases.ts`.
+
+**Savings goal** (`/tools/savings`, or the "How much should I save" box)
+A sinking fund: deposit = FV · r ÷ ((1 + r)^n − 1), with r the rate per
+deposit (weekly, every two weeks or monthly). Shows the deposit, total put in
+and total growth.
+
+**Export** (`/tools/export`)
+MT5-style statement for "a regular person" (summary, holdings) or "into
+trading" (trades with realised P&L, equity curve, bars). Built in the
+browser as CSV or HTML and downloaded; the server never stores a file, and
+Cancel leaves nothing behind.
+
+**Admin** — a user with a row in `public.user_roles` (role `admin`). The first
+was seeded 2026-09-29. Admins see the **Developer Dashboard** (`/admin`):
+Overview, Integration logs, Notification log, Audit log, Support, Users,
+Resources, Blog.
+
+**Integration log** — one row per outside API call (target, route pattern,
+status, ms, HTTP status, transaction ID). **Notification log** — in-app and
+email notifications with delivery status. **Audit log** — who did what to
+which record, written by database triggers (orders, profiles, roles, support,
+blog, chat moderation). All three: admin-only reads, 30-day retention, CSV
+export.
+
+**Support message** — from `/support`, guests included, rate limited per
+email; reference `PPK-XXXXXX`; open or resolved.
+
+**Chat room** — the one community room (`/community`). Signed-in users post
+(rate limited); guests read; admins hide a message for everyone.
+
+**Article** — a blog post in Markdown, draft or published. Only published
+articles are public. Deleting one is permanent and asks Yes / No first.
+
 ### Reserved for later phases — do not build yet
 
 **Asset** — an instrument that can be held: a stock, ETF, cryptocurrency or
@@ -244,7 +283,17 @@ auth.users  (Supabase Auth — passwords, sessions, OAuth identities)
     │
     │  1:1, upserted on retake
     └── public.risk_profiles    the CURRENT band + score → what features read
+
+public.user_roles        admin grants (written only by admin_set_role)
+public.audit_log         trigger-written; admin read
+public.integration_logs  log_integration RPC; admin read
+public.notification_log  log_notification RPC + order trigger; admin read
+public.support_messages  submit_support_message RPC; admin read/update
+public.blog_posts        admin write; published rows public
+public.chat_messages     signed-in insert; public read (no user_id for guests)
 ```
 
-Every table has RLS enabled, every policy pairs `TO authenticated` with an ownership
-predicate, and `anon` holds no grant on any of them.
+Every table has RLS enabled. User-scoped policies pair `TO authenticated` with an
+ownership predicate; admin access goes through `private.is_admin()`. `anon` can read
+only published articles, visible chat messages (without `user_id`) and the market
+tables, and can write only through the validated support and logging RPCs.

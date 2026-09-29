@@ -29,6 +29,7 @@ export const config = {
     '/onboarding/:path*',
     '/profile/:path*',
     '/tools/:path*',
+    '/admin/:path*',
     '/login',
     '/sign-up',
   ],

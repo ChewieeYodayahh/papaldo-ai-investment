@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { logIntegration, routePattern as actionFor } from './integration-log'
+
 /**
  * Thin server-only wrapper around the Finnhub REST API.
  *
@@ -109,6 +111,7 @@ async function finnhubFetch<T>(
   url.searchParams.set('token', key)
 
   let response: Response
+  const started = performance.now()
   try {
     // Short revalidate window rather than no caching at all -- keeps repeated
     // dashboard loads within a few seconds of each other from burning extra
@@ -116,8 +119,17 @@ async function finnhubFetch<T>(
     // ingestion/cache architecture. Slower-moving resources pass a longer one.
     response = await fetch(url, { next: { revalidate } })
   } catch (cause) {
+    logIntegration({ target: 'finnhub', action: actionFor(path), ok: false, durationMs: performance.now() - started, error: 'network error' })
     throw new FinnhubError('network-error', `Could not reach Finnhub on ${path}: ${String(cause)}`)
   }
+  logIntegration({
+    target: 'finnhub',
+    action: actionFor(path),
+    ok: response.ok,
+    durationMs: performance.now() - started,
+    httpStatus: response.status,
+    error: response.ok ? undefined : `HTTP ${response.status}`,
+  })
 
   if (!response.ok) {
     // Never interpolate `url` into an error -- the token is a query parameter.

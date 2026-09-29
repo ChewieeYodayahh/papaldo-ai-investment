@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { UniverseQuote } from './api/movers'
-import { buildHeatmap, colorStep, stepFill } from './heatmap'
+import { buildHeatmap, colorStep, formatCap, stepFill } from './heatmap'
 
 function quote(symbol: string, sector: string, changePercent: number, marketCapUsd: number | null): UniverseQuote {
   return {
@@ -58,10 +58,24 @@ describe('colour scale', () => {
     expect([-7, -2.6, -0.4, 0, 0.49, 0.5, 1.4, 2.5, 12].map(colorStep)).toEqual([-3, -3, 0, 0, 0, 1, 1, 3, 3])
   })
 
-  it('mixes fills from the palette tokens only', () => {
-    expect(stepFill(0)).toBe('var(--muted)')
-    expect(stepFill(3)).toContain('var(--gain)')
-    expect(stepFill(-1)).toContain('var(--loss)')
-    expect(stepFill(2)).not.toMatch(/#[0-9a-f]{3,6}/i)
+  it('fills from the heat tokens only: red, grey at zero, green', () => {
+    expect([-3, -2, -1, 0, 1, 2, 3].map(stepFill)).toEqual([
+      'var(--heat-n3)',
+      'var(--heat-n2)',
+      'var(--heat-n1)',
+      'var(--heat-0)',
+      'var(--heat-p1)',
+      'var(--heat-p2)',
+      'var(--heat-p3)',
+    ])
+    expect(stepFill(9)).toBe('var(--heat-p3)')
+    expect(stepFill(-0)).toBe('var(--heat-0)')
+  })
+
+  it('formats market caps compactly', () => {
+    expect(formatCap(3.21e12)).toBe('3.21T')
+    expect(formatCap(845e9)).toBe('845B')
+    expect(formatCap(12.44e9)).toBe('12.4B')
+    expect(formatCap(450e6)).toBe('450M')
   })
 })
