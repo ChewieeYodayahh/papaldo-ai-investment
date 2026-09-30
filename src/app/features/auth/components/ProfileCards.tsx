@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
-import { BriefcaseBusiness, Check, KeyRound, Link2, MailCheck, ShieldCheck, UserRound } from 'lucide-react'
+import { BriefcaseBusiness, Check, Globe, KeyRound, Link2, MailCheck, Plus, ShieldCheck, UserRound, X } from 'lucide-react'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 
 import { useFormSubmit } from '../hooks/use-form-submit'
@@ -155,14 +156,19 @@ function incomeOf(draft: IncomeDraft): Income | null {
 
 export function WorkIncomeCard({ profile }: { profile: UserProfile }) {
   const { pending, message, errors, saved, save } = useProfileSave()
-  const [occupation, setOccupation] = useState<string | null>(profile.occupation)
+  // Up to three occupations (2026-09-30); one empty picker when none is set.
+  const [occupations, setOccupations] = useState<Array<string | null>>(
+    profile.occupations.length ? profile.occupations : [null],
+  )
   const [annual, setAnnual] = useState<IncomeDraft>(draftOf(profile.annualIncome))
   const [ideal, setIdeal] = useState<IncomeDraft>(draftOf(profile.idealIncome))
+
+  const chosen = [...new Set(occupations.filter((o): o is string => Boolean(o)))]
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     await save({
-      ...(occupation ? { occupation } : {}),
+      occupations: chosen,
       annualIncome: incomeOf(annual),
       idealIncome: incomeOf(ideal),
     })
@@ -176,10 +182,46 @@ export function WorkIncomeCard({ profile }: { profile: UserProfile }) {
     <SectionCard icon={BriefcaseBusiness} title="prof.work" description="What you do, what you earn, and where you want to be.">
       <form onSubmit={onSubmit} noValidate>
         <FieldGroup className="gap-5">
-          <Field data-invalid={Boolean(errors.occupation) || undefined}>
-            <FieldLabel htmlFor="occupation">Occupation</FieldLabel>
-            <OccupationCombobox id="occupation" value={occupation} onChange={setOccupation} invalid={Boolean(errors.occupation)} />
-            <FieldError>{errors.occupation}</FieldError>
+          <Field data-invalid={Boolean(errors.occupations) || undefined}>
+            <FieldLabel htmlFor="occupation-0">Occupations</FieldLabel>
+            <div className="grid gap-2">
+              {occupations.map((value, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <OccupationCombobox
+                      id={`occupation-${index}`}
+                      value={value}
+                      onChange={(next) => setOccupations((list) => list.map((item, i) => (i === index ? next : item)))}
+                      invalid={Boolean(errors.occupations)}
+                    />
+                  </div>
+                  {occupations.length > 1 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setOccupations((list) => list.filter((_, i) => i !== index))}
+                      aria-label={`Remove occupation ${index + 1}`}
+                      className="shrink-0 rounded-full"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+            {occupations.length < 3 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setOccupations((list) => [...list, null])}
+                className="w-fit rounded-full px-2 text-primary"
+              >
+                <Plus className="size-4" /> Add another occupation
+              </Button>
+            ) : null}
+            {errors.occupations ? <FieldError>{errors.occupations}</FieldError> : <FieldDescription>Up to three, like “Nurse” and “Student”.</FieldDescription>}
           </Field>
           <Field data-invalid={Boolean(errors.annualIncome) || undefined}>
             <FieldLabel htmlFor="annual-income">Annual income</FieldLabel>
@@ -357,6 +399,67 @@ export function SecurityCard({ confirmed }: { confirmed: boolean }) {
           </div>
         </div>
       )}
+    </SectionCard>
+  )
+}
+
+/**
+ * About you (Carlos, 2026-09-30): a website friends can follow, the Private
+ * switch, and social profiles once those APIs are set up. The picture itself
+ * is changed from the avatar in the page header.
+ */
+export function AboutYouCard({ profile }: { profile: UserProfile }) {
+  const { pending, message, errors, saved, save } = useProfileSave()
+  const [website, setWebsite] = useState(profile.website ?? '')
+  const [isPrivate, setIsPrivate] = useState(profile.isPrivate)
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    await save({ website, isPrivate })
+  }
+
+  return (
+    <SectionCard icon={Globe} title="prof.about" description="What other investors see when they open your profile.">
+      <form onSubmit={onSubmit} noValidate>
+        <FieldGroup className="gap-5">
+          <Field data-invalid={Boolean(errors.website) || undefined}>
+            <FieldLabel htmlFor="website">Your website</FieldLabel>
+            <Input
+              id="website"
+              type="url"
+              inputMode="url"
+              value={website}
+              onChange={(event) => setWebsite(event.target.value)}
+              placeholder="https://"
+              maxLength={200}
+              aria-invalid={Boolean(errors.website) || undefined}
+              className="h-11 rounded-xl text-[0.9375rem]"
+            />
+            {errors.website ? (
+              <FieldError>{errors.website}</FieldError>
+            ) : (
+              <FieldDescription>A blog, portfolio or social page, shown on your profile so friends can connect.</FieldDescription>
+            )}
+          </Field>
+          <Field orientation="horizontal" className="items-start justify-between gap-4">
+            <div className="grid gap-1">
+              <FieldLabel htmlFor="private-profile">Private profile</FieldLabel>
+              <FieldDescription>
+                Hide your balance, holdings and risk band from everyone except friends. Your email, number and income are
+                never shown to anyone.
+              </FieldDescription>
+            </div>
+            <Switch id="private-profile" checked={isPrivate} onCheckedChange={(checked) => setIsPrivate(Boolean(checked))} />
+          </Field>
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2.5 text-sm">
+            <span className="text-muted-foreground">Connect Facebook or LinkedIn</span>
+            <Badge variant="outline" className="rounded-full">
+              Coming soon
+            </Badge>
+          </div>
+          <SaveRow pending={pending} saved={saved} message={Object.keys(errors).length ? undefined : message} />
+        </FieldGroup>
+      </form>
     </SectionCard>
   )
 }

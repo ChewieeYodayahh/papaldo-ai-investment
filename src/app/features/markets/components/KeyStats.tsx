@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { Quote } from '../api/quotes'
 import type { MarketResult } from '../api/result'
 import { marketUnavailableMessage } from '../market-status'
+import { StatHelp, type StatId } from './StatHelp'
 
 type Metrics = Record<string, number | string | null>
 
@@ -42,18 +43,19 @@ export function KeyStats({
   const yield_ = num(m, 'dividendYieldIndicatedAnnual')
   const volume = num(m, '10DayAverageTradingVolume')
 
-  const rows: [string, string][] = [
-    ['Open', price(quote.open)],
-    ['Previous close', price(quote.previousClose)],
-    ['Day high', price(quote.high)],
-    ['Day low', price(quote.low)],
-    ['52-week high', high52 === null ? '—' : price(high52)],
-    ['52-week low', low52 === null ? '—' : price(low52)],
-    ['Market cap', marketCap === null ? '—' : millions(marketCap)],
-    ['P/E (TTM)', pe === null ? '—' : pe.toFixed(2)],
-    ['Beta', beta === null ? '—' : beta.toFixed(2)],
-    ['Dividend yield', yield_ === null ? '—' : `${yield_.toFixed(2)}%`],
-    ['Avg volume (10d)', volume === null ? '—' : `${volume.toFixed(2)}M`],
+  // Each row: label, value, and which "?" explanation it opens.
+  const rows: [string, string, StatId][] = [
+    ['Open', price(quote.open), 'open'],
+    ['Previous close', price(quote.previousClose), 'previousClose'],
+    ['Day high', price(quote.high), 'dayRange'],
+    ['Day low', price(quote.low), 'dayRange'],
+    ['52-week high', high52 === null ? '—' : price(high52), 'week52'],
+    ['52-week low', low52 === null ? '—' : price(low52), 'week52'],
+    ['Market cap', marketCap === null ? '—' : millions(marketCap), 'marketCap'],
+    ['P/E (TTM)', pe === null ? '—' : pe.toFixed(2), 'pe'],
+    ['Beta', beta === null ? '—' : beta.toFixed(2), 'beta'],
+    ['Dividend yield', yield_ === null ? '—' : `${yield_.toFixed(2)}%`, 'dividendYield'],
+    ['Avg volume (10d)', volume === null ? '—' : `${volume.toFixed(2)}M`, 'avgVolume'],
   ]
 
   return (
@@ -69,9 +71,12 @@ export function KeyStats({
         ) : null}
 
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-          {rows.map(([label, value]) => (
+          {rows.map(([label, value, help]) => (
             <div key={label}>
-              <dt className="text-xs text-muted-foreground">{label}</dt>
+              <dt className="flex items-center gap-1 text-xs text-muted-foreground">
+                {label}
+                <StatHelp id={help} label={label} />
+              </dt>
               <dd className="text-sm font-medium tabular-nums">{value}</dd>
             </div>
           ))}

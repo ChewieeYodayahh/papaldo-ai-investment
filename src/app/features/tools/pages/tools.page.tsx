@@ -1,11 +1,13 @@
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getProfile, isSetupComplete } from "@/app/features/auth/api/profile";
 import { getBenchmarks } from "@/app/features/markets/benchmarks/api/benchmarks";
 import { getCurrentRiskProfile } from "@/app/features/tools/quiz/api/submit";
 import { MANULIFE_TOOLS_URL } from "@/app/features/userData/frame/nav";
-import { T } from "@/app/features/userData/preferences/copy";
+import { T, type CopyKey } from "@/app/features/userData/preferences/copy";
 
 import {
   BenchmarkToolCard,
+  LifeInsuranceToolCard,
   ProfileToolCard,
   QuizToolCard,
   SimpleToolCard,
@@ -13,15 +15,15 @@ import {
   type BenchmarkPreview,
 } from "../components/ToolCards";
 
+const GRID = "grid items-stretch gap-4 pb-2 lg:grid-cols-2 2xl:grid-cols-3";
+
 /**
- * Tools (Carlos, 2026-09-26): the things that shape how someone invests, as
- * cards. The quiz lives here for good -- take it, view the results, retake
- * it -- alongside the profile, the index benchmarker, the calculators and the
- * export tool (2026-09-29), and the first-trade walkthrough.
+ * Tools (Carlos, 2026-09-26; sections 2026-09-30): every tool as a card,
+ * grouped into drop-down sections the sidebar mirrors -- Let's get started,
+ * Basics, Accounting, Life insurance and Tutorials.
  *
- * Guests get the tools that need no account (2026-09-30): the calculators,
- * the benchmarker and the Manulife life-insurance link. The quiz, profile,
- * export and walkthrough appear once signed in.
+ * Guests get the sections that need no account: Basics, Accounting and Life
+ * insurance. The quiz, profile, export and walkthroughs appear once signed in.
  */
 export async function ToolsPage() {
   const [profile, risk, benchmarks] = await Promise.all([
@@ -47,86 +49,122 @@ export async function ToolsPage() {
   });
   const since = benchmarks.growth[0]?.date.slice(0, 4) ?? null;
 
-  const calculators = (
-    <>
+  const basics = (
+    <div className={GRID}>
       <SimpleToolCard
         icon="returns"
         title="Returns calculator"
-        body="Replay real prices: what money in an index, fund or stock would be worth today, and what that buys."
-        badge="Indices · 50 stocks"
+        body="Replay real prices: what money in an index, fund or stock would be worth today, and where it could go next."
+        badge="10 & 15 years"
         href="/tools/returns"
         action="Run the numbers"
       />
       <SimpleToolCard
         icon="savings"
-        title="Savings goal"
-        body="How much to put away each week, fortnight or month to reach a target by a date."
+        title="Savings planner"
+        body="How much to put away for a goal, plus an emergency fund in a Maya, CIMB, MariBank or GoTyme deposit, after tax."
+        badge="Time deposits"
         href="/tools/savings"
         action="Plan a goal"
       />
-    </>
+      <SimpleToolCard
+        icon="purchasing"
+        title="Purchasing power"
+        body="What a peso or dollar from any year since 1960 is worth today, and how fast cash loses value."
+        badge="World Bank CPI"
+        href="/tools/purchasing-power"
+        action="Compare the years"
+      />
+      <SimpleToolCard
+        icon="budget"
+        title="Budget 50/30/20"
+        body="Split take-home pay into needs, wants and savings, with Philippine or international presets."
+        badge="Needs · wants · savings"
+        href="/tools/budget"
+        action="Plan my month"
+      />
+      <BenchmarkToolCard preview={preview} since={since} />
+    </div>
+  );
+  const accounting = (
+    <div className={GRID}>
+      <SimpleToolCard
+        icon="statements"
+        title="Financial statements"
+        body="Income statement, balance sheet and cash flow that check each other. Kept only in this browser."
+        badge="CSV · HTML"
+        href="/tools/statements"
+        action="Build statements"
+      />
+    </div>
   );
   const insurance = (
-    <SimpleToolCard
-      icon="insurance"
-      title="Life insurance"
-      body="Protection and investment-linked plans, with Manulife Philippines' own calculators."
-      badge="Manulife PH"
-      href={MANULIFE_TOOLS_URL}
-      action="Open Manulife's calculators"
-      external
-    />
+    <div className={GRID}>
+      <LifeInsuranceToolCard href={MANULIFE_TOOLS_URL} />
+    </div>
   );
 
-  if (!profile) {
-    return (
-      <>
-        <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
-          <T k="tools.subtitle" />
-        </p>
-        <div className="grid items-stretch gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-          {calculators}
-          <BenchmarkToolCard preview={preview} since={since} />
-          {insurance}
-        </div>
-      </>
-    );
-  }
+  const sections: Array<{ value: string; label: CopyKey; count: number; content: React.ReactNode }> = profile
+    ? [
+        {
+          value: "started",
+          label: "tools.section.started",
+          count: 2,
+          content: (
+            <div className={GRID}>
+              <QuizToolCard
+                risk={risk ? { band: risk.band, score: risk.score, takenAt: risk.computed_at } : null}
+              />
+              <ProfileToolCard profile={profile} complete={isSetupComplete(profile)} />
+            </div>
+          ),
+        },
+        { value: "basics", label: "nav.tools.basics", count: 5, content: basics },
+        { value: "accounting", label: "nav.tools.accounting", count: 1, content: accounting },
+        { value: "insurance", label: "nav.tools.lifeInsurance", count: 1, content: insurance },
+        {
+          value: "tutorials",
+          label: "nav.tools.tutorials",
+          count: 2,
+          content: (
+            <div className={GRID}>
+              <WalkthroughToolCard quizDone={Boolean(risk)} />
+              <SimpleToolCard
+                icon="export"
+                title="Export my data"
+                body="Download your trades, holdings, performance and profile as CSV or an HTML report. Nothing leaves your browser."
+                badge="CSV · HTML"
+                href="/tools/export"
+                action="Build a report"
+              />
+            </div>
+          ),
+        },
+      ]
+    : [
+        { value: "basics", label: "nav.tools.basics", count: 5, content: basics },
+        { value: "accounting", label: "nav.tools.accounting", count: 1, content: accounting },
+        { value: "insurance", label: "nav.tools.lifeInsurance", count: 1, content: insurance },
+      ];
 
   return (
     <>
       <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
         <T k="tools.subtitle" />
       </p>
-      <div className="grid items-stretch gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-        <QuizToolCard
-          risk={
-            risk
-              ? {
-                  band: risk.band,
-                  score: risk.score,
-                  takenAt: risk.computed_at,
-                }
-              : null
-          }
-        />
-        <BenchmarkToolCard preview={preview} since={since} />
-        <ProfileToolCard
-          profile={profile}
-          complete={isSetupComplete(profile)}
-        />
-        {calculators}
-        <SimpleToolCard
-          icon="export"
-          title="Export my data"
-          body="Download your trades, holdings, performance and profile as CSV or an HTML report. Nothing leaves your browser."
-          badge="CSV · HTML"
-          href="/tools/export"
-          action="Build a report"
-        />
-        <WalkthroughToolCard quizDone={Boolean(risk)} />
-        {insurance}
-      </div>
+      <Accordion multiple defaultValue={profile ? ["started", "basics"] : ["basics"]} className="gap-3">
+        {sections.map((section) => (
+          <AccordionItem key={section.value} value={section.value} className="rounded-2xl border-0 bg-card/60 px-4 ring-1 ring-foreground/5">
+            <AccordionTrigger className="py-4 text-base font-semibold hover:no-underline">
+              <span className="flex items-baseline gap-2">
+                <T k={section.label} />
+                <span className="figure text-xs font-normal text-muted-foreground">{section.count}</span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>{section.content}</AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </>
   );
 }

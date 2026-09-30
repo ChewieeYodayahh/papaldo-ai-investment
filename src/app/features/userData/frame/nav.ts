@@ -4,7 +4,9 @@ import {
   ChartNoAxesCombined,
   ChartSpline,
   ClipboardList,
+  Coins,
   Download,
+  FileSpreadsheet,
   House,
   LayoutGrid,
   LayoutList,
@@ -15,23 +17,48 @@ import {
   ShieldPlus,
   Sparkles,
   Users,
+  Wallet,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
 
 import type { CopyKey } from '@/app/features/userData/preferences/copy'
 
-export type NavLeaf = { href: string; label: CopyKey; icon: LucideIcon; also?: string[]; exact?: boolean }
+export type NavLeaf = {
+  href: string
+  label: CopyKey
+  icon: LucideIcon
+  also?: string[]
+  exact?: boolean
+  /** A small heading shown above the first link of each section in a group. */
+  section?: CopyKey
+  /** Another site: opens in a new tab without an opener. */
+  external?: boolean
+}
 export type NavGroup = { label: CopyKey; icon: LucideIcon; href: string; children: NavLeaf[] }
 
-/** Every tool, in the order the sidebar lists them. The first is the Tools page itself. */
+/**
+ * Manulife Philippines' own calculators. The only life-insurance resource
+ * Papaldo links to (Carlos, 2026-09-30): no in-app insurance calculators and
+ * no other insurers. Opens Manulife's site in a new tab.
+ */
+export const MANULIFE_TOOLS_URL = 'https://www.manulife.com/ph/services/tools-calculators'
+
+/**
+ * Every tool, in the order the sidebar lists them, in the same sections as
+ * the /tools hub (2026-09-30). The first is the Tools page itself.
+ */
 export const TOOL_LINKS: NavLeaf[] = [
   { href: '/tools', label: 'nav.tools.all', icon: LayoutList, exact: true },
-  { href: '/isq', label: 'nav.tools.quiz', icon: ClipboardList },
-  { href: '/markets/benchmarks', label: 'nav.tools.benchmarks', icon: ChartSpline },
-  { href: '/tools/returns', label: 'nav.tools.returns', icon: Calculator },
-  { href: '/tools/savings', label: 'nav.tools.savings', icon: PiggyBank },
-  { href: '/tools/export', label: 'nav.tools.export', icon: Download },
+  { href: '/isq', label: 'nav.tools.quiz', icon: ClipboardList, section: 'nav.tools.started' },
+  { href: '/tools/returns', label: 'nav.tools.returns', icon: Calculator, section: 'nav.tools.basics' },
+  { href: '/tools/savings', label: 'nav.tools.savings', icon: PiggyBank, section: 'nav.tools.basics' },
+  { href: '/tools/purchasing-power', label: 'nav.tools.purchasingPower', icon: Coins, section: 'nav.tools.basics' },
+  { href: '/tools/budget', label: 'nav.tools.budget', icon: Wallet, section: 'nav.tools.basics' },
+  { href: '/markets/benchmarks', label: 'nav.tools.benchmarks', icon: ChartSpline, section: 'nav.tools.basics' },
+  { href: '/tools/statements', label: 'nav.tools.statements', icon: FileSpreadsheet, section: 'nav.tools.accounting' },
+  { href: MANULIFE_TOOLS_URL, label: 'nav.tools.manulife', icon: ShieldPlus, section: 'nav.tools.lifeInsurance', external: true },
+  { href: '/tools/export', label: 'nav.tools.export', icon: Download, section: 'nav.tools.yourData' },
 ]
 
 export const COMMUNITY_LINKS: NavLeaf[] = [
@@ -49,16 +76,10 @@ export const APP_NAV: Array<NavLeaf | NavGroup> = [
 ]
 
 export function isActive(item: NavLeaf, pathname: string): boolean {
+  if (item.external) return false
   if (item.exact) return pathname === item.href
   return [item.href, ...(item.also ?? [])].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
-
-/**
- * Manulife Philippines' own calculators. The only life-insurance resource
- * Papaldo links to (Carlos, 2026-09-30): no in-app insurance calculators and
- * no other insurers. Opens Manulife's site in a new tab.
- */
-export const MANULIFE_TOOLS_URL = 'https://www.manulife.com/ph/services/tools-calculators'
 
 export type PublicMenuItem = { href: string; label: CopyKey; icon: LucideIcon; external?: boolean }
 export type PublicMenu = { label: CopyKey; sections: Array<{ label?: CopyKey; items: PublicMenuItem[] }> }
@@ -69,8 +90,7 @@ export const isPublicMenu = (entry: PublicNavEntry): entry is PublicMenu => 'sec
 /**
  * The top bar outside the app (Carlos, 2026-09-30): About Papaldo ▾, Markets,
  * Community ▾, Tools ▾. Tools lists what a guest can open without an account;
- * the quiz and export need one and live in the signed-in sidebar. Purchasing
- * power, budget and accounting join Basics as they ship (plan Phase 7).
+ * the quiz and export need one and live in the signed-in sidebar.
  * Section links are absolute (`/#…`) so they also work from other pages.
  */
 export const PUBLIC_NAV: PublicNavEntry[] = [
@@ -91,14 +111,10 @@ export const PUBLIC_NAV: PublicNavEntry[] = [
   {
     label: 'nav.tools',
     sections: [
-      {
-        label: 'nav.tools.basics',
-        items: TOOL_LINKS.filter((link) => ['/tools/returns', '/tools/savings'].includes(link.href)),
-      },
-      {
-        label: 'nav.tools.lifeInsurance',
-        items: [{ href: MANULIFE_TOOLS_URL, label: 'nav.tools.manulife', icon: ShieldPlus, external: true }],
-      },
+      ...(['nav.tools.basics', 'nav.tools.accounting', 'nav.tools.lifeInsurance'] as const).map((section) => ({
+        label: section,
+        items: TOOL_LINKS.filter((link) => link.section === section && link.href !== '/markets/benchmarks'),
+      })),
     ],
   },
 ]

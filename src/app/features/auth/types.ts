@@ -19,7 +19,15 @@ export type UserProfile = {
   email: string
   username: string | null
   contact: string | null
+  /** The first of `occupations`; kept while older screens still show one. */
   occupation: string | null
+  /** Up to three (2026-09-30). */
+  occupations: string[]
   annualIncome: Income | null
   idealIncome: Income | null
+  /** Cloudinary URL uploaded from the profile, or null (the provider picture or initials show instead). */
+  avatarUrl: string | null
+  website: string | null
+  /** Hides balance, holdings and risk band from everyone but friends. */
+  isPrivate: boolean
 }

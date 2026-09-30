@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Calculator, ChartLine, ClipboardList, Download, ExternalLink, Lock, PiggyBank, Route, ShieldPlus, UserRound } from 'lucide-react'
+import { ArrowRight, Calculator, ChartLine, ClipboardList, Coins, Download, ExternalLink, FileSpreadsheet, Lock, MessageCircle, PiggyBank, Route, ShieldPlus, UserRound, Wallet } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -230,7 +230,15 @@ export function WalkthroughToolCard({ quizDone }: { quizDone: boolean }) {
   )
 }
 
-const SIMPLE_ICONS = { returns: Calculator, savings: PiggyBank, export: Download, insurance: ShieldPlus } as const
+const SIMPLE_ICONS = {
+  returns: Calculator,
+  savings: PiggyBank,
+  export: Download,
+  insurance: ShieldPlus,
+  purchasing: Coins,
+  budget: Wallet,
+  statements: FileSpreadsheet,
+} as const
 
 /**
  * A tool card with no live preview: icon, name, one line on what it does, and
@@ -286,6 +294,46 @@ export function SimpleToolCard({
             <ArrowRight data-icon="inline-end" />
           </Link>
         )}
+      </CardFooter>
+    </Card>
+  )
+}
+
+/**
+ * Life insurance (Carlos, 2026-09-30): Manulife Philippines' own calculators
+ * and nothing else -- no in-app insurance maths, no other insurers. "Talk to
+ * an Advisor" waits, disabled, for Carlos's advisor profile.
+ */
+export function LifeInsuranceToolCard({ href }: { href: string }) {
+  return (
+    <Card className={CARD}>
+      <CardHeader className="px-5 sm:px-6">
+        <div className="flex items-start justify-between gap-3">
+          <ToolIcon icon={ShieldPlus} />
+          <Badge variant="outline" className="rounded-full">
+            Manulife PH
+          </Badge>
+        </div>
+        <CardTitle className="pt-3 text-lg font-semibold">Life insurance</CardTitle>
+        <CardDescription className="text-[0.8125rem]">
+          Protection and investment-linked plans, worked out with Manulife Philippines’ own calculators.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1" />
+      <CardFooter className="flex flex-wrap gap-2 border-0 bg-transparent px-5 pt-2 sm:px-6">
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}
+        >
+          Open Manulife’s calculators
+          <ExternalLink data-icon="inline-end" aria-label="Opens in a new tab" />
+        </a>
+        <Button size="lg" variant="outline" disabled className="h-10 rounded-full px-5">
+          <MessageCircle data-icon="inline-start" />
+          Talk to an Advisor · Coming soon
+        </Button>
       </CardFooter>
     </Card>
   )

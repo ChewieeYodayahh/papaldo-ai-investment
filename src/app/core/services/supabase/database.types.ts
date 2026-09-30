@@ -103,28 +103,85 @@ export type Database = {
           author_name: string
           body: string
           created_at: string
+          guest_session_id: string | null
           id: number
+          is_guest: boolean
           removed_at: string | null
           removed_by: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           author_name?: string
           body: string
           created_at?: string
+          guest_session_id?: string | null
           id?: never
+          is_guest?: boolean
           removed_at?: string | null
           removed_by?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Update: {
           author_name?: string
           body?: string
           created_at?: string
+          guest_session_id?: string | null
           id?: never
+          is_guest?: boolean
           removed_at?: string | null
           removed_by?: string | null
-          user_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cpi_annual: {
+        Row: {
+          country: string
+          cpi: number
+          source: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          country: string
+          cpi: number
+          source: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          country?: string
+          cpi?: number
+          source?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -408,6 +465,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          actor_name: string
+          created_at: string
+          id: number
+          kind: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name: string
+          created_at?: string
+          id?: never
+          kind: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          id?: never
+          kind?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           asset_class: string
@@ -620,41 +707,53 @@ export type Database = {
         Row: {
           annual_income: number | null
           annual_income_currency: string | null
+          avatar_url: string | null
           contact: string | null
           created_at: string
           email: string
           id: string
           ideal_income: number | null
           ideal_income_currency: string | null
+          is_private: boolean
           occupation: string | null
+          occupations: string[]
           updated_at: string
           username: string | null
+          website: string | null
         }
         Insert: {
           annual_income?: number | null
           annual_income_currency?: string | null
+          avatar_url?: string | null
           contact?: string | null
           created_at?: string
           email: string
           id: string
           ideal_income?: number | null
           ideal_income_currency?: string | null
+          is_private?: boolean
           occupation?: string | null
+          occupations?: string[]
           updated_at?: string
           username?: string | null
+          website?: string | null
         }
         Update: {
           annual_income?: number | null
           annual_income_currency?: string | null
+          avatar_url?: string | null
           contact?: string | null
           created_at?: string
           email?: string
           id?: string
           ideal_income?: number | null
           ideal_income_currency?: string | null
+          is_private?: boolean
           occupation?: string | null
+          occupations?: string[]
           updated_at?: string
           username?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -702,7 +801,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      my_friends: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          relation: string
+          since: string
+          username: string
+        }[]
+      }
       my_starting_cash: { Args: never; Returns: number }
+      post_guest_message: { Args: { p_body: string; p_secret: string }; Returns: number }
+      public_profile: { Args: { p_username: string }; Returns: Json }
+      remove_friend: { Args: { p_username: string }; Returns: undefined }
+      request_friend: { Args: { p_username: string }; Returns: string }
+      respond_friend: {
+        Args: { p_accept: boolean; p_username: string }
+        Returns: string
+      }
       place_order: {
         Args: {
           p_asset_class: string
@@ -730,6 +846,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      start_guest_session: { Args: { p_name: string }; Returns: string }
       submit_support_message: {
         Args: {
           p_body: string

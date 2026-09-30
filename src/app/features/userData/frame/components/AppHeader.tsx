@@ -7,6 +7,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useCopy } from '@/app/features/userData/preferences/copy'
 import { usePreferences } from '@/app/features/userData/preferences/store'
+import type { SocialNotification } from '@/app/features/community/api/notifications'
 import type { Order } from '@/app/features/trading/types'
 import { cn } from '@/lib/utils'
 
@@ -20,10 +21,12 @@ import { SettingsMenu } from './SettingsMenu'
 export function AppHeader({
   user,
   notifications,
+  social,
   greetingSeed,
 }: {
   user: ShellUser | null
   notifications: Order[]
+  social: SocialNotification[]
   greetingSeed: number
 }) {
   const t = useCopy()
@@ -51,7 +54,7 @@ export function AppHeader({
       </h1>
 
       <div className="flex items-center gap-2">
-        {user ? <NotificationsMenu orders={notifications} /> : null}
+        {user ? <NotificationsMenu orders={notifications} social={social} /> : null}
         <SettingsMenu signedIn={Boolean(user)} />
       </div>
 

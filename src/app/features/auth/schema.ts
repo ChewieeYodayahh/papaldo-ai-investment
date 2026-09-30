@@ -26,6 +26,21 @@ const contact = z.string().trim().min(1, 'Contact number is required.').max(40, 
 
 const occupation = z.string().trim().min(1, 'Pick an occupation.').max(80, 'Keep it under 80 characters.')
 
+/** Up to three (2026-09-30); the same limits as the users.occupations CHECK. */
+const occupations = z.array(occupation).max(3, 'Pick up to three occupations.')
+
+/**
+ * A website shown on the public profile. `url()` alone accepts `javascript:`
+ * links, so the protocol is checked too (the database CHECK matches). An
+ * empty string clears it.
+ */
+const website = z
+  .string()
+  .trim()
+  .max(200, 'Keep the link under 200 characters.')
+  .refine((value) => value === '' || /^https?:\/\/\S+$/i.test(value), 'Use a full link starting with https://')
+  .transform((value) => (value === '' ? null : value))
+
 export const INCOME_CURRENCIES = ['USD', 'PHP'] as const
 export type IncomeCurrency = (typeof INCOME_CURRENCIES)[number]
 
@@ -61,8 +76,11 @@ export const profileUpdateSchema = z
     username: username.optional(),
     contact: contact.optional(),
     occupation: occupation.optional(),
+    occupations: occupations.optional(),
     annualIncome: income.nullable().optional(),
     idealIncome: income.nullable().optional(),
+    website: website.optional(),
+    isPrivate: z.boolean().optional(),
   })
   .refine((value) => Object.values(value).some((field) => field !== undefined), {
     message: 'Nothing to save.',

@@ -61,7 +61,7 @@ export function SavingsGoalCalculator({
 
   return (
     <div className={cn('grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]', className)}>
-      <Card className="rounded-2xl border-0 py-5">
+      <Card className="rounded-2xl border-0 py-5" data-tut="savings.goal">
         <CardHeader className="px-5">
           <CardTitle className="text-base font-semibold">Your goal</CardTitle>
           <CardDescription>Tell it the amount, the deadline and the return you expect.</CardDescription>
@@ -121,7 +121,7 @@ export function SavingsGoalCalculator({
 
       <Card className="rounded-2xl border-0 py-5">
         <CardContent className="grid gap-4 px-5">
-          <div className="rounded-2xl bg-primary/10 p-4 ring-1 ring-primary/25">
+          <div className="rounded-2xl bg-primary/10 p-4 ring-1 ring-primary/25" data-tut="savings.result">
             <p className="text-sm text-muted-foreground">
               {result.coveredByStart ? 'You don’t need to add anything' : `Put away ${per}`}
             </p>
@@ -181,6 +181,10 @@ export function SavingsGoalCalculator({
               ],
               buysLabel: 'That goal could buy',
               buys: whatItBuys(targetUsd, fx?.rate ?? null).map((p) => p.text),
+              chart: [
+                { label: 'Balance', values: result.schedule.map((row) => row.balance) },
+                { label: 'Your deposits', values: result.schedule.map((row) => row.contributed), dashed: true },
+              ],
               footer: 'Papaldo Ka · a planning estimate, not a promise or financial advice',
             })}
           />

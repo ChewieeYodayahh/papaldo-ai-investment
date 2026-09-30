@@ -1,5 +1,6 @@
 import { getHistory, INDEX_OPTIONS } from '../api/history'
 import type { RatePreset } from '../components/SavingsGoalCalculator'
+import { EmergencyFundPlanner } from '../components/EmergencyFundPlanner'
 import { SavingsGoalCalculator } from '../components/SavingsGoalCalculator'
 import { lastYears, seriesCagr } from '../math'
 
@@ -25,6 +26,12 @@ export async function SavingsPage() {
         growth over the last ten years.
       </p>
       <SavingsGoalCalculator presets={presets} />
+      <h2 className="mt-8 mb-1 text-lg font-semibold tracking-tight">Emergency fund</h2>
+      <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
+        Before investing for a goal, most planners keep three to six months of expenses in cash. See what that
+        fund earns in a Philippine time deposit, after tax, next to investing it.
+      </p>
+      <EmergencyFundPlanner />
     </>
   )
 }

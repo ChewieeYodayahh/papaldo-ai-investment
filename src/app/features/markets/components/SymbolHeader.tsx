@@ -3,6 +3,8 @@ import { ArrowDownRight, ArrowLeft, ArrowUpRight } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
+import { T } from '@/app/features/userData/preferences/copy'
+import { cn } from '@/lib/utils'
 
 import type { FinnhubCompanyProfile } from '@/app/core/services/finnhub'
 import type { Quote } from '../api/quotes'
@@ -31,7 +33,7 @@ export function SymbolHeader({
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to dashboard
+        <T k="sym.back" />
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -47,9 +49,10 @@ export function SymbolHeader({
             />
           ) : null}
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
+            {/* h2: the app header already holds the page's h1 ("Trade"). */}
+            <h2 className="text-2xl font-semibold tracking-tight">
               {company?.name ?? quote.symbol}
-            </h1>
+            </h2>
             <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span className="font-medium">{quote.symbol}</span>
               {company?.exchange ? <span>· {company.exchange}</span> : null}
@@ -65,7 +68,7 @@ export function SymbolHeader({
             </div>
             <div
               className={`mt-0.5 inline-flex items-center gap-1 text-sm font-medium tabular-nums ${
-                up ? 'text-primary' : 'text-destructive'
+                up ? 'text-gain' : 'text-loss'
               }`}
             >
               {up ? <ArrowUpRight className="size-4" /> : <ArrowDownRight className="size-4" />}
@@ -75,12 +78,22 @@ export function SymbolHeader({
             </div>
           </div>
 
-          {/* Jumps to the trade panel (or the sign-in card) further down.
-              Until 2026-09-30 this was a permanently disabled "Buy" left over
-              from before trading existed. */}
-          <a href="#trade" className={buttonVariants({ className: 'rounded-full px-4' })}>
-            Trade
-          </a>
+          {/* Jump to the trade panel with that side picked (the ticket reads
+              the hash). Until 2026-09-30 this was a permanently disabled "Buy". */}
+          <div className="flex gap-2">
+            <a
+              href="#trade-buy"
+              className={cn(buttonVariants(), 'rounded-full bg-gain px-4 font-semibold text-gain-foreground hover:bg-gain/85')}
+            >
+              Buy
+            </a>
+            <a
+              href="#trade-sell"
+              className={cn(buttonVariants(), 'rounded-full bg-loss px-4 font-semibold text-loss-foreground hover:bg-loss/85')}
+            >
+              Sell
+            </a>
+          </div>
         </div>
       </div>
 

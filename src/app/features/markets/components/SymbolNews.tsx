@@ -1,17 +1,21 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PanelFrame } from './PanelFrame'
 
 import type { FinnhubNewsItem } from '@/app/core/services/finnhub'
 import type { MarketResult } from '../api/result'
 import { marketUnavailableMessage } from '../market-status'
 
 /** Company headlines from Finnhub, last 30 days. Real, unranked, unfiltered. */
-export function SymbolNews({ items, symbol }: { items: MarketResult<FinnhubNewsItem[]>; symbol: string }) {
+export function SymbolNews({
+  items,
+  symbol,
+  embedded = false,
+}: {
+  items: MarketResult<FinnhubNewsItem[]>
+  symbol: string
+  embedded?: boolean
+}) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">News · {symbol}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <PanelFrame title={`News · ${symbol}`} embedded={embedded}>
         {!items.ok ? (
           <p className="text-sm text-muted-foreground">{marketUnavailableMessage(items.reason, 'Finnhub')}</p>
         ) : items.data.length === 0 ? (
@@ -40,7 +44,6 @@ export function SymbolNews({ items, symbol }: { items: MarketResult<FinnhubNewsI
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+    </PanelFrame>
   )
 }

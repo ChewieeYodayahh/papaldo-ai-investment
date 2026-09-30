@@ -20,8 +20,9 @@ features/  auth                 sign-in, session, /profile, users row
            advisory             AI market outlook card (/api/advisory/outlook)
            tools                /tools hub
              quiz               ISQ (/isq, /isq/results), scoring, recommendations
-             calculators        /tools/returns, /tools/savings, "what it buys"
-           community            /community chat room
+             calculators        /tools/{returns,savings,purchasing-power,budget,
+                                statements}, deposit rates, "what it buys"
+           community            /community chat room, friends, /u/[username]
              blog               /blog, Markdown articles
            support              /support form
            tutorials            Get Started dock, welcome, walkthroughs,

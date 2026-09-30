@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  addMonths,
+  depositGrowth,
   doublingYears,
   effectiveAnnualRate,
   lastYears,
   projectFixed,
+  projectFromCagr,
   replayHistory,
   savingsGoal,
   seriesCagr,
@@ -105,5 +108,52 @@ describe('rates', () => {
     expect(effectiveAnnualRate(5)).toBeCloseTo(5.116, 3)
     expect(doublingYears(10)).toBeCloseTo(7.27, 2)
     expect(doublingYears(0)).toBeNull()
+  })
+})
+
+describe('depositGrowth', () => {
+  it('adds one year of simple interest on a 12-month deposit, taxed 20%', () => {
+    const [, year1] = depositGrowth(100_000, 4, 12, 1, 0.2)
+    expect(year1.gross).toBeCloseTo(104_000, 6)
+    expect(year1.net).toBeCloseTo(103_200, 6)
+  })
+
+  it('compounds when a shorter term renews: four 3-month terms in a year', () => {
+    const [, year1] = depositGrowth(100_000, 4, 3, 1, 0.2)
+    expect(year1.gross).toBeCloseTo(100_000 * 1.01 ** 4, 6)
+    expect(year1.net).toBeCloseTo(100_000 * 1.008 ** 4, 6)
+  })
+
+  it('credits a savings account (no term) monthly, and taxes nothing at a zero rate', () => {
+    const rows = depositGrowth(1_000, 3, 0, 2, 0)
+    expect(rows).toHaveLength(3)
+    expect(rows[2].gross).toBeCloseTo(1_000 * 1.0025 ** 24, 6)
+    expect(rows[2].net).toBeCloseTo(rows[2].gross, 9)
+  })
+})
+
+describe('projectFromCagr', () => {
+  const last = { date: '2026-09-01', contributed: 1_000, value: 1_000 }
+
+  it('grows at the yearly rate, compounded monthly, starting from the last real month', () => {
+    const rows = projectFromCagr(last, 10, 0, 2)
+    expect(rows[0]).toEqual(last)
+    expect(rows).toHaveLength(25)
+    expect(rows[12].value).toBeCloseTo(1_100, 6)
+    expect(rows[24].value).toBeCloseTo(1_210, 6)
+    expect(rows[24].date).toBe('2028-09-01')
+  })
+
+  it('keeps adding the monthly top-up', () => {
+    const rows = projectFromCagr(last, 0, 100, 1)
+    expect(rows[12].contributed).toBe(2_200)
+    expect(rows[12].value).toBeCloseTo(2_200, 9)
+  })
+})
+
+describe('addMonths', () => {
+  it('rolls over year ends', () => {
+    expect(addMonths('2026-11-01', 3)).toBe('2027-02-01')
+    expect(addMonths('2026-01-31', 1)).toBe('2026-02-01')
   })
 })

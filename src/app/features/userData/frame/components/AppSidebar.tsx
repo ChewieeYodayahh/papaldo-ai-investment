@@ -2,8 +2,8 @@
 
 import Link, { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { ChevronRight, ChevronsLeft, CircleHelp, ShieldCheck } from 'lucide-react'
+import { Fragment, useEffect, useState } from 'react'
+import { ChevronRight, ChevronsLeft, CircleHelp, ExternalLink, ShieldCheck } from 'lucide-react'
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
@@ -101,20 +101,35 @@ function GroupItem({ group }: { group: NavGroup }) {
       </CollapsibleTrigger>
       <CollapsibleContent className="h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0">
         <SidebarMenuSub className="mt-1 opacity-65 transition-opacity duration-200 hover:opacity-100 focus-within:opacity-100">
-          {group.children.map((child) => {
+          {group.children.map((child, index) => {
             const ChildIcon = child.icon
+            // A heading where a new section starts (Tools: Get started, Basics, …).
+            const heading = child.section && child.section !== group.children[index - 1]?.section ? child.section : null
             return (
-              <SidebarMenuSubItem key={child.href}>
-                <SidebarMenuSubButton
-                  isActive={isActive(child, pathname)}
-                  render={<Link href={child.href} />}
-                  className="h-8 max-md:h-10 max-md:text-base! max-md:[&_svg]:size-5 data-active:font-medium data-active:text-sidebar-primary"
-                >
-                  <ChildIcon />
-                  <span>{t(child.label)}</span>
-                  <PendingSpinner />
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
+              <Fragment key={child.href}>
+                {heading ? (
+                  <li aria-hidden className="px-2 pt-2 pb-0.5 text-[10px] font-medium tracking-wider text-sidebar-foreground/60 uppercase max-md:text-xs">
+                    {t(heading)}
+                  </li>
+                ) : null}
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton
+                    isActive={isActive(child, pathname)}
+                    render={
+                      child.external ? (
+                        <a href={child.href} target="_blank" rel="noopener noreferrer" />
+                      ) : (
+                        <Link href={child.href} />
+                      )
+                    }
+                    className="h-8 max-md:h-10 max-md:text-base! max-md:[&_svg]:size-5 data-active:font-medium data-active:text-sidebar-primary"
+                  >
+                    <ChildIcon />
+                    <span>{t(child.label)}</span>
+                    {child.external ? <ExternalLink aria-label="Opens in a new tab" className="ml-auto size-3! opacity-60" /> : <PendingSpinner />}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </Fragment>
             )
           })}
         </SidebarMenuSub>

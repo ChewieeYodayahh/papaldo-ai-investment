@@ -1,6 +1,6 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { getSessionUser } from '@/app/core/services/supabase/session'
@@ -8,7 +8,8 @@ import { initials } from '@/lib/initials'
 
 import { hasConfirmedByEmail } from '../api/password'
 import { getProfile, isSetupComplete } from '../api/profile'
-import { ConnectedAccountsCard, DetailsCard, SecurityCard, WorkIncomeCard } from '../components/ProfileCards'
+import { AvatarUploader } from '../components/AvatarUploader'
+import { AboutYouCard, ConnectedAccountsCard, DetailsCard, SecurityCard, WorkIncomeCard } from '../components/ProfileCards'
 import { SignOutButton } from '../components/SignOutButton'
 
 /**
@@ -31,10 +32,11 @@ export async function ProfileDashboardPage({ searchParams }: { searchParams: Rec
     <div className="grid gap-4">
       <Card className="hero-mesh rounded-2xl border-0 py-5">
         <CardContent className="flex flex-wrap items-center gap-4 px-5 sm:px-6">
-          <Avatar className="size-16 text-lg">
-            {session.avatarUrl ? <AvatarImage src={session.avatarUrl} alt="" /> : null}
-            <AvatarFallback>{initials(displayName)}</AvatarFallback>
-          </Avatar>
+          <AvatarUploader
+            src={profile.avatarUrl ?? session.avatarUrl}
+            fallback={initials(displayName)}
+            hasCustom={Boolean(profile.avatarUrl)}
+          />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-xl font-semibold tracking-tight">{displayName}</h2>
             <p className="truncate text-sm text-muted-foreground">
@@ -52,6 +54,14 @@ export async function ProfileDashboardPage({ searchParams }: { searchParams: Rec
               >
                 {setupDone ? 'Profile complete' : 'Profile setup in progress'}
               </Badge>
+              {profile.username ? (
+                <Link
+                  href={`/u/${encodeURIComponent(profile.username)}`}
+                  className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  View your member profile &amp; friends →
+                </Link>
+              ) : null}
             </div>
           </div>
           <SignOutButton />
@@ -61,6 +71,7 @@ export async function ProfileDashboardPage({ searchParams }: { searchParams: Rec
       <div className="grid items-start gap-4 xl:grid-cols-2">
         <div className="grid gap-4">
           <DetailsCard profile={profile} />
+          <AboutYouCard profile={profile} />
           <ConnectedAccountsCard providers={session.providers} linkError={linkError} />
         </div>
         <div className="grid gap-4">

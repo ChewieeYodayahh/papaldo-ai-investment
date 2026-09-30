@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
 import type { FinnhubRecommendation } from '@/app/core/services/finnhub'
 import type { MarketResult } from '../api/result'
 import { marketUnavailableMessage } from '../market-status'
+import { PanelFrame } from './PanelFrame'
 
 /**
  * The most recent analyst recommendation month, as published by Finnhub.
@@ -10,16 +9,17 @@ import { marketUnavailableMessage } from '../market-status'
  * Reported, not derived: Papaldo does not rate securities, and nothing here
  * is advice. The bar widths are the raw analyst counts.
  */
-export function AnalystRatings({ ratings }: { ratings: MarketResult<FinnhubRecommendation | null> }) {
+export function AnalystRatings({
+  ratings,
+  embedded = false,
+}: {
+  ratings: MarketResult<FinnhubRecommendation | null>
+  embedded?: boolean
+}) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">Analyst ratings</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Body ratings={ratings} />
-      </CardContent>
-    </Card>
+    <PanelFrame title="Analyst ratings" embedded={embedded}>
+      <Body ratings={ratings} />
+    </PanelFrame>
   )
 }
 

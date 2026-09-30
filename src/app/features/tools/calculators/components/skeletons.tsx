@@ -51,3 +51,31 @@ export function SavingsSkeleton() {
     </div>
   )
 }
+
+/** The other two-pane calculators (purchasing power, budget) share the savings layout. */
+export const TwoPaneSkeleton = SavingsSkeleton
+
+/** /tools/statements: the header card, three checks, then one statement. */
+export function StatementsSkeleton() {
+  return (
+    <div className="grid gap-4">
+      <Bar className="h-4 w-96 max-w-full" />
+      <Panel className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+        <FieldBlock />
+        <FieldBlock />
+        <FieldBlock className="w-24" />
+      </Panel>
+      <div className="grid gap-2 sm:grid-cols-3">
+        {Array.from({ length: 3 }, (_, i) => (
+          <Bar key={i} className="h-14 rounded-xl" />
+        ))}
+      </div>
+      <Bar className="h-9 w-80 max-w-full rounded-lg" />
+      <Panel className="grid max-w-3xl gap-3">
+        {Array.from({ length: 6 }, (_, i) => (
+          <Bar key={i} className="h-9 rounded-lg" />
+        ))}
+      </Panel>
+    </div>
+  )
+}

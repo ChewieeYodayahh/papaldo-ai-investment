@@ -176,6 +176,293 @@ cloned to `~/.claude/references/`.
   browser, guest `/tools` renders the calculators, benchmarker and Manulife card, and
   the desktop Tools dropdown shows Basics and Life insurance with the external mark.
 
+**2026-09-30 (Phase 4 of the v0.5 plan): markets page.**
+- **Search bar:** `MarketSearch` sits at the top of `/markets`, backed by
+  `GET /api/markets/search` → `markets/api/search.ts`.
+  - Papaldo's 50 buyable names come first with a "Papaldo" badge; then Alpaca's cached
+    US catalogue, ranked exact › prefix › contains › name; 10 results at most, debounced
+    at 200ms.
+  - Built on the `components/ui` Command (cmdk, `shouldFilter={false}`), so arrow keys,
+    Enter and the listbox semantics come for free.
+  - The "Trade now…" hint types itself out, holds and fades (`.search-hint` in
+    globals.css; static under reduced motion).
+  - Checked: "app" → AAPL and VIG (Papaldo), then APP, APPF…; Down then Enter opened
+    `/markets/VIG`.
+- **The black space:** moving the heatmap out would only move the gap (the table is
+  capped at about 520px; the movers are about 660px). Instead, Market Insight joined the
+  rail under Top Losers.
+  - On xl the rail is pinned to the left column's height (`relative` / `absolute
+    inset-0`, min 48rem), and the news fills the rest and scrolls.
+  - Checked at 1440px: both columns end at the same pixel (1508). "All US stocks" is
+    now full width. The `mkt.news` copy key now reads "Market Insight" (it was
+    hardcoded).
+- **Heatmap on phones:** the stacked-sector constants are tuned, giving 478px at 400px
+  wide (was about 1,000). The first paint reserves 5:8, so the layout barely jumps.
+  - The hover card appears only for a mouse, so a tap navigates instead of covering
+    tiles (seen in Carlos's F12 screenshot).
+  - New Map / List toggle (ToggleGroup): the list groups sectors, with stocks by cap
+    and change pills on the heat scale. A `minmax(0,1fr)` column keeps long names
+    truncating.
+- **Checks:** `verify:full` passes (113 tests, 13 Python tests, 55 routes).
+
+**2026-09-30 (Phase 5 of the v0.5 plan): trading page (`/markets/[symbol]`).**
+- **Layout** (grid areas): on a phone the order is chart → trade → key stats →
+  Insights. On desktop the trade panel is a sticky right column beside the chart
+  (checked at 1440px: same top, `position: sticky`) and is never below the news. There
+  is no duplicated form.
+- **Confirmation modal** (`AlertDialog`, after Investopedia's): the ticket's submit is
+  now "Review buy/sell".
+  - The dialog shows asset and name, action, quantity, estimated price, estimated
+    cost or proceeds, cash after and shares after, and the simulated-fill note.
+  - Execute places the order through the unchanged POST `/api/trading/orders`; Cancel
+    sends nothing.
+  - All amounts use `<Money>`, replacing the ticket's hardcoded USD `Intl`.
+- **Buy is green and Sell is red:** new `--gain-foreground` / `--loss-foreground`
+  tokens (light: near-white; dark: near-black, since dark-mode gain is bright green)
+  plus `bg-gain` / `bg-loss`.
+  - The side toggle is a radiogroup, and Sell is disabled when nothing is held.
+  - The header's Buy and Sell link to `#trade-buy` / `#trade-sell`, which scroll to
+    anchors in the trade panel; the ticket picks that side if it's allowed.
+  - The header price change uses `text-gain` / `text-loss`.
+- **Insights accordion:** Analyst ratings, News and Quarterly earnings, all collapsed.
+  The panels gained `embedded` through a shared `PanelFrame`, so there is no card
+  inside a card.
+- **Key stats "?":** `StatHelp` is a popover with a plain-language meaning (copy keys
+  `stat.*`) and "Learn more on Investopedia" (new tab, `noopener noreferrer`), on all
+  11 fields.
+  - **The links weren't machine-checked:** Investopedia answers scripted requests with
+    402 and blocks the search crawler, so Carlos should click each once.
+- **Also:** "Back to dashboard" is copy key `sym.back`; the company name is an `<h2>`
+  (the page now has one `<h1>`, "Trade").
+- **Checks:** `verify:full` passes. In the browser (guest): the phone order is right,
+  there are 3 collapsed sections, 11 "?" buttons, Buy/Sell in the header, and the Beta
+  popover shows its text and link.
+  - Still for Carlos: place one order through the confirmation dialog while signed in.
+
+**2026-09-30 (Phase 6, part 1): guest names in the chat room.**
+- **Migration `20260930130000_guest_chat_sessions`** (applied live):
+  - `guest_sessions` stores only the sha256 of a random 64-hex secret. It has no grants
+    or policies; only the functions touch it.
+  - `chat_messages` gets `is_guest` and `guest_session_id`, a one-author check, and
+    partial indexes. `user_id` is now nullable.
+  - Signed-in SELECT went from table-wide to a column list, so no client can read
+    `guest_session_id`. Anon can read `is_guest`.
+  - The insert trigger branches for guests: the name comes from the pass, never the
+    caller, and a `for update` lock covers the rate limits.
+  - `start_guest_session(name)` and `post_guest_message(secret, body)`: SECURITY
+    DEFINER, anon only, revoked from public and authenticated.
+- **Rules, all in SQL:**
+  - names match `^[A-Za-z0-9 ]{2,24}$`, with repeated spaces collapsed;
+  - reserved words (admin, papaldo, moderator, support, official, staff) and any
+    member's username (case-insensitive) are refused;
+  - per pass: 1 message per 3s and 10 per minute; all guests together: 60 messages per
+    minute; 30 new passes per minute; guest bodies ≤ 500 characters;
+  - passes expire 10 minutes after they're issued, and old ones are tidied up
+    opportunistically.
+- **Proof** (role-switched, rolled back), 15 of 15 checks:
+  - an anon pass works, and the message is stored as "Juan Dela Cruz" / guest;
+  - refused: a 2nd post within 3s, a fake pass, a reserved name, a member name, bad
+    characters, a 501-character body;
+  - anon can read neither `guest_session_id` nor `guest_sessions`;
+  - a signed-in user can't start a pass, insert `is_guest`, or read
+    `guest_session_id`.
+  - Regression: a signed-in post still gets the username and `is_guest = false`.
+- **App:**
+  - `community/api/messages.ts` gained `startGuestSession` / `postGuestMessage` (401
+    when a pass expires, 429 when too fast or busy), exposed as
+    `POST /api/community/guest` and `/api/community/guest/messages`.
+  - `GuestJoin.tsx`: `useGuestPass` keeps the pass in sessionStorage, so it's gone
+    with the tab or app, with a minutes-left counter; `GuestJoinDialog` asks for the
+    name.
+  - Chat shows "name · Guest"; the composer reads "Chatting as X · Guest · N min left ·
+    Leave".
+  - Checked in the browser up to the dialog (focus, and Join disabled under 2
+    characters). No live test post was made, because the dev server writes to the
+    production database.
+- **Carlos:** add a Vercel firewall rate limit on `/api/community/guest*` (SQL can't
+  limit by IP), then try a guest join in a private window.
+
+**2026-09-30 (Phase 6, part 2): profile picture, website, occupations, Private switch.**
+- **Migration `20260930140000_profile_social_fields`** (applied live), on `users`:
+  - `avatar_url`: CHECK requires a res.cloudinary.com upload URL, ≤ 500 characters.
+  - `website`: CHECK requires `^https?://`, no spaces, ≤ 200 characters.
+  - `occupations text[]`: ≤ 3 entries, each 1–80 characters (immutable helper
+    `private.text_items_within`, EXECUTE granted to authenticated because a CHECK runs
+    as the writer).
+  - `is_private`.
+  - These are CHECKs because owners may update any column of their own row.
+  - `occupations` is backfilled from `occupation` (3 of 3 rows). `handle_new_user` now
+    writes both, and the app writes both; migration B drops `occupation` once nothing
+    reads it.
+- **Proof** (rolled back):
+  - a valid set is accepted;
+  - refused: a non-Cloudinary avatar, a `javascript:` site, 4 occupations, an
+    81-character or empty occupation;
+  - a simulated sign-up gets `occupations={Nurse}` and a $100,000 portfolio, which also
+    confirms Phase 2.
+- **Migration `20260930150000_integration_logs_cloudinary_target`:** the log target
+  list gains `cloudinary`.
+- **Avatar upload:** `auth/api/avatar.ts`, behind `POST` / `DELETE /api/profile/avatar`.
+  - It checks the real bytes (JPEG, PNG or WebP, `sniffImage`, tested), 2MB at most.
+  - It uploads with the `cloudinary` SDK Carlos installed: server-side signed, to
+    `papaldo/avatars/<user id>`, overwrite, 256px face crop. It's integration-logged.
+  - Credentials are read by env name only; the values are Carlos's. The route answers
+    503 until they're set. `.env.example` lists the three names, empty.
+  - `AvatarUploader` puts a "+" on the profile header avatar, with a spinner, error and
+    Remove. The header pill and menus prefer the uploaded picture.
+- **Profile page:**
+  - The Work & income card takes up to three occupations (add and remove pickers).
+  - New About you card: website, Private switch, and "Connect Facebook or LinkedIn:
+    Coming soon".
+  - Schema: `occupations`, `website` (protocol-checked, because `url()` accepts
+    `javascript:`; empty clears it) and `isPrivate`, with 4 new tests. `UserProfile`
+    keeps `occupation` = the first of `occupations`, so the 16 display sites are
+    unchanged.
+- **Checks:** `npm run verify` passes (119 tests). The signed-in profile screens need
+  Carlos's session.
+- **Carlos:** add `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` /
+  `CLOUDINARY_API_SECRET` to `.env.local` and Vercel, then upload a picture on
+  `/profile`.
+
+**2026-09-30 (Phase 6, part 3): friends, member profiles, friend notifications.**
+- **Migration `20260930160000_friends_profiles_notifications`** (applied live; the live
+  history also has a `public_profile_asset_class` step, which is folded into the file):
+  - `friendships`: one row per pair (unique on least/greatest), no self-requests, and
+    `pending | accepted | declined`. Both parties can SELECT; nobody can write directly.
+  - `notifications`: `friend_request | friend_accepted` with an `actor_name` snapshot.
+    Owners can SELECT six columns and UPDATE only `read_at`. `actor_id` is not granted
+    to anyone; it exists for the rate limits.
+  - Functions, signed-in only: `request_friend`, `respond_friend`, `remove_friend`,
+    `my_friends` and `public_profile`. All are SECURITY DEFINER with
+    `search_path = ''`, and everyone else is revoked. `private.require_member()`
+    sits behind them.
+  - Limits:
+    - 5 requests a minute per sender;
+    - one request notification to the same person a day, so request, cancel,
+      request doesn't spam the bell;
+    - after a decline, the pair waits 24h, in both directions;
+    - asking someone who already asked you accepts.
+  - `public_profile` builds its reply field by field. It always returns username,
+    avatar, website, occupations, is_private, relation and visible. It returns band,
+    cash and holdings (symbol, asset class, quantity) only when the profile is public,
+    or to friends and yourself. It never returns an id, email, contact, income or
+    avg_cost.
+- **Proof** (`db-auditor`, rolled back, 80+ checks, all passing):
+  - anon is denied everything;
+  - authenticated users can't write either table directly or read `actor_id`;
+  - request, accept, decline and cancel flows, the rate limit and the dedupe all
+    behave as specified;
+  - a private profile is hidden from a non-friend, then shown once they're friends;
+  - no forbidden key appears in any reply.
+
+  The only advisor warnings are the intended "authenticated can execute" ones.
+- **App:**
+  - `community/api/{friends,profiles,notifications}.ts`, behind
+    `POST /api/community/friends` (request, accept, decline, remove) and
+    `POST /api/notifications/read`.
+  - **`/u/[username]`** (signed-in only: middleware plus the RPC):
+    - avatar, occupations, website (`rel="nofollow ugc noopener noreferrer"`), risk
+      band and a friend button;
+    - the **total simulated balance** at live Alpaca quotes, an allocation bar (top 5,
+      Other and Cash, chart tokens) and the holdings;
+    - a private profile shows "Only X's friends can see…";
+    - your own page adds a Friends card (requests first).
+    - `/profile` links to it.
+  - **Chat:** for signed-in viewers, a member's name opens "Add as Friend" / "View
+    Profile" on right-click or long-press (ContextMenu) and on tap or click
+    (DropdownMenu). Guests' names and guest viewers get plain text.
+  - **Bell:** fills and friend activity merge, newest first. The copy reads "X added
+    you as a friend — check X's profile now!" and links to `/u/X`. Opening the bell
+    marks them read.
+  - Pure helpers go in `community/allocation.ts`, with 7 tests in
+    `community.test.ts`. `features.md` records the new imports: `community` →
+    `markets`, and frame → `community`.
+- **Checks:**
+  - `npm run verify:full` passes: 126 tests, build 61 routes.
+  - As a guest: `/u/david` redirects to `/login`, chat names are plain text, and both
+    new routes return 401 (also for a non-JSON body). There are no console or server
+    errors.
+  - Signed-in screens (profile page, chat menu, bell) need Carlos's session.
+
+**2026-09-30 (Phase 7): tools overhaul.**
+- **`/tools` hub:** an Accordion of sections: Let's get started (quiz, About you),
+  Basics, Accounting, Life insurance, and Tutorials (walkthrough, export). Guests see
+  Basics, Accounting and Life insurance.
+  - The sidebar's Tools list shows the same sections as headings; the Manulife link
+    opens in a new tab.
+  - The landing Tools ▾ menu lists Basics (returns, savings, purchasing power,
+    budget), Accounting and Life insurance.
+  - The skeleton matches the accordion.
+- **Returns calculator:**
+  - 10Y / 15Y / all history (5Y dropped, per the plan).
+  - A dashed **Projected** line at the asset's own CAGR, with "Project ahead" 0–30
+    years (`projectFromCagr`).
+  - For shorter stock and fund history, the page says it comes from Alpaca.
+- **Share images:** the card can draw a line chart (`ShareCard.chart`) in place of
+  the chips. PNG and JPG already existed. Returns, savings goal, emergency fund,
+  purchasing power and budget all share it.
+- **Savings planner** adds an **Emergency fund in a time deposit**
+  (`EmergencyFundPlanner`, `deposit-rates.ts`):
+  - Rates are checked on each bank's own page on 2026-09-30, each with a date and a
+    source link:
+    - Maya Time Deposit Plus: 3.5% guaranteed; up to 5.5% / 6.0% / 5.75% for
+      3 / 6 / 12 months when its conditions are met, for accounts from 1 Oct 2026.
+    - CIMB MaxSave: 3.5% / 3.5% / 3.25% from 1 Jun 2026.
+    - MariBank Upfront TD: 3.75% for 3 months. MariBank's page timed out, so this is
+      sourced from ManilaShaker's launch report.
+    - GoTyme has no peso time deposit, so it shows the Go Save savings account at
+      3.0%, labelled as savings.
+  - A "20% final withholding tax" checkbox, on by default. Since 1 July 2025,
+    RA 12214 (CMEPA) taxes all deposit interest, so the 5-year exemption is gone;
+    the planner cites this.
+  - The chart shows before tax, after tax, and investing instead. It warns above
+    the PDIC cap of ₱1M per depositor per bank (up from ₱500k on 15 Mar 2025).
+  - `depositGrowth` has tests.
+- **Purchasing power** (`/tools/purchasing-power`, open to guests):
+  - The new pipeline `python/cpi.py` reads the World Bank API (`FP.CPI.TOTL`, official,
+    no key) into **`public.cpi_annual`**: PHL 1960–2025, USA 1960–2024, 131 rows.
+  - The migration `20260930170000_cpi_annual` gives anon and authenticated SELECT only,
+    proven with a privilege check.
+  - Loaded through `--emit-sql` with the MCP; the weekly `market-data.yml` now runs it.
+  - The UI has PHP or USD, from/to years and an equivalent value. It shows prices
+    risen, buying power lost and average inflation. A falling buying-power line
+    continues as a dashed projection at an editable rate (default: the long-run
+    average).
+  - Signed-in users get "Use my simulated portfolio balance", with the note that the
+    companies may not have existed then.
+  - Tests: `inflation.test.ts`, plus `test_cpi.py`.
+- **Budget 50/30/20** (`/tools/budget`, client-only):
+  - Philippine presets (rent, Meralco, water, load/data, commute, groceries, tuition,
+    padala…) or international ones.
+  - Editable lines tagged need, want or savings; bucket cards and a target-vs-planned
+    chart.
+  - Up to two tips, most urgent first.
+  - `budget.test.ts`.
+- **Financial statements** (`/tools/statements`):
+  - Income statement, balance sheet and cash-flow tabs with editable lines.
+  - Live checks: net income, Assets = Liabilities + Equity, and closing cash equals
+    balance-sheet cash. Net income flows into retained earnings.
+  - A sari-sari store sample that ties exactly.
+  - CSV and HTML export through `userData/export/formats` (CSV-injection-safe).
+  - The draft lives in localStorage and clears after **5 days without an edit**. It
+    saves on real edits only, so opening the page never re-dates it; this bug was
+    found and fixed in the browser.
+  - `statements.test.ts`.
+- **Life insurance:** a card with Manulife PH's calculators only, plus a disabled
+  "Talk to an Advisor · Coming soon".
+- **Quiz results:** the overview is full width, with answers on the left and
+  Recommended assets on the right, split into Top ETFs and Top stocks. It stacks on
+  phones.
+- **Checks:**
+  - `npm run verify:full` passes: 151 tests, 15 Python tests, build 64 routes.
+  - As a guest, every tools page works. There is no horizontal scroll at 375px.
+  - Checked with real numbers:
+    - ₱1,000 in 2000 is ₱2,549.98 in 2025;
+    - the budget flags needs at 57%;
+    - the statements sample ties;
+    - drafts restore, expire and clear.
+  - Quiz results and "Use my portfolio balance" need Carlos's session.
+
 **Bug found in Phase 8's work:** quiz-result recommendations were always empty.
 `recommendations.ts` filtered `risk_tier` by the person's band
 (`Low/Medium/High`), but assets use `conservative/moderate/aggressive`. The

@@ -12,12 +12,10 @@ import { getCandles } from '../api/candles'
 import { getSymbolNews } from '../api/news'
 import { assetClassOf, getSymbolOverview, getSymbolRatings, isPlausibleSymbol } from '../api/symbol'
 import { marketUnavailableMessage } from '../market-status'
-import { AnalystRatings } from '../components/AnalystRatings'
-import { EarningsChart } from '../components/EarningsChart'
 import { KeyStats } from '../components/KeyStats'
 import { PriceChart } from '../components/PriceChart'
 import { SymbolHeader } from '../components/SymbolHeader'
-import { SymbolNews } from '../components/SymbolNews'
+import { SymbolInsights } from '../components/SymbolInsights'
 
 /**
  * One symbol, opened from the dashboard watchlist.
@@ -69,8 +67,11 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
     <div className="mx-auto max-w-6xl">
         <SymbolHeader quote={quote} profile={profile} />
 
-        <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-6">
+        {/* Grid areas give the order Carlos asked for (2026-09-30): on a phone
+            chart, trade, key stats, insights; on desktop the trade panel is a
+            sticky column beside the chart, never below the news. */}
+        <div className="grid grid-cols-1 gap-6 [grid-template-areas:'chart'_'trade'_'stats'_'insights'] lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:[grid-template-areas:'chart_trade'_'stats_trade'_'insights_trade'] lg:grid-rows-[auto_auto_1fr]">
+          <div className="min-w-0 [grid-area:chart]">
             {candles.ok ? (
               <PriceChart candles={candles.data} />
             ) : (
@@ -80,22 +81,21 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
                 </CardContent>
               </Card>
             )}
-            <EarningsChart points={earnings} />
-            <SymbolNews items={news} symbol={symbol} />
           </div>
 
-          <div className="space-y-6">
-            {/* The header's Trade button jumps here. */}
-            <div id="trade" className="scroll-mt-24">
+          {/* The header's Buy / Sell buttons jump here. */}
+          <div id="trade" className="scroll-mt-24 [grid-area:trade] lg:sticky lg:top-4 lg:self-start">
+            {/* Scroll targets for the header's Buy / Sell (the ticket reads which one). */}
+            <span id="trade-buy" className="block scroll-mt-24" aria-hidden />
+            <span id="trade-sell" className="block scroll-mt-24" aria-hidden />
             {portfolio ? (
               <OrderTicket
                 symbol={symbol}
+                name={profile.ok ? profile.data.name : null}
                 assetClass={assetClassOf(symbol)}
                 price={quote.price}
                 cashBalance={portfolio.cashBalance}
-                heldQuantity={
-                  portfolio.holdings.find((h) => h.symbol === symbol)?.quantity ?? 0
-                }
+                heldQuantity={portfolio.holdings.find((h) => h.symbol === symbol)?.quantity ?? 0}
                 // Alpaca decides whether a fraction is allowed. Unknown asset
                 // records default to whole units rather than assuming.
                 fractionable={overview.data.asset.ok ? overview.data.asset.data.fractionable : false}
@@ -112,10 +112,13 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
                 </CardContent>
               </Card>
             )}
-            </div>
+          </div>
 
+          <div className="min-w-0 [grid-area:stats]">
             <KeyStats quote={quote} metrics={metrics} />
-            <AnalystRatings ratings={ratings} />
+          </div>
+          <div className="min-w-0 [grid-area:insights]">
+            <SymbolInsights symbol={symbol} ratings={ratings} news={news} earnings={earnings} />
           </div>
         </div>
 

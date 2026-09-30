@@ -3,6 +3,8 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
+import type { TourId } from './tours'
+
 /**
  * Browser-side state for first-time setup: whether the Get Started checklist
  * is open, whether the welcome carousel has been seen, and where the
@@ -30,11 +32,14 @@ type SetupState = {
    * trade" can run the walkthrough again on an account that already has.
    */
   tourStartedAt: string | null
+  /** Tutorial Mode tours finished at least once, for the Done ticks (2026-09-30). */
+  toursDone: TourId[]
   setDockOpen: (open: boolean) => void
   markWelcomeSeen: () => void
   startTour: () => void
   setTourStep: (step: TourStep) => void
   endTour: () => void
+  markTourDone: (tour: TourId) => void
 }
 
 export const useSetupStore = create<SetupState>()(
@@ -44,11 +49,13 @@ export const useSetupStore = create<SetupState>()(
       welcomeSeen: false,
       tour: null,
       tourStartedAt: null,
+      toursDone: [],
       setDockOpen: (dockOpen) => set({ dockOpen }),
       markWelcomeSeen: () => set({ welcomeSeen: true }),
       startTour: () => set({ tour: 'pick', tourStartedAt: new Date().toISOString(), dockOpen: false }),
       setTourStep: (tour) => set({ tour }),
       endTour: () => set({ tour: null }),
+      markTourDone: (tour) => set((state) => (state.toursDone.includes(tour) ? state : { toursDone: [...state.toursDone, tour] })),
     }),
     {
       name: 'papaldo-setup',

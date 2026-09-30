@@ -8,6 +8,9 @@
  * Everything happens in the browser; nothing is uploaded.
  */
 
+/** One line on the card's chart. `null` leaves a gap (a projection that starts later). */
+export type ShareLine = { label: string; values: Array<number | null>; dashed?: boolean }
+
 export type ShareCard = {
   eyebrow: string
   title: string
@@ -16,6 +19,8 @@ export type ShareCard = {
   buysLabel: string
   buys: string[]
   footer: string
+  /** Drawn under the stats in place of the "what it buys" chips (2026-09-30). */
+  chart?: ShareLine[]
 }
 
 export type ImageFormat = 'png' | 'jpeg'
@@ -129,8 +134,14 @@ export async function renderShareImage(card: ShareCard, format: ImageFormat): Pr
   })
   y += 140
 
-  // What it buys, as chips.
-  if (card.buys.length) {
+  if (card.chart?.some((line) => line.values.some((v) => v !== null))) {
+    drawChart(ctx, card.chart, { x: PAD, y, w: WIDTH - PAD * 2, h: HEIGHT - y - 72 }, font, {
+      colours: [accent, token('--chart-2', '#5fb3b3'), token('--chart-3', '#e0b04a')],
+      muted,
+      border,
+    })
+  } else if (card.buys.length) {
+    // What it buys, as chips.
     ctx.fillStyle = muted
     ctx.font = `500 20px ${font}`
     ctx.fillText(card.buysLabel, PAD, y)
@@ -164,6 +175,73 @@ export async function renderShareImage(card: ShareCard, format: ImageFormat): Pr
       0.92,
     )
   })
+}
+
+type Box = { x: number; y: number; w: number; h: number }
+
+/** Lines scaled to one shared axis, with a legend across the top of the box. */
+function drawChart(
+  ctx: CanvasRenderingContext2D,
+  lines: ShareLine[],
+  box: Box,
+  font: string,
+  palette: { colours: string[]; muted: string; border: string },
+) {
+  const all = lines.flatMap((line) => line.values.filter((v): v is number => v !== null))
+  const count = Math.max(...lines.map((line) => line.values.length))
+  if (all.length === 0 || count < 2) return
+  const min = Math.min(0, ...all)
+  const max = Math.max(...all)
+  const span = max - min || 1
+
+  // Legend.
+  ctx.textBaseline = 'middle'
+  ctx.font = `500 18px ${font}`
+  let legendX = box.x
+  lines.forEach((line, i) => {
+    ctx.strokeStyle = palette.colours[i % palette.colours.length]
+    ctx.lineWidth = 4
+    ctx.setLineDash(line.dashed ? [10, 8] : [])
+    ctx.beginPath()
+    ctx.moveTo(legendX, box.y + 10)
+    ctx.lineTo(legendX + 28, box.y + 10)
+    ctx.stroke()
+    ctx.fillStyle = palette.muted
+    ctx.fillText(line.label, legendX + 38, box.y + 10)
+    legendX += 38 + ctx.measureText(line.label).width + 32
+  })
+  ctx.setLineDash([])
+
+  const plot = { x: box.x, y: box.y + 32, w: box.w, h: box.h - 32 }
+  ctx.strokeStyle = palette.border
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(plot.x, plot.y + plot.h)
+  ctx.lineTo(plot.x + plot.w, plot.y + plot.h)
+  ctx.stroke()
+
+  const px = (i: number) => plot.x + (i / (count - 1)) * plot.w
+  const py = (v: number) => plot.y + plot.h - ((v - min) / span) * plot.h
+  lines.forEach((line, i) => {
+    ctx.strokeStyle = palette.colours[i % palette.colours.length]
+    ctx.lineWidth = 5
+    ctx.lineJoin = 'round'
+    ctx.setLineDash(line.dashed ? [14, 10] : [])
+    ctx.beginPath()
+    let drawing = false
+    line.values.forEach((value, index) => {
+      if (value === null) {
+        drawing = false
+        return
+      }
+      if (drawing) ctx.lineTo(px(index), py(value))
+      else ctx.moveTo(px(index), py(value))
+      drawing = true
+    })
+    ctx.stroke()
+  })
+  ctx.setLineDash([])
+  ctx.textBaseline = 'top'
 }
 
 /** Saves the image, or opens the share sheet where the browser supports sharing files. */

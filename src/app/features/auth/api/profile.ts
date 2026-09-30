@@ -10,7 +10,7 @@ import type { OnboardingStep, UserProfile } from '../types'
 import { profileUpdateSchema, type Income, type IncomeCurrency, type ProfileUpdateInput } from '../schema'
 
 const PROFILE_COLUMNS =
-  'id, email, username, contact, occupation, annual_income, annual_income_currency, ideal_income, ideal_income_currency'
+  'id, email, username, contact, occupation, occupations, annual_income, annual_income_currency, ideal_income, ideal_income_currency, avatar_url, website, is_private'
 
 function toIncome(amount: number | null, currency: string | null): Income | null {
   return amount === null || !currency ? null : { amount: Number(amount), currency: currency as IncomeCurrency }
@@ -33,9 +33,14 @@ export const getProfile = cache(async (): Promise<UserProfile | null> => {
     email: data.email,
     username: data.username,
     contact: data.contact,
-    occupation: data.occupation,
+    // occupations is the source now; occupation is its first entry until dropped.
+    occupation: data.occupations[0] ?? data.occupation,
+    occupations: data.occupations.length ? data.occupations : data.occupation ? [data.occupation] : [],
     annualIncome: toIncome(data.annual_income, data.annual_income_currency),
     idealIncome: toIncome(data.ideal_income, data.ideal_income_currency),
+    avatarUrl: data.avatar_url,
+    website: data.website,
+    isPrivate: data.is_private,
   }
 })
 
@@ -85,7 +90,16 @@ export async function updateProfile(input: ProfileUpdateInput) {
   const patch: TablesUpdate<'users'> = {}
   if (parsed.username !== undefined) patch.username = parsed.username
   if (parsed.contact !== undefined) patch.contact = parsed.contact
-  if (parsed.occupation !== undefined) patch.occupation = parsed.occupation
+  // Both columns stay in step until occupation is dropped (migration B).
+  if (parsed.occupations !== undefined) {
+    patch.occupations = parsed.occupations
+    patch.occupation = parsed.occupations[0] ?? null
+  } else if (parsed.occupation !== undefined) {
+    patch.occupation = parsed.occupation
+    patch.occupations = [parsed.occupation]
+  }
+  if (parsed.website !== undefined) patch.website = parsed.website
+  if (parsed.isPrivate !== undefined) patch.is_private = parsed.isPrivate
   if (parsed.annualIncome !== undefined) {
     patch.annual_income = parsed.annualIncome?.amount ?? null
     patch.annual_income_currency = parsed.annualIncome?.currency ?? null

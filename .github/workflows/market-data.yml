@@ -1,9 +1,10 @@
 name: Market data
 
-# Weekly refresh of the two Python pipelines behind /markets and Tools:
+# Weekly refresh of the Python pipelines behind /markets and Tools:
 #
 #   python/market_caps.py  tradable_assets.market_cap_usd  (heatmap tile sizes)
 #   python/benchmarks.py   public.market_benchmarks        (index benchmarker)
+#   python/cpi.py          public.cpi_annual               (purchasing power)
 #
 # Weekly is plenty: market caps drift slowly, and the benchmarker is monthly
 # data -- a weekly run only moves the current month's month-to-date close.
@@ -59,3 +60,8 @@ jobs:
       # EPHE is only the last resort, and the app labels it when used.
       - name: Refresh index benchmarks
         run: python python/benchmarks.py
+
+      # Yearly consumer prices from the World Bank API (official, no key).
+      # New years appear once a year; a weekly run just upserts the same rows.
+      - name: Refresh consumer price index
+        run: python python/cpi.py

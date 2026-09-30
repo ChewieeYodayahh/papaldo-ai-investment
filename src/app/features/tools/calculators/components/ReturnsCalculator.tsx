@@ -10,24 +10,29 @@ import { Field, FieldLabel } from '@/components/ui/field'
 import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { useTutorialDemo } from '@/app/features/tutorials/tutorial-store'
 import { useFx } from '@/app/features/userData/preferences/components/Money'
 import { pointDot } from '@/lib/chart-dots'
 
 import type { AssetOption, HistoryResult } from '../api/history'
-import { lastYears, replayHistory, type MonthlyPoint } from '../math'
+import { lastYears, projectFromCagr, replayHistory, type MonthlyPoint } from '../math'
 import { whatItBuys } from '../purchases'
-import { AmountField, ShareResultButton, Stat, useMoney, WhatItBuys } from './fields'
+import { AmountField, NumberField, ShareResultButton, Stat, useMoney, WhatItBuys } from './fields'
 import { SavingsGoalDialog } from './SavingsGoalDialog'
 
-export const YEAR_OPTIONS = [5, 10, 15, 'max'] as const
+/** 10 or 15 years back (Carlos, 2026-09-30), or everything Papaldo has. */
+export const YEAR_OPTIONS = [10, 15, 'max'] as const
 export type YearOption = (typeof YEAR_OPTIONS)[number]
 
 const GROUP_LABEL = { index: 'Stock market indices', fund: 'Funds (ETFs)', stock: 'Stocks' } as const
 
 const config = {
   value: { label: 'Worth', color: 'var(--chart-1)' },
+  projected: { label: 'Projected', color: 'var(--chart-3)' },
   contributed: { label: 'You put in', color: 'var(--muted-foreground)' },
 } satisfies ChartConfig
+
+type ChartRow = { date: string; value?: number; projected?: number; contributed: number }
 
 const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 const asDate = (iso: string) => new Date(`${iso}T00:00:00Z`)
@@ -48,10 +53,16 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
   const [initialUsd, setInitialUsd] = useState(1_000)
   const [monthlyUsd, setMonthlyUsd] = useState(100)
   const [years, setYears] = useState<YearOption>(10)
+  const [aheadYears, setAheadYears] = useState(5)
   const [history, setHistory] = useState<HistoryResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [saveOpen, setSaveOpen] = useState(false)
   const cache = useRef(new Map<string, HistoryResult>())
+  useTutorialDemo('returns.amounts', () => {
+    setInitialUsd(1_000)
+    setMonthlyUsd(200)
+  })
+  useTutorialDemo('returns.ahead', () => setAheadYears(10))
 
   useEffect(() => {
     const cached = cache.current.get(asset)
@@ -85,11 +96,26 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
   const since = span[0]?.date
   const shorterThanAsked = typeof years === 'number' && result !== null && result.years < years - 0.1
 
+  // The "Projected" line: the replay carried forward at the asset's own CAGR.
+  const projection = useMemo(() => {
+    if (!result || result.cagrPct === null || aheadYears <= 0) return []
+    return projectFromCagr(result.rows[result.rows.length - 1], result.cagrPct, monthlyUsd, aheadYears)
+  }, [result, monthlyUsd, aheadYears])
+  const chartRows = useMemo<ChartRow[]>(() => {
+    if (!result) return []
+    const real: ChartRow[] = result.rows.map((row) => ({ date: row.date, value: row.value, contributed: row.contributed }))
+    if (projection.length === 0) return real
+    // The last real month carries both keys so the dashed line starts where the real one ends.
+    real[real.length - 1].projected = projection[0].value
+    return [...real, ...projection.slice(1).map((row) => ({ date: row.date, projected: row.value, contributed: row.contributed }))]
+  }, [result, projection])
+  const projectedEnd = projection.at(-1)
+
   return (
     <div className="grid gap-4">
       <Card className="rounded-2xl border-0 py-5">
         <CardContent className="grid gap-4 px-5 md:grid-cols-2 lg:grid-cols-4">
-          <Field className="md:col-span-2">
+          <Field className="md:col-span-2" data-tut="returns.asset">
             <FieldLabel htmlFor={selectId}>Invest in</FieldLabel>
             <NativeSelect id={selectId} value={asset} onChange={(event) => setAsset(event.target.value)} className="h-10 w-full rounded-xl">
               {(['index', 'fund', 'stock'] as const).map((group) => (
@@ -105,9 +131,11 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
               ))}
             </NativeSelect>
           </Field>
-          <AmountField label="Start with" usd={initialUsd} onChange={setInitialUsd} />
-          <AmountField label="Add every month" usd={monthlyUsd} onChange={setMonthlyUsd} />
-          <Field className="md:col-span-2 lg:col-span-4">
+          <div data-tut="returns.amounts" className="grid gap-4 sm:grid-cols-2 md:col-span-2">
+            <AmountField label="Start with" usd={initialUsd} onChange={setInitialUsd} />
+            <AmountField label="Add every month" usd={monthlyUsd} onChange={setMonthlyUsd} />
+          </div>
+          <Field className="md:col-span-2 lg:col-span-3" data-tut="returns.window">
             <FieldLabel>Starting</FieldLabel>
             <ToggleGroup
               variant="outline"
@@ -122,6 +150,17 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
               ))}
             </ToggleGroup>
           </Field>
+          <div data-tut="returns.ahead">
+            <NumberField
+              label="Project ahead"
+              value={aheadYears}
+              onChange={setAheadYears}
+              min={0}
+              max={30}
+              suffix="yrs"
+              hint="At the asset’s own yearly growth. 0 hides it."
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -140,7 +179,7 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
             <p className="py-10 text-center text-sm text-muted-foreground">{history.message}</p>
           ) : result ? (
             <>
-              <div>
+              <div data-tut="returns.result">
                 <p className="text-sm text-muted-foreground">
                   {money.format(initialUsd)} in {shortLabel}
                   {monthlyUsd > 0 ? ` plus ${money.format(monthlyUsd)} a month` : ''} since{' '}
@@ -150,6 +189,16 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
                 {shorterThanAsked ? (
                   <p className="mt-1 text-xs text-muted-foreground">
                     Papaldo has {result.years.toFixed(1)} years of prices for {shortLabel}, so this starts at the earliest month available.
+                    {options.find((o) => o.value === asset)?.group === 'index'
+                      ? ''
+                      : ' Stock and fund prices come from Alpaca, whose history is shorter than the indices’.'}
+                  </p>
+                ) : null}
+                {projectedEnd && result.cagrPct !== null ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Kept going at its {result.cagrPct.toFixed(1)}% a year, it could reach{' '}
+                    <span className="figure font-medium text-foreground">{money.format(projectedEnd.value)}</span> in {aheadYears} more{' '}
+                    {aheadYears === 1 ? 'year' : 'years'} (a projection, not a promise).
                   </p>
                 ) : null}
               </div>
@@ -164,8 +213,8 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
                 <Stat label="Yearly growth (CAGR)" value={result.cagrPct === null ? '—' : `${result.cagrPct.toFixed(1)}%`} tone="accent" />
               </div>
 
-              <ChartContainer config={config} className="aspect-auto h-[240px] w-full">
-                <AreaChart data={result.rows} margin={{ left: 4, right: 8, top: 8 }}>
+              <ChartContainer config={config} className="aspect-auto h-[240px] w-full" data-tut="returns.chart">
+                <AreaChart data={chartRows} margin={{ left: 4, right: 8, top: 8 }}>
                   <defs>
                     <linearGradient id="returns-fill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--color-value)" stopOpacity={0.3} />
@@ -203,7 +252,16 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
                     stroke="var(--color-value)"
                     strokeWidth={2.25}
                     fill="url(#returns-fill)"
-                    dot={pointDot(result.rows.length, 'var(--color-value)')}
+                    dot={pointDot(chartRows.length, 'var(--color-value)')}
+                    isAnimationActive={false}
+                  />
+                  <Line
+                    dataKey="projected"
+                    type="monotone"
+                    stroke="var(--color-projected)"
+                    strokeWidth={2}
+                    strokeDasharray="6 4"
+                    dot={pointDot(chartRows.length, 'var(--color-projected)')}
                     isAnimationActive={false}
                   />
                   <Line
@@ -220,7 +278,7 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
 
               <WhatItBuys amountUsd={result.finalValue} label="That’s enough for" />
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4" data-tut="returns.share">
                 <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                   <Checkbox checked={saveOpen} onCheckedChange={(checked) => setSaveOpen(Boolean(checked))} />
                   How much should I save?
@@ -239,6 +297,10 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
                     ],
                     buysLabel: 'That’s enough for',
                     buys: whatItBuys(result.finalValue, fx?.rate ?? null).map((p) => p.text),
+                    chart: [
+                      { label: 'Worth', values: chartRows.map((row) => row.value ?? null) },
+                      ...(projection.length ? [{ label: 'Projected', values: chartRows.map((row) => row.projected ?? null), dashed: true }] : []),
+                    ],
                     footer: 'Papaldo Ka · real monthly prices, dividends not included · past performance, not financial advice',
                   })}
                 />

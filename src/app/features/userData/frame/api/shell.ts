@@ -6,6 +6,7 @@ import { getUsdToPhp } from '@/app/core/services/exchange-rate'
 import { getSessionUser } from '@/app/core/services/supabase/session'
 import { getProfile, isSetupComplete } from '@/app/features/auth/api/profile'
 import { isAdmin } from '@/app/features/auth/api/roles'
+import { getSocialNotifications, type SocialNotification } from '@/app/features/community/api/notifications'
 import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
 import type { Fx } from '@/app/features/userData/preferences/components/Money'
 import { getOrderHistory } from '@/app/features/trading/api/orders'
@@ -28,8 +29,10 @@ export type ShellUser = {
 export type ShellData = {
   user: ShellUser | null
   fx: Fx
-  /** Recent simulated fills -- the only events Papaldo has to notify about. */
+  /** Recent simulated fills. */
   notifications: Order[]
+  /** Friend requests and acceptances (2026-09-30). */
+  social: SocialNotification[]
   /** Constant for one five-minute window of this session; see greetings.ts. */
   greetingSeed: number
   /** Null when signed out. */
@@ -72,7 +75,8 @@ export const getShellUser = cache(async (): Promise<ShellUser | null> => {
     // Usernames are often lowercase; a greeting reads better capitalised.
     firstName: first.charAt(0).toUpperCase() + first.slice(1),
     email: session.email,
-    avatarUrl: session.avatarUrl,
+    // An uploaded picture wins over the sign-in provider's (2026-09-30).
+    avatarUrl: profile?.avatarUrl ?? session.avatarUrl,
     username: profile?.username ?? null,
     occupation: profile?.occupation ?? null,
     isAdmin: admin,
@@ -91,7 +95,7 @@ export const getShellUser = cache(async (): Promise<ShellUser | null> => {
 export const getShellData = cache(async (): Promise<ShellData> => {
   const session = await getSessionUser()
 
-  const [user, profile, fx, notifications, riskProfile] = await Promise.all([
+  const [user, profile, fx, notifications, riskProfile, social] = await Promise.all([
     getShellUser(),
     session ? getProfile() : null,
     getUsdToPhp().then(
@@ -103,12 +107,14 @@ export const getShellData = cache(async (): Promise<ShellData> => {
     ),
     session ? getOrderHistory(NOTIFICATION_COUNT) : [],
     session ? getCurrentRiskProfile() : null,
+    session ? getSocialNotifications(NOTIFICATION_COUNT) : [],
   ])
 
   return {
     user,
     fx,
     notifications,
+    social,
     greetingSeed: greetingSeed(session),
     setup: session
       ? { profile: isSetupComplete(profile), quiz: Boolean(riskProfile), trade: notifications.length > 0 }

@@ -29,12 +29,17 @@ function Mark({ symbol }: { symbol: string }) {
 }
 
 /**
- * "Recommended for you" under the quiz result: the band's funds first, then a
- * few of its stocks. Each opens the asset's trade page.
+ * "Recommended for you" beside the quiz answers (2026-09-30): the band's top
+ * five funds, then its top five stocks, by market cap. Each opens the asset's
+ * trade page.
  */
 export function RecommendedAssets({ band, assets }: { band: RiskBand; assets: RecommendedAsset[] }) {
   const t = useCopy()
   if (assets.length === 0) return null
+  const groups = [
+    { key: 'fund', label: 'Top ETFs', items: assets.filter((a) => a.kind === 'fund') },
+    { key: 'stock', label: 'Top stocks', items: assets.filter((a) => a.kind !== 'fund') },
+  ].filter((group) => group.items.length > 0)
 
   return (
     <Card className="rounded-2xl border-0 py-5">
@@ -42,33 +47,38 @@ export function RecommendedAssets({ band, assets }: { band: RiskBand; assets: Re
         <CardTitle className="text-base font-semibold">{t('isq.recommended')}</CardTitle>
         <CardDescription>{t('isq.recommendedNote', { band: t(`tools.band.${band}`) })}</CardDescription>
       </CardHeader>
-      <CardContent className="px-5 sm:px-6">
-        <ul className="grid gap-2.5 sm:grid-cols-2">
-          {assets.map((asset) => (
-            <li key={asset.symbol}>
-              <Link
-                href={`/markets/${encodeURIComponent(asset.symbol)}`}
-                className="group flex items-center gap-3 rounded-xl p-2.5 ring-1 ring-foreground/10 transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-              >
-                <Mark symbol={asset.symbol} />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="font-semibold">{asset.symbol}</span>
-                    <Badge variant={asset.kind === 'fund' ? 'secondary' : 'outline'} className="rounded-full">
-                      {asset.kind === 'fund' ? t('isq.fund') : asset.sector}
-                    </Badge>
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">{asset.name}</span>
-                </span>
-                <span className="flex items-center gap-1 text-xs font-medium text-primary">
-                  {t('isq.trade')}
-                  <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-xs text-muted-foreground">{t('isq.recommendedDisclaimer')}</p>
+      <CardContent className="grid gap-4 px-5 sm:px-6">
+        {groups.map((group) => (
+          <section key={group.key}>
+            <h3 className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">{group.label}</h3>
+            <ul className="grid gap-2">
+              {group.items.map((asset) => (
+                <li key={asset.symbol}>
+                  <Link
+                    href={`/markets/${encodeURIComponent(asset.symbol)}`}
+                    className="group flex items-center gap-3 rounded-xl p-2.5 ring-1 ring-foreground/10 transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  >
+                    <Mark symbol={asset.symbol} />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold">{asset.symbol}</span>
+                        <Badge variant={asset.kind === 'fund' ? 'secondary' : 'outline'} className="rounded-full">
+                          {asset.kind === 'fund' ? t('isq.fund') : asset.sector}
+                        </Badge>
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">{asset.name}</span>
+                    </span>
+                    <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                      {t('isq.trade')}
+                      <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+        <p className="text-xs text-muted-foreground">{t('isq.recommendedDisclaimer')}</p>
       </CardContent>
     </Card>
   )

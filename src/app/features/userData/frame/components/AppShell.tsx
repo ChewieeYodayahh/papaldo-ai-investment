@@ -34,7 +34,7 @@ const SIDEBAR_COOKIE = 'sidebar_state'
  * 2026-09-26). Signed in, the Get Started checklist rides along on every page.
  */
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  const [{ user, fx, notifications, greetingSeed, setup }, cookieStore] = await Promise.all([
+  const [{ user, fx, notifications, social, greetingSeed, setup }, cookieStore] = await Promise.all([
     getShellData(),
     cookies(),
   ])
@@ -65,7 +65,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <AppSidebar isAdmin={user.isAdmin} />
           <SidebarInset className="min-w-0 bg-transparent md:overflow-y-auto">
             <div className="w-full px-4 pb-24 md:pr-5 md:pl-2">
-              <AppHeader user={user} notifications={notifications} greetingSeed={greetingSeed} />
+              <AppHeader user={user} notifications={notifications} social={social} greetingSeed={greetingSeed} />
               {children}
             </div>
           </SidebarInset>

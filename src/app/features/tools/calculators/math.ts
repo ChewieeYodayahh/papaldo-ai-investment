@@ -153,3 +153,54 @@ export function doublingYears(annualRatePct: number): number | null {
   if (annualRatePct <= 0) return null
   return Math.log(2) / Math.log(1 + annualRatePct / 100)
 }
+
+export type DepositYear = { year: number; gross: number; net: number }
+
+/**
+ * A deposit left to renew for `years` (2026-09-30, Savings Planner). Each
+ * term earns simple interest, principal x rate x months / 12, which is added
+ * at maturity and renews with the principal -- how a time deposit rolls over.
+ * `termMonths: 0` is a savings account, credited monthly. `gross` ignores the
+ * tax; `net` has `taxRate` withheld from every credit, as banks do.
+ */
+export function depositGrowth(principal: number, annualRatePct: number, termMonths: number, years: number, taxRate: number): DepositYear[] {
+  const step = Math.max(1, Math.round(termMonths))
+  const perCredit = (annualRatePct / 100) * (step / 12)
+  let gross = principal
+  let net = principal
+  const rows: DepositYear[] = [{ year: 0, gross, net }]
+  for (let month = 1; month <= years * 12; month++) {
+    if (month % step === 0) {
+      gross += gross * perCredit
+      net += net * perCredit * (1 - taxRate)
+    }
+    if (month % 12 === 0) rows.push({ year: month / 12, gross, net })
+  }
+  return rows
+}
+
+/** An ISO date (YYYY-MM-DD) `months` later, on the first of the month, in UTC. */
+export function addMonths(iso: string, months: number): string {
+  const date = new Date(`${iso}T00:00:00Z`)
+  date.setUTCDate(1)
+  date.setUTCMonth(date.getUTCMonth() + months)
+  return date.toISOString().slice(0, 10)
+}
+
+/**
+ * Carries a replay forward `years` at a steady yearly rate -- the asset's own
+ * CAGR (2026-09-30, the "Projected" line). Monthly compounding at the rate's
+ * monthly equivalent, with the same top-up every month. The first row is the
+ * last real month, so the projected line joins the historical one.
+ */
+export function projectFromCagr(last: ReplayRow, cagrPct: number, monthly: number, years: number): ReplayRow[] {
+  const growth = (1 + cagrPct / 100) ** (1 / 12)
+  const rows: ReplayRow[] = [last]
+  let { value, contributed } = last
+  for (let month = 1; month <= Math.round(years * 12); month++) {
+    value = value * growth + monthly
+    contributed += monthly
+    rows.push({ date: addMonths(last.date, month), contributed, value })
+  }
+  return rows
+}

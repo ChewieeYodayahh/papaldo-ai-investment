@@ -3,7 +3,7 @@
 import { createChart, HistogramSeries, type IChartApi } from 'lightweight-charts'
 import { useEffect, useRef } from 'react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PanelFrame } from './PanelFrame'
 
 import type { FundamentalPoint } from '../api/symbol'
 import { useChartTheme } from './use-chart-theme'
@@ -16,7 +16,7 @@ import { useChartTheme } from './use-chart-theme'
  * colored per point (green for a profitable quarter, red for a loss) rather
  * than by adding a second series, which is the v5 way to vary bar color.
  */
-export function EarningsChart({ points }: { points: FundamentalPoint[] }) {
+export function EarningsChart({ points, embedded = false }: { points: FundamentalPoint[]; embedded?: boolean }) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const theme = useChartTheme()
@@ -70,16 +70,9 @@ export function EarningsChart({ points }: { points: FundamentalPoint[] }) {
 
   if (points.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">Quarterly earnings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Finnhub returned no quarterly earnings series for this symbol.
-          </p>
-        </CardContent>
-      </Card>
+      <PanelFrame title="Quarterly earnings" embedded={embedded}>
+        <p className="text-sm text-muted-foreground">Finnhub returned no quarterly earnings series for this symbol.</p>
+      </PanelFrame>
     )
   }
 
@@ -87,20 +80,15 @@ export function EarningsChart({ points }: { points: FundamentalPoint[] }) {
   const last = points[points.length - 1]
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">Quarterly earnings</CardTitle>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Earnings per share, {first.time} to {last.time} · {points.length} quarters
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div ref={containerRef} className="h-[220px] w-full" />
-        <p className="mt-3 text-xs text-muted-foreground">
-          Reported figures from Finnhub, not estimates and not adjusted. This is the real dated history the
-          plan provides; price history is not part of it.
-        </p>
-      </CardContent>
-    </Card>
+    <PanelFrame title="Quarterly earnings" embedded={embedded}>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Earnings per share, {first.time} to {last.time} · {points.length} quarters
+      </p>
+      <div ref={containerRef} className="h-[220px] w-full" />
+      <p className="mt-3 text-xs text-muted-foreground">
+        Reported figures from Finnhub, not estimates and not adjusted. This is the real dated history the
+        plan provides; price history is not part of it.
+      </p>
+    </PanelFrame>
   )
 }

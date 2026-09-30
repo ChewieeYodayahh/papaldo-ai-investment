@@ -27,7 +27,7 @@ export function ResultsView({
   score: number
   takenAt: string
   answers: AnsweredQuestion[]
-  /** Rendered between the result and the answers: the recommended assets. */
+  /** Rendered beside the answers: the recommended assets. */
   children?: React.ReactNode
 }) {
   const t = useCopy()
@@ -35,7 +35,7 @@ export function ResultsView({
   const outdated = answers.some((answer) => !answer.choice)
 
   return (
-    <div className="mx-auto grid w-full max-w-4xl gap-4">
+    <div className="mx-auto grid w-full max-w-6xl gap-4">
       <Card className="hero-mesh rounded-3xl border-0 py-0">
         <CardContent className="flex flex-col items-center gap-3 px-6 py-9 text-center">
           <span className="grid size-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
@@ -62,39 +62,42 @@ export function ResultsView({
         </CardContent>
       </Card>
 
-      {children}
+      {/* Answers on the left, recommended assets on the right (2026-09-30); stacked on phones. */}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <Card className="rounded-2xl border-0 py-5">
+          <CardHeader className="px-5 sm:px-6">
+            <CardTitle className="text-base font-semibold">Your answers</CardTitle>
+            {outdated ? (
+              <p className="text-[0.8125rem] text-muted-foreground">
+                Some answers are from an earlier version of the quiz. Retake it to see them in today’s wording.
+              </p>
+            ) : null}
+          </CardHeader>
+          <CardContent className="px-5 sm:px-6">
+            <ol className="divide-y divide-border">
+              {answers.map((answer, index) => {
+                const Icon = answer.choice ? CHOICE_ICON[answer.choice.icon] : CircleHelp
+                return (
+                  <li key={answer.questionId} className="flex items-start gap-4 py-3.5">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+                      <Icon className="size-[1.125rem]" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[0.8125rem] text-muted-foreground">
+                        <span className="figure">Q{index + 1}.</span> {answer.prompt}
+                      </p>
+                      <p className="font-medium">{answer.choice?.label ?? 'Answered in an earlier version'}</p>
+                      {answer.choice ? <p className="text-[0.8125rem] text-muted-foreground">{answer.choice.description}</p> : null}
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+          </CardContent>
+        </Card>
 
-      <Card className="rounded-2xl border-0 py-5">
-        <CardHeader className="px-5 sm:px-6">
-          <CardTitle className="text-base font-semibold">Your answers</CardTitle>
-          {outdated ? (
-            <p className="text-[0.8125rem] text-muted-foreground">
-              Some answers are from an earlier version of the quiz. Retake it to see them in today’s wording.
-            </p>
-          ) : null}
-        </CardHeader>
-        <CardContent className="px-5 sm:px-6">
-          <ol className="divide-y divide-border">
-            {answers.map((answer, index) => {
-              const Icon = answer.choice ? CHOICE_ICON[answer.choice.icon] : CircleHelp
-              return (
-                <li key={answer.questionId} className="flex items-start gap-4 py-3.5">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-                    <Icon className="size-[1.125rem]" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[0.8125rem] text-muted-foreground">
-                      <span className="figure">Q{index + 1}.</span> {answer.prompt}
-                    </p>
-                    <p className="font-medium">{answer.choice?.label ?? 'Answered in an earlier version'}</p>
-                    {answer.choice ? <p className="text-[0.8125rem] text-muted-foreground">{answer.choice.description}</p> : null}
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
-        </CardContent>
-      </Card>
+        {children}
+      </div>
 
       <p className="text-xs text-muted-foreground">
         Your profile shapes the simulated portfolio ideas Papaldo shows you. It is not investment advice.

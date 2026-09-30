@@ -13,9 +13,36 @@ const complete: UserProfile = {
   username: 'juan',
   contact: '+63 917 000 0000',
   occupation: 'Nurse',
+  occupations: ['Nurse'],
   annualIncome: { amount: 480000, currency: 'PHP' },
   idealIncome: { amount: 1200000, currency: 'PHP' },
+  avatarUrl: null,
+  website: null,
+  isPrivate: false,
 }
+
+describe('profile social fields (2026-09-30)', () => {
+  it('accepts an https website and clears it with an empty string', () => {
+    expect(profileUpdateSchema.parse({ website: 'https://example.com/me' }).website).toBe('https://example.com/me')
+    expect(profileUpdateSchema.parse({ website: '' }).website).toBeNull()
+  })
+
+  it('refuses links that are not http(s), even ones URL parsing accepts', () => {
+    for (const website of ['javascript:alert(1)', 'ftp://example.com', 'example.com', 'https://has space.com']) {
+      expect(profileUpdateSchema.safeParse({ website }).success).toBe(false)
+    }
+  })
+
+  it('takes up to three occupations', () => {
+    expect(profileUpdateSchema.safeParse({ occupations: ['Nurse', 'Writer', 'Student'] }).success).toBe(true)
+    expect(profileUpdateSchema.safeParse({ occupations: ['A', 'B', 'C', 'D'] }).success).toBe(false)
+    expect(profileUpdateSchema.safeParse({ occupations: ['  '] }).success).toBe(false)
+  })
+
+  it('accepts the Private switch on its own', () => {
+    expect(profileUpdateSchema.parse({ isPrivate: true }).isPrivate).toBe(true)
+  })
+})
 
 describe('return path after an auth round trip', () => {
   it('accepts the profile page, with or without a query', () => {

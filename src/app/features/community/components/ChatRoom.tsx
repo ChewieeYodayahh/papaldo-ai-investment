@@ -10,9 +10,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 
 import type { ChatMessage } from '../api/messages'
+import { AuthorMenu } from './AuthorMenu'
+import { GuestJoinDialog, useGuestPass } from './GuestJoin'
 
 const POLL_MS = 4000
 const MAX_LENGTH = 1000
+const GUEST_MAX_LENGTH = 500
 
 const timeLabel = (iso: string) => {
   const date = new Date(iso)
@@ -24,15 +27,21 @@ const timeLabel = (iso: string) => {
 
 /**
  * The one community chat room (Carlos, 2026-09-29). Signed-in users post;
- * guests read along. New messages arrive by polling every few seconds while
- * the tab is visible -- the UI talks only to /api/community/messages, never
- * to the database. Admins can remove a message for everyone.
+ * guests can read, or pick a name and chat for up to ten minutes (2026-09-30,
+ * `GuestJoin`). New messages arrive by polling every few seconds while the tab
+ * is visible -- the UI talks only to /api/community/*, never to the database.
+ * Admins can remove a message for everyone. Signed-in viewers get "Add as
+ * Friend" / "View Profile" on members' names (`AuthorMenu`).
  */
 export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[]; signedIn: boolean; isAdmin: boolean }) {
   const [messages, setMessages] = useState(initial)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const guest = useGuestPass()
+  const [joining, setJoining] = useState(false)
+  const canPost = signedIn || Boolean(guest.pass)
+  const maxLength = signedIn ? MAX_LENGTH : GUEST_MAX_LENGTH
   const listRef = useRef<HTMLDivElement>(null)
   const stickToBottom = useRef(true)
   const lastId = messages.at(-1)?.id ?? 0
@@ -71,10 +80,11 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
     setSending(true)
     setError(null)
     try {
-      const response = await fetch('/api/community/messages', {
+      const asGuest = !signedIn && guest.pass
+      const response = await fetch(asGuest ? '/api/community/guest/messages' : '/api/community/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body }),
+        body: JSON.stringify(asGuest ? { secret: guest.pass?.secret, body } : { body }),
       })
       const payload = (await response.json()) as { ok: boolean; message?: ChatMessage | string }
       if (payload.ok && payload.message && typeof payload.message !== 'string') {
@@ -82,6 +92,8 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
         merge([payload.message])
         setDraft('')
       } else {
+        // An expired guest pass: drop it so the name prompt comes back.
+        if (asGuest && response.status === 401) guest.clear()
         setError(typeof payload.message === 'string' ? payload.message : 'The message was not sent. Try again.')
       }
     } catch {
@@ -116,7 +128,14 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
             messages.map((message) => (
               <div key={message.id} className={cn('group flex flex-col gap-1', message.mine ? 'items-end' : 'items-start')}>
                 <span className="px-1 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">{message.mine ? 'You' : message.author}</span> · {timeLabel(message.createdAt)}
+                  {message.mine ? (
+                    <span className="font-medium text-foreground">You</span>
+                  ) : signedIn && !message.guest ? (
+                    <AuthorMenu name={message.author} />
+                  ) : (
+                    <span className="font-medium text-foreground">{message.author}</span>
+                  )}
+                  {message.guest ? <span className="text-muted-foreground"> · Guest</span> : null} · {timeLabel(message.createdAt)}
                 </span>
                 <div className="flex max-w-[85%] items-center gap-1.5 sm:max-w-[70%]">
                   {isAdmin && !message.mine ? (
@@ -145,7 +164,7 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
         </div>
 
         <div className="border-t px-4 py-3 sm:px-5">
-          {signedIn ? (
+          {canPost ? (
             <form
               onSubmit={(event) => {
                 event.preventDefault()
@@ -156,7 +175,7 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
               <div className="flex items-end gap-2">
                 <Textarea
                   value={draft}
-                  onChange={(event) => setDraft(event.target.value.slice(0, MAX_LENGTH))}
+                  onChange={(event) => setDraft(event.target.value.slice(0, maxLength))}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && !event.shiftKey) {
                       event.preventDefault()
@@ -173,19 +192,33 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
                   <span className="hidden sm:inline">{sending ? 'Sending…' : 'Send'}</span>
                 </Button>
               </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="flex justify-between gap-3 text-xs text-muted-foreground">
                 <span role="status" className={cn(error && 'text-destructive')}>
-                  {error ?? 'Enter to send, Shift+Enter for a new line.'}
+                  {error ??
+                    (guest.pass && !signedIn ? (
+                      <>
+                        Chatting as <span className="font-medium text-foreground">{guest.pass.name}</span> · Guest ·{' '}
+                        {guest.minutesLeft} min left ·{' '}
+                        <button type="button" onClick={guest.clear} className="underline underline-offset-2 hover:text-foreground">
+                          Leave
+                        </button>
+                      </>
+                    ) : (
+                      'Enter to send, Shift+Enter for a new line.'
+                    ))}
                 </span>
-                <span className="figure">
-                  {draft.length}/{MAX_LENGTH}
+                <span className="figure shrink-0">
+                  {draft.length}/{maxLength}
                 </span>
               </div>
             </form>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground">You’re reading as a guest. Sign in to join the conversation.</p>
-              <div className="flex gap-2">
+              <p className="text-sm text-muted-foreground">You’re reading as a guest. Pick a name to chat for 10 minutes, or sign in.</p>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => setJoining(true)} className="h-9 rounded-full px-4">
+                  Join as a guest
+                </Button>
                 <Link href="/login" className={cn(buttonVariants({ variant: 'outline' }), 'h-9 rounded-full px-4')}>
                   Log in
                 </Link>
@@ -197,6 +230,7 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
           )}
         </div>
       </CardContent>
+      {signedIn ? null : <GuestJoinDialog open={joining} onOpenChange={setJoining} onJoined={guest.save} />}
     </Card>
   )
 }

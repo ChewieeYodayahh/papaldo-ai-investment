@@ -22,9 +22,11 @@ paths:
   `userData/preferences` (store, `<Money>`, copy).
 - Cross-feature imports run one way only (checked 2026-09-30):
   - `userData/preferences` imports no feature; `auth` imports only it.
-  - `trading` and `community` import `auth`; `community/blog` imports none.
-  - `tools/quiz` imports `auth`; `tools/calculators` imports no feature but
-    preferences; the `tools` hub imports `auth`, `markets/benchmarks`,
+  - `trading` imports `auth`; `community` imports `auth` and `markets`
+    (quotes and `SymbolMark` for member profiles); `community/blog` imports none.
+  - `tools/quiz` imports `auth`; `tools/calculators` imports preferences,
+    `userData/export` (formats only, for statements), and `trading` +
+    `dashboard` read-only (the purchasing-power balance); the `tools` hub imports `auth`, `markets/benchmarks`,
     `tools/quiz` and `tutorials`.
   - `markets` imports `trading` and `tools/quiz` (read-only risk profile for
     the buy gate); `markets/benchmarks` imports `markets` and
@@ -33,7 +35,8 @@ paths:
     **never** `userData/frame`: the frame mounts tutorials, not the reverse.
     Shared types such as `SetupProgress` live in `tutorials/types.ts`.
   - `userData/frame` wraps pages and may import `auth`, `trading`,
-    `markets` (`SymbolMark`), `tools/quiz` (read-only), `tutorials`. Pages
+    `markets` (`SymbolMark`), `tools/quiz` (read-only), `tutorials`, and
+    `community` (the bell's friend notifications). Pages
     (`dashboard`, `landing`, `support`, `admin`) import the frame; nothing the
     frame imports may import it back.
   - `userData/export` reads `auth`, `dashboard`, `markets`, `tools/quiz` and
