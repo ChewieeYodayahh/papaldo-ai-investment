@@ -14,16 +14,20 @@ import { cn } from '@/lib/utils'
 
 import type { SetupProgress } from '../types'
 import { useSetupStore } from '../setup-store'
+import { TourRunner } from './TutorialMode'
 
 /** Elements the walkthrough points at. Pages opt in with `data-tour="..."`. */
-const TARGETS = { pick: 'universe', ticket: 'order-ticket' } as const
+const TARGETS = { pick: 'market-search', ticket: 'order-ticket' } as const
 
 /**
  * The guided first trade (Get Started 3/3), after Investopedia's "Buy your
- * first stock" tour, cut to the two places Papaldo actually needs:
+ * first stock" tour:
  *
- *   pick    /markets           -> point at the buyable universe table
- *   ticket  /markets/[symbol]  -> point at the order ticket
+ *   pick    /markets           -> point at the search bar (or the table under it)
+ *   ticket  /markets/[symbol]  -> the "trade" Tutorial Mode tour, field by field:
+ *                                 chart, key stats, buy/sell, quantity, review
+ *                                 (rebuilt 2026-09-30; it used to point at the
+ *                                 whole ticket at once)
  *
  * Steps advance by *navigation*, not by Next buttons: clicking a row is the
  * action the step asks for, so the route change is the signal. It finishes
@@ -39,6 +43,8 @@ export function FirstTradeTour({ setup, orders }: { setup: SetupProgress; orders
   const setStep = useSetupStore((s) => s.setTourStep)
   const endTour = useSetupStore((s) => s.endTour)
   const startTour = useSetupStore((s) => s.startTour)
+  const [tradeStep, setTradeStep] = useState(0)
+  const [explained, setExplained] = useState(false)
 
   const onMarkets = pathname === '/markets'
   const onSymbol = pathname.startsWith('/markets/')
@@ -99,8 +105,11 @@ export function FirstTradeTour({ setup, orders }: { setup: SetupProgress; orders
   }
 
   if (onSymbol && tour === 'ticket') {
+    // After the last step the explanation steps aside; the tour ends when the order fills.
     return setup.quiz ? (
-      <CoachMark target={TARGETS.ticket} step={2} title="tour.ticket.title" body="tour.ticket.body" onExit={endTour} side="left" />
+      explained ? null : (
+        <TourRunner tour="trade" index={tradeStep} onIndex={setTradeStep} onClose={endTour} onDone={() => setExplained(true)} />
+      )
     ) : (
       <CoachMark target={TARGETS.ticket} step={2} title="tour.quizFirst.title" body="tour.quizFirst.body" onExit={endTour} side="left">
         <Link href="/isq" className={cn(buttonVariants({ size: 'sm' }), 'rounded-full px-3')}>

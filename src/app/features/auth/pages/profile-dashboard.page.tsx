@@ -62,6 +62,9 @@ export async function ProfileDashboardPage({ searchParams }: { searchParams: Rec
                   View your member profile &amp; friends →
                 </Link>
               ) : null}
+              <Link href="/tools/export" className="text-xs font-medium text-primary underline-offset-2 hover:underline">
+                Export my data →
+              </Link>
             </div>
           </div>
           <SignOutButton />

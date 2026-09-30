@@ -1,4 +1,7 @@
+import Link from 'next/link'
+
 import { Card, CardContent } from '@/components/ui/card'
+import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
 import { T } from '@/app/features/userData/preferences/copy'
 
 import { getTradableAssets, searchAssets } from '../api/assets'
@@ -57,22 +60,28 @@ export async function MarketsPage({ query }: { query: string }) {
 
   return (
     <>
+      <TutorialTrigger tour="markets" className="mb-2" />
       {/* The page name lives in the header (AppHeader); this is only the context line. */}
       <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
         <T k="mkt.subtitle" /> Simulated trading only — no real money and no broker orders.
       </p>
-      <div className="mb-4">
+      <div className="mb-4" data-tut="markets.search" data-tour="market-search">
         <MarketSearch />
       </div>
 
       {quotes.ok ? (
         <div className="grid gap-4">
           {/* One window, 2x2 on a phone -- the same shape as the dashboard's portfolio tiles. */}
-          <Card className="rounded-2xl border-0 py-4">
+          <Card className="rounded-2xl border-0 py-4" data-tut="markets.benchmarks">
             <CardContent className="space-y-3 px-4">
-              <h2 className="text-base font-medium">
-                <T k="mkt.indexes" />
-              </h2>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-base font-medium">
+                  <T k="mkt.indexes" />
+                </h2>
+                <Link href="/markets/benchmarks" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+                  Compare 15 years →
+                </Link>
+              </div>
               <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
                 {benchmarks.map((quote) => (
                   <QuoteCard
@@ -91,18 +100,22 @@ export async function MarketsPage({ query }: { query: string }) {
                 the space the taller movers column used to leave empty. */}
             <div className="grid min-w-0 gap-4">
               {/* The first-trade walkthrough points here (shell FirstTradeTour). */}
-              <div data-tour="universe" className="min-w-0 rounded-2xl">
+              <div data-tour="universe" data-tut="markets.table" className="min-w-0 rounded-2xl">
                 <UniverseTable quotes={quotes.data} trends={trends} />
               </div>
-              <SectorTreemap quotes={quotes.data} />
+              <div data-tut="markets.heatmap" className="min-w-0">
+                <SectorTreemap quotes={quotes.data} />
+              </div>
             </div>
             {/* The rail is pinned to the left column's height on wide screens
                 (absolute inset), so neither side leaves an empty block; Market
                 Insight takes what the movers leave and scrolls inside. */}
             <div className="xl:relative xl:min-h-[48rem]">
               <div className="flex flex-col gap-4 xl:absolute xl:inset-0">
-                <MoversList title="mkt.topGainers" quotes={movers?.gainers ?? []} trends={trends} />
-                <MoversList title="mkt.topLosers" quotes={movers?.losers ?? []} trends={trends} />
+                <div data-tut="markets.movers" className="grid gap-4">
+                  <MoversList title="mkt.topGainers" quotes={movers?.gainers ?? []} trends={trends} />
+                  <MoversList title="mkt.topLosers" quotes={movers?.losers ?? []} trends={trends} />
+                </div>
                 <MarketNews items={news} fill />
               </div>
             </div>

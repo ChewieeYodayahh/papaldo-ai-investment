@@ -44,6 +44,7 @@ export function AccountMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t('header.account')}
+        data-tut="account.menu"
         data-active={active || undefined}
         className={cn(
           'flex min-w-0 items-center gap-2.5 rounded-full bg-card py-1 pr-3 pl-1 text-left text-card-foreground ring-1 ring-foreground/10 transition-colors outline-none',

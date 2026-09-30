@@ -7,6 +7,7 @@ import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
 import { isBuyable } from '../api/universe'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
 import { OrderTicket } from '@/app/features/trading/components/OrderTicket'
+import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
 
 import { getCandles } from '../api/candles'
 import { getSymbolNews } from '../api/news'
@@ -66,12 +67,13 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
   return (
     <div className="mx-auto max-w-6xl">
         <SymbolHeader quote={quote} profile={profile} />
+        <TutorialTrigger tour="trade" className="mb-4" />
 
         {/* Grid areas give the order Carlos asked for (2026-09-30): on a phone
             chart, trade, key stats, insights; on desktop the trade panel is a
             sticky column beside the chart, never below the news. */}
         <div className="grid grid-cols-1 gap-6 [grid-template-areas:'chart'_'trade'_'stats'_'insights'] lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:[grid-template-areas:'chart_trade'_'stats_trade'_'insights_trade'] lg:grid-rows-[auto_auto_1fr]">
-          <div className="min-w-0 [grid-area:chart]">
+          <div className="min-w-0 [grid-area:chart]" data-tut="trade.chart">
             {candles.ok ? (
               <PriceChart candles={candles.data} />
             ) : (
@@ -114,7 +116,7 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
             )}
           </div>
 
-          <div className="min-w-0 [grid-area:stats]">
+          <div className="min-w-0 [grid-area:stats]" data-tut="trade.stats">
             <KeyStats quote={quote} metrics={metrics} />
           </div>
           <div className="min-w-0 [grid-area:insights]">

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -65,3 +66,25 @@ export const useSetupStore = create<SetupState>()(
     },
   ),
 )
+
+/**
+ * Loads the saved setup state once, wherever it is first needed, and says
+ * when it has. Anything that *writes* the store must wait for this: a write
+ * before hydration replaces what localStorage held (a guest finishing a tour
+ * used to wipe the tours finished before, 2026-09-30).
+ */
+export function useSetupHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    const persistApi = useSetupStore.persist
+    if (!persistApi) return
+    if (persistApi.hasHydrated()) {
+      setHydrated(true)
+      return
+    }
+    const unsubscribe = persistApi.onFinishHydration(() => setHydrated(true))
+    void persistApi.rehydrate()
+    return unsubscribe
+  }, [])
+  return hydrated
+}

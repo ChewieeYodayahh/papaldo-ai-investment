@@ -23,6 +23,7 @@ import {
   QuestionnaireTitle,
 } from '@/components/ui/questionnaire'
 import { useFormSubmit } from '@/app/features/auth/hooks/use-form-submit'
+import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
 import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
@@ -117,7 +118,8 @@ export function IsqForm({ retake }: { retake: boolean }) {
 
   return (
     <QuizCard>
-      <div className="mb-7 space-y-3">
+      <TutorialTrigger tour="quiz" className="mb-4" />
+      <div className="mb-7 space-y-3" data-tut="quiz.progress">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold tracking-[0.18em] text-highlight uppercase">
             {retake ? 'Retake' : 'User setup · 2 of 3'}
@@ -138,12 +140,12 @@ export function IsqForm({ retake }: { retake: boolean }) {
       <Questionnaire items={ITEMS} item={current} onItemChange={setCurrent} onSubmit={handleSubmit} shortcuts="numbers">
         {ISQ_QUESTIONS.map((question) => (
           <QuestionnaireItem key={question.id} name={question.id} required>
-            <QuestionnaireTitle className="text-2xl leading-tight font-semibold tracking-tight">{question.prompt}</QuestionnaireTitle>
+            <QuestionnaireTitle data-tut="quiz.question" className="text-2xl leading-tight font-semibold tracking-tight">{question.prompt}</QuestionnaireTitle>
             {question.helperText ? (
               <QuestionnaireDescription className="-mt-2 text-[0.9375rem]">{question.helperText}</QuestionnaireDescription>
             ) : null}
 
-            <QuestionnaireChoices className="mt-2 gap-3">
+            <QuestionnaireChoices data-tut="quiz.choices" className="mt-2 gap-3">
               {question.choices.map((choice) => {
                 const Icon = CHOICE_ICON[choice.icon]
                 return (

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Calculator, ChartLine, ClipboardList, Coins, Download, ExternalLink, FileSpreadsheet, Lock, MessageCircle, PiggyBank, Route, ShieldPlus, UserRound, Wallet } from 'lucide-react'
+import { ArrowRight, Calculator, ChartLine, CircleCheck, ClipboardList, Coins, Compass, Download, ExternalLink, FileSpreadsheet, Lock, MessageCircle, PiggyBank, Route, ShieldPlus, UserRound, Wallet } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -12,7 +12,9 @@ import type { UserProfile } from '@/app/features/auth/types'
 import { BAND_ICON, ScoreMeter } from '@/app/features/tools/quiz/components/quiz-visuals'
 import type { RiskBand } from '@/app/features/tools/quiz/types'
 import { useCopy } from '@/app/features/userData/preferences/copy'
-import { useSetupStore } from '@/app/features/tutorials/setup-store'
+import { useSetupHydrated, useSetupStore } from '@/app/features/tutorials/setup-store'
+import { useTutorialStore } from '@/app/features/tutorials/tutorial-store'
+import { TOUR_HOME, type TourId } from '@/app/features/tutorials/tours'
 import { cn } from '@/lib/utils'
 
 const CARD = 'h-full rounded-2xl border-0 py-5'
@@ -333,6 +335,62 @@ export function LifeInsuranceToolCard({ href }: { href: string }) {
         <Button size="lg" variant="outline" disabled className="h-10 rounded-full px-5">
           <MessageCircle data-icon="inline-start" />
           Talk to an Advisor · Coming soon
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
+
+/**
+ * A Tutorial Mode tour as a card (2026-09-30): opens the tour's page with the
+ * tour already running. Finished tours show a tick (remembered per browser).
+ */
+export function TourToolCard({ tour, title, body, steps }: { tour: TourId; title: string; body: string; steps: string[] }) {
+  const router = useRouter()
+  const start = useTutorialStore((s) => s.start)
+  const hydrated = useSetupHydrated()
+  const done = useSetupStore((s) => s.toursDone.includes(tour)) && hydrated
+
+  return (
+    <Card className={CARD}>
+      <CardHeader className="px-5 sm:px-6">
+        <div className="flex items-start justify-between gap-3">
+          <ToolIcon icon={Compass} />
+          <Badge variant="outline" className={cn('rounded-full', done && 'text-gain')}>
+            {done ? (
+              <>
+                <CircleCheck data-icon="inline-start" />
+                Done
+              </>
+            ) : (
+              `${steps.length} steps`
+            )}
+          </Badge>
+        </div>
+        <CardTitle className="pt-3 text-lg font-semibold">{title}</CardTitle>
+        <CardDescription className="text-[0.8125rem]">{body}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 px-5 sm:px-6">
+        <ol className="space-y-2 text-sm text-muted-foreground">
+          {steps.map((step, i) => (
+            <li key={step} className="flex gap-2.5">
+              <span className="figure grid size-5 shrink-0 place-items-center rounded-full bg-muted text-xs font-medium text-foreground">{i + 1}</span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+      <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
+        <Button
+          size="lg"
+          className="h-10 rounded-full px-5 font-semibold"
+          onClick={() => {
+            start(tour)
+            router.push(TOUR_HOME[tour])
+          }}
+        >
+          {done ? 'Take it again' : 'Start the tour'}
+          <ArrowRight data-icon="inline-end" />
         </Button>
       </CardFooter>
     </Card>

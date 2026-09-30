@@ -463,6 +463,63 @@ cloned to `~/.claude/references/`.
     - drafts restore, expire and clear.
   - Quiz results and "Use my portfolio balance" need Carlos's session.
 
+**2026-09-30 (Phase 8): Tutorial Mode.**
+- **Engine** (`features/tutorials`), hand-rolled with no new dependency:
+  - `tours.ts` defines 9 tours as steps pointing at `data-tut` anchors.
+  - `copy.ts` holds the words: English is complete; slang and brainrot cover the
+    controls and step titles, falling back to English.
+  - `tutorial-store.ts` keeps the active tour in memory, so it survives client
+    navigation. It also holds the `useTutorialDemo` / "Show me" registry.
+  - `components/TutorialMode.tsx`:
+    - `TourRunner` reuses the first-trade spotlight (`[data-tour-active]`) and an
+      anchored popover.
+    - It shows "Step n of m" with Back / Next / Done, an Exit ✕ and Esc.
+    - "Show me" appears where the page registered a demo.
+    - A step whose element isn't on screen is skipped after 1.5s, in the direction
+      of travel.
+  - `TutorialTrigger` is the green "? Enter Tutorial Mode". It spins until the first
+    element is found.
+  - Finished tours are stored in the setup store (`toursDone`, per browser).
+- **Tours:**
+  - returns (7 steps; "Show me" fills the amounts and a 10-year projection);
+  - savings (5; "Show me" picks CIMB, 1 year);
+  - purchasing power (5; "Show me" sets 1990);
+  - budget (5; "Show me" fills a sample month);
+  - statements (4; "Show me" loads the sample);
+  - quiz (3);
+  - **account** on the dashboard: sidebar, bell, settings, account menu;
+  - **markets**: search, buyable table, movers, heatmap, indices;
+  - **trade** on symbol pages: chart, key stats "?", buy/sell, quantity, review.
+- **First trade, rebuilt:**
+  - Step 1 now points at the search bar.
+  - On the symbol page it runs the trade tour field by field instead of pointing at
+    the whole ticket.
+  - The walkthrough still finishes when an order fills.
+- **Tools hub Tutorials section:**
+  - Make your first trade, Navigate your account and Navigate the markets
+    (`TourToolCard`: opens the page with the tour running, and shows a Done tick);
+  - Export my data.
+
+  Profile now links to Export too.
+- The Markets indexes card gained the planned "Compare 15 years →" link to
+  `/markets/benchmarks`.
+- `features.md` now says any page may import the Tutorial Mode engine, which imports
+  only preferences. A test checks every step has English copy (4 tests).
+- **Bug found and fixed:** the setup store skips hydration, and only signed-in pages
+  rehydrated it. A guest finishing a tour overwrote earlier tours. The new
+  `useSetupHydrated()` is shared by FirstTimeSetup, the trigger and the tour card.
+  Retested: `["trade"]` became `["trade","budget"]`.
+- **Checks:**
+  - `npm run verify:full` passes: 155 tests, 15 Python tests, 64 routes.
+  - In the browser as a guest:
+    - budget tour: every step, "Show me" (needs 77%), Esc cleans up;
+    - markets tour: all 5 steps to Done;
+    - trade tour: chart, then stats, then skips the ticket steps guests don't have,
+      and ends cleanly.
+  - A hydration-id warning in the public nav came from hot reload while editing and
+    was gone after a clean reload.
+  - The account tour and first-trade steps need Carlos's session.
+
 **Bug found in Phase 8's work:** quiz-result recommendations were always empty.
 `recommendations.ts` filtered `risk_tier` by the person's band
 (`Low/Medium/High`), but assets use `conservative/moderate/aggressive`. The

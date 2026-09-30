@@ -1,12 +1,11 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
 
 import type { Order } from '@/app/features/trading/types'
 
 import type { SetupProgress } from '../types'
-import { useSetupStore } from '../setup-store'
+import { useSetupHydrated, useSetupStore } from '../setup-store'
 import { FirstTradeTour } from './FirstTradeTour'
 import { GetStartedDock } from './GetStartedDock'
 import { WelcomeDialog } from './WelcomeDialog'
@@ -28,20 +27,8 @@ import { WelcomeDialog } from './WelcomeDialog'
  */
 export function FirstTimeSetup({ setup, orders }: { setup: SetupProgress; orders: Order[] }) {
   const pathname = usePathname()
-  const [hydrated, setHydrated] = useState(false)
+  const hydrated = useSetupHydrated()
   const welcomeSeen = useSetupStore((s) => s.welcomeSeen)
-
-  useEffect(() => {
-    const persistApi = useSetupStore.persist
-    if (!persistApi) return
-    if (persistApi.hasHydrated()) {
-      setHydrated(true)
-      return
-    }
-    const unsubscribe = persistApi.onFinishHydration(() => setHydrated(true))
-    void persistApi.rehydrate()
-    return unsubscribe
-  }, [])
 
   if (!hydrated) return null
 

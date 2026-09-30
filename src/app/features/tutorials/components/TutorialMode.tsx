@@ -9,12 +9,12 @@ import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
 import { useTutorialCopy } from '../copy'
-import { useSetupStore } from '../setup-store'
+import { useSetupHydrated, useSetupStore } from '../setup-store'
 import { hasDemo, runDemo, useTutorialStore } from '../tutorial-store'
 import { TOURS, type TourId } from '../tours'
 
 /** How long to wait for a step's element before skipping it. */
-const FIND_MS = 2500
+const FIND_MS = 1500
 const POLL_MS = 100
 
 function findTarget(target: string): HTMLElement | null {
@@ -194,6 +194,7 @@ export function TutorialTrigger({ tour, className }: { tour: TourId; className?:
   const go = useTutorialStore((s) => s.go)
   const stop = useTutorialStore((s) => s.stop)
   const markTourDone = useSetupStore((s) => s.markTourDone)
+  const hydrated = useSetupHydrated()
   const running = active?.tour === tour
   const [found, setFound] = useState(false)
 
@@ -223,7 +224,7 @@ export function TutorialTrigger({ tour, className }: { tour: TourId; className?:
           onClose={stop}
           onFound={() => setFound(true)}
           onDone={() => {
-            markTourDone(tour)
+            if (hydrated) markTourDone(tour)
             stop()
           }}
         />

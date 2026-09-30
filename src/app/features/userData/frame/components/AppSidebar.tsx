@@ -173,7 +173,7 @@ export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu className="gap-1">
+          <SidebarMenu className="gap-1" data-tut="account.nav">
             {APP_NAV.map((item) =>
               'children' in item ? <GroupItem key={item.label} group={item} /> : <LeafItem key={item.href} item={item} />,
             )}

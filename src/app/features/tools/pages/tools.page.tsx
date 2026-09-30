@@ -11,6 +11,7 @@ import {
   ProfileToolCard,
   QuizToolCard,
   SimpleToolCard,
+  TourToolCard,
   WalkthroughToolCard,
   type BenchmarkPreview,
 } from "../components/ToolCards";
@@ -125,10 +126,22 @@ export async function ToolsPage() {
         {
           value: "tutorials",
           label: "nav.tools.tutorials",
-          count: 2,
+          count: 4,
           content: (
             <div className={GRID}>
               <WalkthroughToolCard quizDone={Boolean(risk)} />
+              <TourToolCard
+                tour="account"
+                title="Navigate your account"
+                body="The sidebar, notifications, settings and your account menu, one at a time."
+                steps={["Getting around", "Notifications", "Settings", "Your account"]}
+              />
+              <TourToolCard
+                tour="markets"
+                title="Navigate the markets"
+                body="Search, the buyable list, today’s movers, the heatmap and the index comparison."
+                steps={["Search", "What you can buy", "Movers", "Heatmap", "Indices"]}
+              />
               <SimpleToolCard
                 icon="export"
                 title="Export my data"

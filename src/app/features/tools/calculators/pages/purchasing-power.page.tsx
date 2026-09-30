@@ -1,5 +1,6 @@
 import { getValuation } from '@/app/features/dashboard/api/valuation'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
+import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
 
 import { getCpi } from '../api/cpi'
 import { PurchasingPowerCalculator } from '../components/PurchasingPowerCalculator'
@@ -14,6 +15,7 @@ export async function PurchasingPowerPage() {
 
   return (
     <>
+      <TutorialTrigger tour="purchasing" className="mb-2" />
       <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
         Prices rise, so the same money buys less every year. See what an amount from one year is worth in another,
         from 1960 to the latest year the World Bank has published.

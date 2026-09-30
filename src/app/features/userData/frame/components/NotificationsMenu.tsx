@@ -68,6 +68,7 @@ export function NotificationsMenu({ orders, social }: { orders: Order[]; social:
           <Button
             variant="ghost"
             size="icon-lg"
+            data-tut="account.bell"
             className="relative rounded-full bg-card ring-1 ring-foreground/10"
             aria-label={unread > 0 ? `${t('header.notifications')} (${unread} unread)` : t('header.notifications')}
           />

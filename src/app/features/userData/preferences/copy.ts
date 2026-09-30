@@ -228,7 +228,7 @@ const en = {
   // First-trade walkthrough coach marks.
   'tour.step': 'Step {n} of 2',
   'tour.pick.title': 'Pick a stock',
-  'tour.pick.body': 'Every name in this table can be bought on Papaldo. Click one to open its trade page — NVDA is a popular first pick.',
+  'tour.pick.body': 'Search for a company, or click any name in the table below, to open its trade page — NVDA is a popular first pick.',
   'tour.ticket.title': 'Place your order',
   'tour.ticket.body': 'Choose Buy, enter how many shares (1 to 10 is plenty), then place it. It is simulated — no real money moves.',
   'tour.quizFirst.title': 'One step first',

@@ -141,6 +141,11 @@ _Applies when working in: `src/app/features/**`, `src/app/api/**`, `src/app/**/p
   - `tutorials` imports `auth`, `trading` and `tools/quiz` (read-only), and
     **never** `userData/frame`: the frame mounts tutorials, not the reverse.
     Shared types such as `SetupProgress` live in `tutorials/types.ts`.
+  - The Tutorial Mode engine (`tutorials/components/TutorialMode`,
+    `tutorial-store`, `tours`, `copy`, `setup-store`) imports only
+    preferences, so any page may import it (2026-09-30). Pages mark tour
+    steps with `data-tut="<step target>"`; add the step to `tours.ts` and its
+    English title/body to `tutorials/copy.ts` (a test checks every step).
   - `userData/frame` wraps pages and may import `auth`, `trading`,
     `markets` (`SymbolMark`), `tools/quiz` (read-only), `tutorials`, and
     `community` (the bell's friend notifications). Pages

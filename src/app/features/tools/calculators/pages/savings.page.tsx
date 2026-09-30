@@ -1,3 +1,5 @@
+import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
+
 import { getHistory, INDEX_OPTIONS } from '../api/history'
 import type { RatePreset } from '../components/SavingsGoalCalculator'
 import { EmergencyFundPlanner } from '../components/EmergencyFundPlanner'
@@ -21,6 +23,7 @@ export async function SavingsPage() {
 
   return (
     <>
+      <TutorialTrigger tour="savings" className="mb-2" />
       <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
         Work out how much to save for a goal. Start from a steady yearly return, or tap an index to use its real
         growth over the last ten years.

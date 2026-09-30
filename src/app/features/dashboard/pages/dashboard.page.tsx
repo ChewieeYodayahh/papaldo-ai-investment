@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
 import type { RiskBand } from '@/app/features/tools/quiz/types'
+import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
 import { getShellData } from '@/app/features/userData/frame/api/shell'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
 
@@ -37,6 +38,7 @@ export async function DashboardPage() {
 
   return portfolio ? (
         <div className="grid gap-4">
+          <TutorialTrigger tour="account" className="justify-self-start" />
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[1fr_1fr_1.1fr]">
             <div className="grid content-start gap-4">
               <Suspense fallback={<CardSkeleton />}>

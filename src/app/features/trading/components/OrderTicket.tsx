@@ -180,7 +180,7 @@ export function OrderTicket({
       </CardHeader>
 
       <CardContent>
-        <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1" role="radiogroup" aria-label="Order side">
+        <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1" role="radiogroup" aria-label="Order side" data-tut="trade.side">
           {(['buy', 'sell'] as const).map((option) => (
             <button
               key={option}
@@ -218,7 +218,7 @@ export function OrderTicket({
         ) : null}
 
         <form onSubmit={onReview} className="space-y-3">
-          <div>
+          <div data-tut="trade.quantity">
             <label htmlFor="quantity" className="mb-1 block text-xs text-muted-foreground">
               Quantity {fractionable ? '(fractional allowed)' : '(whole shares)'}
             </label>
@@ -274,6 +274,7 @@ export function OrderTicket({
 
           <Button
             type="submit"
+            data-tut="trade.review"
             disabled={pending || !validQuantity || exceedsCash || exceedsPosition}
             className={cn('h-10 w-full rounded-full font-semibold capitalize', SIDE_FILL[side])}
           >

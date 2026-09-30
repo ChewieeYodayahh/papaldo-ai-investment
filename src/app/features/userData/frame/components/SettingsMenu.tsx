@@ -66,6 +66,7 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
             variant="ghost"
             size="icon-lg"
             aria-label={t('header.settings')}
+            data-tut="account.settings"
             className="rounded-full bg-card ring-1 ring-foreground/10"
           />
         }
