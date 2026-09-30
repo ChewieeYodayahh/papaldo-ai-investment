@@ -9,8 +9,8 @@ import type { Movers, UniverseQuote } from '@/app/features/markets/api/movers'
 import { Change } from '@/app/features/markets/components/Change'
 import { SymbolMark } from '@/app/features/markets/components/SymbolMark'
 import { PILL_LIST, PILL_TRIGGER } from '@/app/features/markets/components/pill-tabs'
-import { Money } from '@/app/features/preferences/components/Money'
-import { useCopy } from '@/app/features/preferences/copy'
+import { Money } from '@/app/features/userData/preferences/components/Money'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 
 function MoverRow({ quote }: { quote: UniverseQuote }) {
   return (

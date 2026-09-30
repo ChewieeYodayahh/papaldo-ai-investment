@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { getSessionUserId } from '@/app/core/services/supabase/session'
-import { getExportBars } from '@/app/features/export/api/bars'
+import { getExportBars } from '@/app/features/userData/export/api/bars'
 
 /**
  * GET /api/export/bars?symbol=AAPL&days=365 -- daily OHLCV bars for the export

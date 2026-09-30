@@ -1,4 +1,4 @@
-import { QuizSkeleton } from '@/app/features/onboarding/components/skeletons'
+import { QuizSkeleton } from '@/app/features/tools/quiz/components/skeletons'
 
 export default function Loading() {
   return <QuizSkeleton />

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getBenchmarks } from '@/app/features/benchmarks/api/benchmarks'
+import { getBenchmarks } from '@/app/features/markets/benchmarks/api/benchmarks'
 
 /**
  * GET /api/benchmarks -- the index benchmarker's data, grouped by month:

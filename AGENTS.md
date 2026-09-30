@@ -12,21 +12,26 @@ logic lives in `src/app/features/<name>/{api,components,pages}` (pages are
 `*.page.tsx`). Route handlers in `src/app/api/*` delegate to `features/*/api`.
 
 ```
-features/  auth         sign-in, session, /profile, users row
-           onboarding   ISQ (/isq, /isq/results), setup journey
-           dashboard    home, /portfolio, valuation, performance
-           markets      /markets, heatmap (d3-hierarchy), symbol pages
-           trading      simulated orders (place_order RPC), order ticket
-           advisory     AI market outlook card (/api/advisory/outlook)
-           benchmarks   /tools/benchmarks over public.market_benchmarks
-           calculators  /tools/returns, /tools/savings, "what it buys"
-           export       /tools/export — CSV/HTML built in the browser
-           tools        /tools cards
-           blog · community · support    public pages (/blog, /community, /support)
-           admin        /admin Developer Dashboard (admins only, 404 otherwise)
-           shell        AppShell / PublicShell, header, sidebar, Get Started
-           preferences  Zustand store, <Money>, copy dictionaries
-           landing      the public home page
+features/  auth                 sign-in, session, /profile, users row
+           dashboard            home, /portfolio, valuation, performance
+           markets              /markets, heatmap (d3-hierarchy), symbol pages
+             benchmarks         /markets/benchmarks over public.market_benchmarks
+           trading              simulated orders (place_order RPC), order ticket
+           advisory             AI market outlook card (/api/advisory/outlook)
+           tools                /tools hub
+             quiz               ISQ (/isq, /isq/results), scoring, recommendations
+             calculators        /tools/returns, /tools/savings, "what it buys"
+           community            /community chat room
+             blog               /blog, Markdown articles
+           support              /support form
+           tutorials            Get Started dock, welcome, walkthroughs,
+                                profile setup journey (/onboarding/profile)
+           userData
+             frame              AppShell / PublicShell, header, sidebar, menus, nav
+             preferences        Zustand store, <Money>, copy dictionaries
+             export             /tools/export — CSV/HTML built in the browser
+           admin                /admin Developer Dashboard (admins only, 404 otherwise)
+           landing              the public home page
 core/services/  alpaca · finnhub · exchange-rate · claude (Gemini) ·
                 integration-log · supabase/{client,server,session,database.types}
 src/components/ui/  shadcn primitives · skeleton-blocks.tsx for loading.tsx
@@ -46,7 +51,7 @@ supabase/migrations/ · python/ (weekly market-data pipelines)
 
 Path-scoped detail loads on its own when you touch matching files:
 `.claude/rules/ui.md` (tsx, css) · `features.md` (import directions, routes) ·
-`database.md` (RLS, admin, logs) · `onboarding.md` (ISQ scoring) ·
+`database.md` (RLS, admin, logs) · `quiz.md` (ISQ scoring) ·
 `python.md` (pipelines).
 
 ## Commands
@@ -82,7 +87,7 @@ is blocked on Carlos · `EXTERNAL_SERVICES.md` every API and MCP server.
 
 ### Database, access and logging rules
 
-_Applies when working in: `supabase/**`, `src/app/core/services/**`, `src/app/features/*/api/**`, `src/app/api/**`, `src/app/admin/**`, `src/app/features/admin/**`_
+_Applies when working in: `supabase/**`, `src/app/core/services/**`, `src/app/features/**/api/**`, `src/app/api/**`, `src/app/admin/**`, `src/app/features/admin/**`_
 
 - RLS on every user-scoped table. Verify with role-switched queries inside a
   rolled-back transaction (the `db-auditor` agent does this); don't assume a
@@ -117,34 +122,37 @@ _Applies when working in: `src/app/features/**`, `src/app/api/**`, `src/app/**/p
   `src/app/features/` — it would become a `/features/...` route.
 - Route handlers in `src/app/api/*` validate and delegate to the matching
   `features/*/api` module; no logic inline in the handler.
-- Cross-feature imports run one way only: `onboarding` and `dashboard` may
-  import `auth`; `auth` imports neither. `shell` wraps pages and may import
-  `auth`, `trading`, `preferences`, `onboarding` (read-only: the risk profile
-  behind the Get Started checklist) and `SymbolMark` from `markets`; pages
-  import `shell`, never the reverse, so `onboarding` must never import
-  `shell`. `tools` may import `auth`, `onboarding`, `benchmarks` and `shell`.
-  `benchmarks` may import `calculators` and `markets`; `calculators` and
-  `blog` import no feature but `preferences`; `community` imports `auth`;
-  `support` imports `shell`; `export` reads `auth`, `dashboard`, `markets`,
-  `onboarding` and `trading`; `admin` may import `auth`, `blog`, `export`
-  (formats only), `shell` and `preferences`, and nothing imports `admin`.
-  `preferences` imports no feature.
+- Feature roots. Nested folders are features of their own: `community/blog`,
+  `markets/benchmarks`, `tools/calculators`, `tools/quiz`, `userData/export`,
+  `userData/frame` (AppShell, PublicShell, header, sidebar, menus, nav) and
+  `userData/preferences` (store, `<Money>`, copy).
+- Cross-feature imports run one way only (checked 2026-09-30):
+  - `userData/preferences` imports no feature; `auth` imports only it.
+  - `trading` and `community` import `auth`; `community/blog` imports none.
+  - `tools/quiz` imports `auth`; `tools/calculators` imports no feature but
+    preferences; the `tools` hub imports `auth`, `markets/benchmarks`,
+    `tools/quiz` and `tutorials`.
+  - `markets` imports `trading` and `tools/quiz` (read-only risk profile for
+    the buy gate); `markets/benchmarks` imports `markets` and
+    `tools/calculators`; `advisory` imports `markets`.
+  - `tutorials` imports `auth`, `trading` and `tools/quiz` (read-only), and
+    **never** `userData/frame`: the frame mounts tutorials, not the reverse.
+    Shared types such as `SetupProgress` live in `tutorials/types.ts`.
+  - `userData/frame` wraps pages and may import `auth`, `trading`,
+    `markets` (`SymbolMark`), `tools/quiz` (read-only), `tutorials`. Pages
+    (`dashboard`, `landing`, `support`, `admin`) import the frame; nothing the
+    frame imports may import it back.
+  - `userData/export` reads `auth`, `dashboard`, `markets`, `tools/quiz` and
+    `trading`; `dashboard` imports `markets`, `tools/quiz` and `trading`.
+  - `admin` may import `auth`, `community/blog`, `userData/export` (formats
+    only) and `userData/frame`; nothing imports `admin`.
 - Ownership: `auth` owns credentials, the session, the `users` row and the
-  `OnboardingStep` type. `onboarding` owns the two screens a new account
-  walks through and everything only they use.
+  `OnboardingStep` type. `tools/quiz` owns the ISQ. `tutorials` owns first-
+  time setup: the profile setup journey (`/onboarding/profile`), the Get
+  Started dock, the welcome carousel and the walkthroughs.
 - Only a username is required before the app opens (middleware). Contact,
   occupation and income are the optional setup journey; the quiz is never a
   gate. After login, everyone lands on `/dashboard`.
-
-### ISQ rules
-
-_Applies when working in: `src/app/features/onboarding/**`_
-
-- ISQ scoring is a reconstruction, not from source data. It is isolated to
-  `features/onboarding/questions.ts` and `scoring.ts` for that reason —
-  change both together and update the tests. Since 2026-09-26 the wording is
-  our own plain-language rewrite, exactly three choices per question
-  (0/10/20).
 
 ### Pipeline rules
 
@@ -159,6 +167,19 @@ _Applies when working in: `python/**`, `.github/workflows/**`_
   `python/.venv/Scripts/python python/benchmarks.py --dry-run`.
   Create the venv with `uv venv python/.venv --python 3.12` and
   `uv pip install --python python/.venv/Scripts/python.exe -r python/requirements.txt`.
+
+### ISQ (investing quiz) rules
+
+_Applies when working in: `src/app/features/tools/quiz/**`_
+
+- ISQ scoring is a reconstruction, not from source data. It is isolated to
+  `features/tools/quiz/questions.ts` and `scoring.ts` for that reason —
+  change both together and update the tests. Since 2026-09-26 the wording is
+  our own plain-language rewrite, exactly three choices per question
+  (0/10/20).
+- A person's band is `Low | Medium | High` (`risk_profiles`); an asset's tier
+  is `conservative | moderate | aggressive` (`tradable_assets.risk_tier`).
+  They are different axes: map between them explicitly, never compare them.
 
 ### UI rules
 
@@ -182,8 +203,9 @@ _Applies when working in: `src/**/*.tsx`, `src/**/*.jsx`, `src/app/globals.css`_
   exception: self-reported incomes (`users.annual_income` / `ideal_income`)
   are shown in the currency they were entered in (`auth/income.ts`) and are
   never converted.
-- Copy goes through `useCopy()` keys in `features/preferences/copy.ts`; add
-  the English key, the other dictionaries fall back to it.
+- Copy goes through `useCopy()` keys in
+  `features/userData/preferences/copy.ts`; add the English key, the other
+  dictionaries fall back to it.
 - Chart lines get a dot on every data point: `pointDot()` from
   `src/lib/chart-dots.ts`.
 - Every new route gets a `loading.tsx` skeleton built from

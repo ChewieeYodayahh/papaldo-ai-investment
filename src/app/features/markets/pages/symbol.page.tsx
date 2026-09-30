@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { Card, CardContent } from '@/components/ui/card'
 
-import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
+import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
 import { isBuyable } from '../api/universe'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
 import { OrderTicket } from '@/app/features/trading/components/OrderTicket'

@@ -27,6 +27,12 @@ const nextConfig: NextConfig = {
   // Next the webpack hook is build-only, which silences its "Webpack is
   // configured while Turbopack is not" warning (an empty object does not count).
   turbopack: { root: path.join(__dirname) },
+
+  // The benchmarker moved from Tools to Markets with the v0.5 restructure
+  // (markets/benchmarks). Old links and bookmarks keep working.
+  async redirects() {
+    return [{ source: '/tools/benchmarks', destination: '/markets/benchmarks', permanent: true }]
+  },
 }
 
 export default nextConfig

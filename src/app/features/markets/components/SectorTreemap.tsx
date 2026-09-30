@@ -8,8 +8,8 @@ import { Search, X } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Money } from '@/app/features/preferences/components/Money'
-import { useCopy } from '@/app/features/preferences/copy'
+import { Money } from '@/app/features/userData/preferences/components/Money'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 import type { UniverseQuote } from '../api/movers'

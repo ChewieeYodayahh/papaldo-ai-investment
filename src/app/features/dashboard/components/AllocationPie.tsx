@@ -3,7 +3,7 @@
 import { Cell, Pie, PieChart } from 'recharts'
 
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
-import { useMoneyFormat } from '@/app/features/preferences/components/Money'
+import { useMoneyFormat } from '@/app/features/userData/preferences/components/Money'
 import { cn } from '@/lib/utils'
 
 import type { AllocationSlice } from '../portfolio-math'

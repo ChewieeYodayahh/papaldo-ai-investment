@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
-import { T } from '@/app/features/preferences/copy'
+import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
+import { T } from '@/app/features/userData/preferences/copy'
 import { getOrderHistory } from '@/app/features/trading/api/orders'
 import { getPortfolio, type PortfolioSummary } from '@/app/features/trading/api/portfolio'
 import { OrderHistory } from '@/app/features/trading/components/OrderHistory'

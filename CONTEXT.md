@@ -20,7 +20,7 @@ topics and their low-to-high risk ordering come from Manulife's *Client
 Suitability Assessment*; since 2026-09-26 the **wording is our own plain-language
 rewrite** (Carlos's call) with **exactly three choices per question**, each a
 short title, a one-line description and an icon. The verbatim transcription it
-replaced is in git history. Lives in `src/app/features/onboarding/questions.ts`.
+replaced is in git history. Lives in `src/app/features/tools/quiz/questions.ts`.
 Question text stays plain English in every language register.
 
 **Risk profile**
@@ -235,14 +235,17 @@ src/
       supabase/{client,server,middleware,database.types}.ts
       claude.ts  finnhub.ts
     features/<feature>/       feature modules: api/ components/ hooks/ pages/
-                              schema.ts types.ts …
+                              schema.ts types.ts … A feature may nest another
+                              (tools/quiz, tools/calculators, markets/benchmarks,
+                              community/blog, userData/{export,preferences,frame});
+                              restructured 2026-09-30, see .claude/rules/features.md
     layout.tsx  page.tsx  globals.css
   components/                 cross-feature UI primitives (index.tsx)
   lib/                        framework-agnostic helpers (env.ts)
   middleware.ts               session refresh + onboarding order
 ```
 
-The import alias `@/*` resolves to `src/*`, so `@/app/features/onboarding/scoring`,
+The import alias `@/*` resolves to `src/*`, so `@/app/features/tools/quiz/scoring`,
 `@/components`, `@/lib/env`, `@/app/core/services/supabase/server`.
 
 ## Architecture rules

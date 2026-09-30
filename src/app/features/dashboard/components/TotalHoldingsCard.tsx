@@ -3,9 +3,9 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Change } from '@/app/features/markets/components/Change'
-import { CurrencyToggle, Money, useFx } from '@/app/features/preferences/components/Money'
-import { useCopy } from '@/app/features/preferences/copy'
-import { usePreferences } from '@/app/features/preferences/store'
+import { CurrencyToggle, Money, useFx } from '@/app/features/userData/preferences/components/Money'
+import { useCopy } from '@/app/features/userData/preferences/copy'
+import { usePreferences } from '@/app/features/userData/preferences/store'
 
 import type { Valuation } from '../portfolio-math'
 

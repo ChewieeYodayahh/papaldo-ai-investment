@@ -8,8 +8,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Change } from '@/app/features/markets/components/Change'
 import { PILL_LIST, PILL_TRIGGER } from '@/app/features/markets/components/pill-tabs'
-import { useMoneyFormat } from '@/app/features/preferences/components/Money'
-import { useCopy } from '@/app/features/preferences/copy'
+import { useMoneyFormat } from '@/app/features/userData/preferences/components/Money'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 import { pointDot } from '@/lib/chart-dots'
 
 import type { Point } from '../portfolio-math'

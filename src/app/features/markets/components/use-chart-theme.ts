@@ -3,7 +3,7 @@
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 
-import { usePreferences } from '@/app/features/preferences/store'
+import { usePreferences } from '@/app/features/userData/preferences/store'
 
 /**
  * Chart colors, derived from the OKLCH tokens in globals.css.

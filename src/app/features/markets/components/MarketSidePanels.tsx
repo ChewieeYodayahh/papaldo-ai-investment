@@ -3,8 +3,8 @@
 import Link from 'next/link'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { Money } from '@/app/features/preferences/components/Money'
-import { useCopy, type CopyKey } from '@/app/features/preferences/copy'
+import { Money } from '@/app/features/userData/preferences/components/Money'
+import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 
 import type { UniverseQuote } from '../api/movers'
 import { Change } from './Change'

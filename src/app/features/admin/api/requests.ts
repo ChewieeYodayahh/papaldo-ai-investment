@@ -4,8 +4,8 @@ import { z } from 'zod'
 
 import { getSessionUserId } from '@/app/core/services/supabase/session'
 import { isAdmin } from '@/app/features/auth/api/roles'
-import { createPost, deletePost, updatePost } from '@/app/features/blog/api/manage'
-import { tableFrom, toCsv, type Column } from '@/app/features/export/formats'
+import { createPost, deletePost, updatePost } from '@/app/features/community/blog/api/manage'
+import { tableFrom, toCsv, type Column } from '@/app/features/userData/export/formats'
 
 import {
   getAuditLog,

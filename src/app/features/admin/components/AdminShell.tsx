@@ -1,5 +1,5 @@
-import { PreferencePersistence } from '@/app/features/preferences/components/PreferencePersistence'
-import { getShellUser } from '@/app/features/shell/api/shell'
+import { PreferencePersistence } from '@/app/features/userData/preferences/components/PreferencePersistence'
+import { getShellUser } from '@/app/features/userData/frame/api/shell'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
 import { requireAdmin } from '../api/guard'

@@ -15,6 +15,9 @@ import path from 'node:path'
 
 const RULES = '.claude/rules'
 
+// Git may check files out with CRLF on Windows; compare and write LF only.
+const read = (file) => readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
+
 function splitFrontmatter(text) {
   const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)
   if (!match) return { paths: [], body: text }
@@ -22,12 +25,12 @@ function splitFrontmatter(text) {
   return { paths, body: text.slice(match[0].length) }
 }
 
-const core = readFileSync('CLAUDE.md', 'utf8').trimEnd()
+const core = read('CLAUDE.md').trimEnd()
 const rules = readdirSync(RULES)
   .filter((f) => f.endsWith('.md'))
   .sort()
   .map((file) => {
-    const { paths, body } = splitFrontmatter(readFileSync(path.join(RULES, file), 'utf8'))
+    const { paths, body } = splitFrontmatter(read(path.join(RULES, file)))
     const scope = paths.length ? `_Applies when working in: ${paths.map((p) => `\`${p}\``).join(', ')}_\n\n` : ''
     // Demote the rule's own H1 so it nests under "Path-scoped rules".
     return body.trim().replace(/^# /, '### ').replace(/\n# /g, '\n### ').replace(/^(### .*)$/m, `$1\n\n${scope}`.trimEnd())
@@ -46,7 +49,7 @@ code, even where their framing differs.`
 const output = `${core}\n\n## Path-scoped rules\n\n${rules.join('\n\n')}\n\n${note}\n`
 
 if (process.argv.includes('--check')) {
-  const current = existsSync('AGENTS.md') ? readFileSync('AGENTS.md', 'utf8') : ''
+  const current = existsSync('AGENTS.md') ? read('AGENTS.md') : ''
   if (current !== output) {
     console.error('AGENTS.md is out of date. Run: npm run agents:sync')
     process.exit(1)

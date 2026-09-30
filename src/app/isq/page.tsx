@@ -1,4 +1,4 @@
-import { IsqPage } from '@/app/features/onboarding/pages/isq.page'
+import { IsqPage } from '@/app/features/tools/quiz/pages/isq.page'
 
 export const metadata = { title: 'Risk profile quiz' }
 

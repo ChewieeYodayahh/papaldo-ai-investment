@@ -1,4 +1,4 @@
-import { ProfileSetupPage } from '@/app/features/onboarding/pages/setup.page'
+import { ProfileSetupPage } from '@/app/features/tutorials/pages/setup.page'
 
 export const metadata = { title: 'Set up your profile' }
 

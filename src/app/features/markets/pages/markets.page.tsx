@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { T } from '@/app/features/preferences/copy'
+import { T } from '@/app/features/userData/preferences/copy'
 
 import { getTradableAssets, searchAssets } from '../api/assets'
 import { getCandlesMany, type Candle } from '../api/candles'

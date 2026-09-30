@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 
 import { getProfile, isSetupComplete } from '@/app/features/auth/api/profile'
-import { getBenchmarks } from '@/app/features/benchmarks/api/benchmarks'
-import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
-import { T } from '@/app/features/preferences/copy'
+import { getBenchmarks } from '@/app/features/markets/benchmarks/api/benchmarks'
+import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
+import { T } from '@/app/features/userData/preferences/copy'
 
 import {
   BenchmarkToolCard,

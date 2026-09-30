@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { getHistory } from '@/app/features/calculators/api/history'
+import { getHistory } from '@/app/features/tools/calculators/api/history'
 
 /**
  * GET /api/calculators/history?asset=SP500 -- monthly closes for the returns

@@ -1,4 +1,4 @@
-import { SavingsPage } from '@/app/features/calculators/pages/savings.page'
+import { SavingsPage } from '@/app/features/tools/calculators/pages/savings.page'
 
 export const metadata = { title: 'Savings Goal' }
 

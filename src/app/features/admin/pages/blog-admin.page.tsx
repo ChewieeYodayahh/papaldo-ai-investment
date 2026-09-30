@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Plus } from 'lucide-react'
 
-import { getPostById, listAllPosts } from '@/app/features/blog/api/manage'
+import { getPostById, listAllPosts } from '@/app/features/community/blog/api/manage'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'

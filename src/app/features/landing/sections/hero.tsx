@@ -5,7 +5,7 @@ import { motion, type Variants } from "motion/react"
 import { ArrowRight } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
-import { useCopy } from "@/app/features/preferences/copy"
+import { useCopy } from "@/app/features/userData/preferences/copy"
 import { cn } from "@/lib/utils"
 
 import { MockDashboard } from "./mock-dashboard"

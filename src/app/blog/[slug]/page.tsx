@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { BlogPostPage, blogPostTitle } from '@/app/features/blog/pages/blog.page'
+import { BlogPostPage, blogPostTitle } from '@/app/features/community/blog/pages/blog.page'
 
 type Props = { params: Promise<{ slug: string }> }
 

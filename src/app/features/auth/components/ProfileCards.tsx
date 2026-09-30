@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { useCopy, type CopyKey } from '@/app/features/preferences/copy'
+import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 
 import { useFormSubmit } from '../hooks/use-form-submit'
 import type { Income, IncomeCurrency } from '../schema'

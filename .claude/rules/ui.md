@@ -25,8 +25,9 @@ paths:
   exception: self-reported incomes (`users.annual_income` / `ideal_income`)
   are shown in the currency they were entered in (`auth/income.ts`) and are
   never converted.
-- Copy goes through `useCopy()` keys in `features/preferences/copy.ts`; add
-  the English key, the other dictionaries fall back to it.
+- Copy goes through `useCopy()` keys in
+  `features/userData/preferences/copy.ts`; add the English key, the other
+  dictionaries fall back to it.
 - Chart lines get a dot on every data point: `pointDot()` from
   `src/lib/chart-dots.ts`.
 - Every new route gets a `loading.tsx` skeleton built from

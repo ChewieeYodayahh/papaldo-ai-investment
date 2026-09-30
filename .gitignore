@@ -130,6 +130,9 @@ secret/
 # Generated knowledge graph (/graphify) — rebuildable, ~2MB
 graphify-out/
 
+# Harmony MCP workspace marker (workspace id + index state; tokens live in ~/.harmony-mcp/)
+.harmony_workspace.json
+
 # editor / agent-local config
 .vscode/
 .codex/

@@ -6,8 +6,8 @@ import { useState } from 'react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/components/ui/dialog'
-import type { RiskBand } from '@/app/features/onboarding/types'
-import { useCopy } from '@/app/features/preferences/copy'
+import type { RiskBand } from '@/app/features/tools/quiz/types'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 /**

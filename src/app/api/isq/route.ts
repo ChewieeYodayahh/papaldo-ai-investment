@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { submitIsq } from '@/app/features/onboarding/api/submit'
-import { IsqValidationError } from '@/app/features/onboarding/scoring'
+import { submitIsq } from '@/app/features/tools/quiz/api/submit'
+import { IsqValidationError } from '@/app/features/tools/quiz/scoring'
 
 const submissionSchema = z.object({
   answers: z

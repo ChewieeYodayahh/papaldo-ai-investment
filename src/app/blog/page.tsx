@@ -1,4 +1,4 @@
-import { BlogIndexPage } from '@/app/features/blog/pages/blog.page'
+import { BlogIndexPage } from '@/app/features/community/blog/pages/blog.page'
 
 export const metadata = { title: 'Blog' }
 

@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { getCurrentRiskProfile } from '@/app/features/onboarding/api/submit'
-import type { RiskBand } from '@/app/features/onboarding/types'
-import { getShellData } from '@/app/features/shell/api/shell'
+import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
+import type { RiskBand } from '@/app/features/tools/quiz/types'
+import { getShellData } from '@/app/features/userData/frame/api/shell'
 import { getPortfolio } from '@/app/features/trading/api/portfolio'
 
 import { RiskAppetiteCard } from '../components/RiskAppetiteCard'

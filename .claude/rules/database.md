@@ -2,7 +2,7 @@
 paths:
   - "supabase/**"
   - "src/app/core/services/**"
-  - "src/app/features/*/api/**"
+  - "src/app/features/**/api/**"
   - "src/app/api/**"
   - "src/app/admin/**"
   - "src/app/features/admin/**"

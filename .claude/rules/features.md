@@ -16,21 +16,34 @@ paths:
   `src/app/features/` — it would become a `/features/...` route.
 - Route handlers in `src/app/api/*` validate and delegate to the matching
   `features/*/api` module; no logic inline in the handler.
-- Cross-feature imports run one way only: `onboarding` and `dashboard` may
-  import `auth`; `auth` imports neither. `shell` wraps pages and may import
-  `auth`, `trading`, `preferences`, `onboarding` (read-only: the risk profile
-  behind the Get Started checklist) and `SymbolMark` from `markets`; pages
-  import `shell`, never the reverse, so `onboarding` must never import
-  `shell`. `tools` may import `auth`, `onboarding`, `benchmarks` and `shell`.
-  `benchmarks` may import `calculators` and `markets`; `calculators` and
-  `blog` import no feature but `preferences`; `community` imports `auth`;
-  `support` imports `shell`; `export` reads `auth`, `dashboard`, `markets`,
-  `onboarding` and `trading`; `admin` may import `auth`, `blog`, `export`
-  (formats only), `shell` and `preferences`, and nothing imports `admin`.
-  `preferences` imports no feature.
+- Feature roots. Nested folders are features of their own: `community/blog`,
+  `markets/benchmarks`, `tools/calculators`, `tools/quiz`, `userData/export`,
+  `userData/frame` (AppShell, PublicShell, header, sidebar, menus, nav) and
+  `userData/preferences` (store, `<Money>`, copy).
+- Cross-feature imports run one way only (checked 2026-09-30):
+  - `userData/preferences` imports no feature; `auth` imports only it.
+  - `trading` and `community` import `auth`; `community/blog` imports none.
+  - `tools/quiz` imports `auth`; `tools/calculators` imports no feature but
+    preferences; the `tools` hub imports `auth`, `markets/benchmarks`,
+    `tools/quiz` and `tutorials`.
+  - `markets` imports `trading` and `tools/quiz` (read-only risk profile for
+    the buy gate); `markets/benchmarks` imports `markets` and
+    `tools/calculators`; `advisory` imports `markets`.
+  - `tutorials` imports `auth`, `trading` and `tools/quiz` (read-only), and
+    **never** `userData/frame`: the frame mounts tutorials, not the reverse.
+    Shared types such as `SetupProgress` live in `tutorials/types.ts`.
+  - `userData/frame` wraps pages and may import `auth`, `trading`,
+    `markets` (`SymbolMark`), `tools/quiz` (read-only), `tutorials`. Pages
+    (`dashboard`, `landing`, `support`, `admin`) import the frame; nothing the
+    frame imports may import it back.
+  - `userData/export` reads `auth`, `dashboard`, `markets`, `tools/quiz` and
+    `trading`; `dashboard` imports `markets`, `tools/quiz` and `trading`.
+  - `admin` may import `auth`, `community/blog`, `userData/export` (formats
+    only) and `userData/frame`; nothing imports `admin`.
 - Ownership: `auth` owns credentials, the session, the `users` row and the
-  `OnboardingStep` type. `onboarding` owns the two screens a new account
-  walks through and everything only they use.
+  `OnboardingStep` type. `tools/quiz` owns the ISQ. `tutorials` owns first-
+  time setup: the profile setup journey (`/onboarding/profile`), the Get
+  Started dock, the welcome carousel and the walkthroughs.
 - Only a username is required before the app opens (middleware). Contact,
   occupation and income are the optional setup journey; the quiz is never a
   gate. After login, everyone lands on `/dashboard`.

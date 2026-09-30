@@ -10,6 +10,13 @@
     "vercel": {
       "type": "http",
       "url": "https://mcp.vercel.com"
+    },
+    "harmony": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@codeconductorai/harmony-mcp@1.0.28"
+      ]
     }
   }
 }

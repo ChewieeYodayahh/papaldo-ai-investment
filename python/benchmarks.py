@@ -2,7 +2,7 @@
 
 Fetches monthly closes for four equity indices from Yahoo Finance, puts them
 on one comparable scale, and writes them to public.market_benchmarks, which
-the Next.js app reads (features/benchmarks).
+the Next.js app reads (features/markets/benchmarks).
 
     python python/benchmarks.py                      # upsert to Supabase
     python python/benchmarks.py --dry-run            # JSON to python/out/

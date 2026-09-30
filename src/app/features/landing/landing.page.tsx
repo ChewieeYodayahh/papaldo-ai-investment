@@ -1,5 +1,5 @@
-import { getShellUser } from "@/app/features/shell/api/shell"
-import { PublicShell } from "@/app/features/shell/components/PublicShell"
+import { getShellUser } from "@/app/features/userData/frame/api/shell"
+import { PublicShell } from "@/app/features/userData/frame/components/PublicShell"
 
 import { Cta } from "./sections/cta"
 import { Faq } from "./sections/faq"

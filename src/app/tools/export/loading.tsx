@@ -1,4 +1,4 @@
-import { ExportSkeleton } from '@/app/features/export/components/skeletons'
+import { ExportSkeleton } from '@/app/features/userData/export/components/skeletons'
 
 export default function Loading() {
   return <ExportSkeleton />

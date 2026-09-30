@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 
-import { Money } from '@/app/features/preferences/components/Money'
+import { Money } from '@/app/features/userData/preferences/components/Money'
 
 import type { Candle } from '../api/candles'
 import type { Quote } from '../api/quotes'

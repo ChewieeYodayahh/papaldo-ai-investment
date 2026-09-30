@@ -1,4 +1,4 @@
-import { getShellUser } from '@/app/features/shell/api/shell'
+import { getShellUser } from '@/app/features/userData/frame/api/shell'
 
 import { SupportForm } from '../components/SupportForm'
 

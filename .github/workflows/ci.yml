@@ -32,6 +32,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: AGENTS.md in sync with CLAUDE.md and .claude/rules
+        run: npm run agents:sync -- --check
+
       - name: Typecheck
         run: npm run typecheck
 

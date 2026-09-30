@@ -1,4 +1,4 @@
-import { ResultsSkeleton } from '@/app/features/onboarding/components/skeletons'
+import { ResultsSkeleton } from '@/app/features/tools/quiz/components/skeletons'
 
 export default function Loading() {
   return <ResultsSkeleton />

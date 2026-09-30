@@ -4,7 +4,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 
 import { buttonVariants } from "@/components/ui/button"
-import { useCopy } from "@/app/features/preferences/copy"
+import { useCopy } from "@/app/features/userData/preferences/copy"
 import { cn } from "@/lib/utils"
 
 export function Cta() {

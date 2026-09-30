@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { useCopy } from '@/app/features/preferences/copy'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 /**

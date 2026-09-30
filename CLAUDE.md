@@ -12,21 +12,26 @@ logic lives in `src/app/features/<name>/{api,components,pages}` (pages are
 `*.page.tsx`). Route handlers in `src/app/api/*` delegate to `features/*/api`.
 
 ```
-features/  auth         sign-in, session, /profile, users row
-           onboarding   ISQ (/isq, /isq/results), setup journey
-           dashboard    home, /portfolio, valuation, performance
-           markets      /markets, heatmap (d3-hierarchy), symbol pages
-           trading      simulated orders (place_order RPC), order ticket
-           advisory     AI market outlook card (/api/advisory/outlook)
-           benchmarks   /tools/benchmarks over public.market_benchmarks
-           calculators  /tools/returns, /tools/savings, "what it buys"
-           export       /tools/export — CSV/HTML built in the browser
-           tools        /tools cards
-           blog · community · support    public pages (/blog, /community, /support)
-           admin        /admin Developer Dashboard (admins only, 404 otherwise)
-           shell        AppShell / PublicShell, header, sidebar, Get Started
-           preferences  Zustand store, <Money>, copy dictionaries
-           landing      the public home page
+features/  auth                 sign-in, session, /profile, users row
+           dashboard            home, /portfolio, valuation, performance
+           markets              /markets, heatmap (d3-hierarchy), symbol pages
+             benchmarks         /markets/benchmarks over public.market_benchmarks
+           trading              simulated orders (place_order RPC), order ticket
+           advisory             AI market outlook card (/api/advisory/outlook)
+           tools                /tools hub
+             quiz               ISQ (/isq, /isq/results), scoring, recommendations
+             calculators        /tools/returns, /tools/savings, "what it buys"
+           community            /community chat room
+             blog               /blog, Markdown articles
+           support              /support form
+           tutorials            Get Started dock, welcome, walkthroughs,
+                                profile setup journey (/onboarding/profile)
+           userData
+             frame              AppShell / PublicShell, header, sidebar, menus, nav
+             preferences        Zustand store, <Money>, copy dictionaries
+             export             /tools/export — CSV/HTML built in the browser
+           admin                /admin Developer Dashboard (admins only, 404 otherwise)
+           landing              the public home page
 core/services/  alpaca · finnhub · exchange-rate · claude (Gemini) ·
                 integration-log · supabase/{client,server,session,database.types}
 src/components/ui/  shadcn primitives · skeleton-blocks.tsx for loading.tsx
@@ -46,7 +51,7 @@ supabase/migrations/ · python/ (weekly market-data pipelines)
 
 Path-scoped detail loads on its own when you touch matching files:
 `.claude/rules/ui.md` (tsx, css) · `features.md` (import directions, routes) ·
-`database.md` (RLS, admin, logs) · `onboarding.md` (ISQ scoring) ·
+`database.md` (RLS, admin, logs) · `quiz.md` (ISQ scoring) ·
 `python.md` (pipelines).
 
 ## Commands

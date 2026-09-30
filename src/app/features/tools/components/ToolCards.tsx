@@ -9,10 +9,10 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatIncome } from '@/app/features/auth/components/profile-fields'
 import type { UserProfile } from '@/app/features/auth/types'
-import { BAND_ICON, ScoreMeter } from '@/app/features/onboarding/components/quiz-visuals'
-import type { RiskBand } from '@/app/features/onboarding/types'
-import { useCopy } from '@/app/features/preferences/copy'
-import { useSetupStore } from '@/app/features/shell/setup-store'
+import { BAND_ICON, ScoreMeter } from '@/app/features/tools/quiz/components/quiz-visuals'
+import type { RiskBand } from '@/app/features/tools/quiz/types'
+import { useCopy } from '@/app/features/userData/preferences/copy'
+import { useSetupStore } from '@/app/features/tutorials/setup-store'
 import { cn } from '@/lib/utils'
 
 const CARD = 'h-full rounded-2xl border-0 py-5'
@@ -173,7 +173,7 @@ export function BenchmarkToolCard({ preview, since }: { preview: BenchmarkPrevie
         )}
       </CardContent>
       <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
-        <Link href="/tools/benchmarks" className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+        <Link href="/markets/benchmarks" className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
           {t('bm.open')}
           <ArrowRight data-icon="inline-end" />
         </Link>
