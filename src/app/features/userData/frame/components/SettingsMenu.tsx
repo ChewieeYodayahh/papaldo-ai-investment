@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { Globe, LogOut, Palette as PaletteIcon, Settings, UserRound } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
@@ -20,6 +21,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { CustomThemeDialog } from '@/app/features/userData/preferences/components/CustomThemeDialog'
 import { useCopy } from '@/app/features/userData/preferences/copy'
 import {
   FONTS,
@@ -53,12 +55,15 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
   const { theme, setTheme } = useTheme()
   const palette = usePreferences((s) => s.palette)
   const setPalette = usePreferences((s) => s.setPalette)
+  const customColors = usePreferences((s) => s.customColors)
+  const [customOpen, setCustomOpen] = useState(false)
   const font = usePreferences((s) => s.font)
   const setFont = usePreferences((s) => s.setFont)
   const language = usePreferences((s) => s.language)
   const setLanguage = usePreferences((s) => s.setLanguage)
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
@@ -103,15 +108,27 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuLabel>{t('header.themes')}</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={palette} onValueChange={(value) => setPalette(value as Palette)}>
+              <DropdownMenuRadioGroup
+                value={palette}
+                onValueChange={(value) => (value === 'custom' ? setCustomOpen(true) : setPalette(value as Palette))}
+              >
                 {PALETTES.map((option) => (
                   <DropdownMenuRadioItem key={option} value={option}>
-                    <span
-                      // The swatch wears its own palette, so it shows the real token.
-                      data-palette={option}
-                      className="size-4 rounded-full bg-sidebar ring-1 ring-foreground/20"
-                      aria-hidden
-                    />
+                    {option === 'custom' ? (
+                      // The two chosen colours, half and half.
+                      <span
+                        className="size-4 rounded-full ring-1 ring-foreground/20"
+                        style={{ background: `linear-gradient(135deg, ${customColors.primary} 50%, ${customColors.secondary} 50%)` }}
+                        aria-hidden
+                      />
+                    ) : (
+                      <span
+                        // The swatch wears its own palette, so it shows the real token.
+                        data-palette={option}
+                        className="size-4 rounded-full bg-sidebar ring-1 ring-foreground/20"
+                        aria-hidden
+                      />
+                    )}
                     {t(`header.palette.${option}`)}
                   </DropdownMenuRadioItem>
                 ))}
@@ -167,5 +184,7 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
+    <CustomThemeDialog open={customOpen} onOpenChange={setCustomOpen} />
+    </>
   )
 }

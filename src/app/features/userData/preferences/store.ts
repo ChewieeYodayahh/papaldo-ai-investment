@@ -30,8 +30,12 @@ export type Currency = (typeof CURRENCIES)[number]
 export const LANGUAGES = ['en', 'slang', 'brainrot'] as const
 export type Language = (typeof LANGUAGES)[number]
 
-export const PALETTES = ['forest', 'orchid', 'midnight'] as const
+/** Midnight is the default since 2026-09-30; Black, White and Custom joined then too. */
+export const PALETTES = ['midnight', 'forest', 'orchid', 'black', 'white', 'custom'] as const
 export type Palette = (typeof PALETTES)[number]
+
+/** The custom theme's two colours, as #rrggbb. */
+export type CustomColors = { primary: string; secondary: string }
 
 export const FONTS = ['figtree', 'geist', 'system'] as const
 export type Font = (typeof FONTS)[number]
@@ -43,7 +47,8 @@ export type ThemeMode = (typeof THEMES)[number]
 export const DEFAULT_PREFERENCES = {
   currency: 'USD' as Currency,
   language: 'en' as Language,
-  palette: 'forest' as Palette,
+  palette: 'midnight' as Palette,
+  customColors: { primary: '#9be15d', secondary: '#5fb3b3' } as CustomColors,
   font: 'figtree' as Font,
   theme: 'dark' as ThemeMode,
   notificationsSeenAt: null as string | null,
@@ -80,6 +85,7 @@ type Preferences = {
   currency: Currency
   language: Language
   palette: Palette
+  customColors: CustomColors
   font: Font
   /** Light / dark / system, mirrored from next-themes so it is saved per account. */
   theme: ThemeMode
@@ -88,6 +94,7 @@ type Preferences = {
   setCurrency: (currency: Currency) => void
   setLanguage: (language: Language) => void
   setPalette: (palette: Palette) => void
+  setCustomColors: (colors: CustomColors) => void
   setFont: (font: Font) => void
   setTheme: (theme: ThemeMode) => void
   markNotificationsSeen: () => void
@@ -100,14 +107,16 @@ export const usePreferences = create<Preferences>()(
       setCurrency: (currency) => set({ currency }),
       setLanguage: (language) => set({ language }),
       setPalette: (palette) => set({ palette }),
+      setCustomColors: (customColors) => set({ customColors, palette: 'custom' }),
       setFont: (font) => set({ font }),
       setTheme: (theme) => set({ theme }),
       markNotificationsSeen: () => set({ notificationsSeenAt: new Date().toISOString() }),
     }),
     {
       name: PREFERENCES_KEY,
-      // v2 added `theme`. Older saves adopt the mode next-themes last stored.
-      version: 2,
+      // v2 added `theme`; v3 made Midnight the default, so a save still on
+      // the old default (Forest) moves to Midnight, and added custom colours.
+      version: 3,
       migrate: (persisted, version) => {
         const state = (persisted ?? {}) as Partial<Preferences>
         if (version < 2) {
@@ -119,14 +128,19 @@ export const usePreferences = create<Preferences>()(
           }
           state.theme = (THEMES as readonly string[]).includes(stored ?? '') ? (stored as ThemeMode) : DEFAULT_PREFERENCES.theme
         }
+        if (version < 3) {
+          if (!state.palette || state.palette === 'forest') state.palette = DEFAULT_PREFERENCES.palette
+          state.customColors = DEFAULT_PREFERENCES.customColors
+        }
         return state as Preferences
       },
       storage: createJSONStorage(() => accountStorage),
       skipHydration: true,
-      partialize: ({ currency, language, palette, font, theme, notificationsSeenAt }) => ({
+      partialize: ({ currency, language, palette, customColors, font, theme, notificationsSeenAt }) => ({
         currency,
         language,
         palette,
+        customColors,
         font,
         theme,
         notificationsSeenAt,

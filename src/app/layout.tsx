@@ -43,6 +43,8 @@ export default function RootLayout({
     // declared on the same element or above it.
     <html
       lang="en"
+      // Midnight is the default palette (2026-09-30); PreferencesEffects changes it.
+      data-palette="midnight"
       className={cn('font-sans', figtree.variable, geistSans.variable, geistMono.variable)}
       suppressHydrationWarning
     >

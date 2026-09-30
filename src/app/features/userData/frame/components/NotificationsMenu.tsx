@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -82,7 +83,10 @@ export function NotificationsMenu({ orders, social }: { orders: Order[]; social:
         ) : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>{t('header.notifications')}</DropdownMenuLabel>
+        {/* Base UI needs a label inside a group; unwrapped, opening the bell threw. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t('header.notifications')}</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {entries.length === 0 ? (
           <p className="px-2 py-3 text-sm text-muted-foreground">{t('header.noNotifications')}</p>

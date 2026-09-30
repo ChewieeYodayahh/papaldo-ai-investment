@@ -65,8 +65,10 @@ npm run graph         refresh graphify-out/ (AST only, no tokens)
 npm run agents:sync   rebuild AGENTS.md after editing CLAUDE.md or .claude/rules
 ```
 
-`NEXT_PUBLIC_SITE_URL` only builds OAuth/email redirect URLs; the dev port is
-pinned by `--port 3001` in package.json. Keep the two in step.
+Production is **https://papaldo-ka.vercel.app** (2026-09-30; the old
+`papaldo-ai-investment.vercel.app` stays as an alias). `NEXT_PUBLIC_SITE_URL`
+only builds OAuth/email redirect URLs; the dev port is pinned by `--port 3001`
+in package.json. Keep the two in step.
 
 ## Working economically
 

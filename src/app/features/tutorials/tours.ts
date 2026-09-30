@@ -13,7 +13,7 @@
 export type TourSide = 'top' | 'bottom' | 'left' | 'right'
 export type TourStepDef = { id: string; target: string; side?: TourSide; demo?: boolean }
 
-export const TOUR_IDS = ['returns', 'savings', 'purchasing', 'budget', 'statements', 'quiz', 'account', 'markets', 'trade'] as const
+export const TOUR_IDS = ['returns', 'savings', 'purchasing', 'budget', 'statements', 'dca', 'waiting', 'quiz', 'account', 'markets', 'trade'] as const
 export type TourId = (typeof TOUR_IDS)[number]
 
 export const TOURS: Record<TourId, TourStepDef[]> = {
@@ -46,12 +46,28 @@ export const TOURS: Record<TourId, TourStepDef[]> = {
     { id: 'budget.lines', target: 'budget.lines', side: 'right', demo: true },
     { id: 'budget.buckets', target: 'budget.buckets', side: 'left' },
     { id: 'budget.tips', target: 'budget.tips', side: 'top' },
+    { id: 'budget.export', target: 'budget.export', side: 'top' },
   ],
   statements: [
     { id: 'statements.sample', target: 'statements.sample', demo: true },
+    { id: 'statements.nonprofit', target: 'statements.nonprofit' },
     { id: 'statements.checks', target: 'statements.checks' },
     { id: 'statements.tabs', target: 'statements.tabs' },
     { id: 'statements.export', target: 'statements.export' },
+  ],
+  dca: [
+    { id: 'dca.asset', target: 'dca.asset' },
+    { id: 'dca.amount', target: 'dca.amount' },
+    { id: 'dca.period', target: 'dca.period', demo: true },
+    { id: 'dca.result', target: 'dca.result', side: 'top' },
+    { id: 'dca.chart', target: 'dca.chart', side: 'top' },
+    { id: 'dca.history', target: 'dca.history', side: 'top' },
+  ],
+  waiting: [
+    { id: 'waiting.inputs', target: 'waiting.inputs', side: 'right', demo: true },
+    { id: 'waiting.results', target: 'waiting.results', side: 'left' },
+    { id: 'waiting.chart', target: 'waiting.chart', side: 'top' },
+    { id: 'waiting.lesson', target: 'waiting.lesson', side: 'top' },
   ],
   quiz: [
     { id: 'quiz.question', target: 'quiz.question' },
@@ -87,6 +103,8 @@ export const TOUR_HOME: Record<TourId, string> = {
   purchasing: '/tools/purchasing-power',
   budget: '/tools/budget',
   statements: '/tools/statements',
+  dca: '/tools/dca',
+  waiting: '/tools/cost-of-waiting',
   quiz: '/isq',
   account: '/dashboard',
   markets: '/markets',

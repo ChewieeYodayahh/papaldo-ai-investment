@@ -21,13 +21,13 @@ function ToolCardSkeleton() {
   )
 }
 
-/** `/tools` while it loads: the subtitle, one open section of cards, then the closed sections. */
+/** `/tools` while it loads: the subtitle, one open section of cards, then the closed sections, divided by rules. */
 export function ToolsSkeleton() {
   return (
     <>
       <Bar className="mb-4 h-3 w-80 max-w-full" />
-      <div className="grid gap-3">
-        <div className="rounded-2xl px-4 pb-4 ring-1 ring-foreground/5">
+      <div className="divide-y divide-border border-y border-border">
+        <div className="pb-5">
           <Bar className="my-4 h-5 w-40" />
           <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -36,7 +36,10 @@ export function ToolsSkeleton() {
           </div>
         </div>
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="shimmer h-14 rounded-2xl" />
+          <div key={i} className="flex items-center justify-between py-4">
+            <Bar className="h-5 w-32" />
+            <Skeleton className="shimmer size-4 rounded" />
+          </div>
         ))}
       </div>
     </>

@@ -17,6 +17,8 @@ export function titleFor(pathname: string): CopyKey | 'greeting' {
   if (pathname.startsWith('/tools/purchasing-power')) return 'page.purchasingPower'
   if (pathname.startsWith('/tools/budget')) return 'page.budget'
   if (pathname.startsWith('/tools/statements')) return 'page.statements'
+  if (pathname.startsWith('/tools/dca')) return 'page.dca'
+  if (pathname.startsWith('/tools/cost-of-waiting')) return 'page.waiting'
   if (pathname.startsWith('/community')) return 'page.community'
   if (pathname.startsWith('/u/')) return 'page.member'
   if (pathname.startsWith('/blog')) return 'page.blog'

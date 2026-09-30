@@ -2,16 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Fragment, useState } from 'react'
-import { ChevronDown, ExternalLink, Menu } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronDown, ChevronRight, ExternalLink, Menu } from 'lucide-react'
 
+import { MenuToggleIcon } from '@/components/menu-toggle-icon'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -20,7 +20,7 @@ import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 import type { ShellUser } from '../api/shell'
-import { isPublicMenu, PUBLIC_NAV, type PublicMenu, type PublicMenuItem } from '../nav'
+import { isActive, isPublicMenu, PUBLIC_NAV, type NavLeaf, type PublicMenu } from '../nav'
 import { AccountMenu } from './AccountMenu'
 import { SettingsMenu } from './SettingsMenu'
 
@@ -30,25 +30,25 @@ const linkClass = (active: boolean) =>
     active ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:text-foreground',
   )
 
-/** Phone-menu rows: 17px text on a 44px touch target (Carlos, 2026-09-30: menus read too small). */
-const MOBILE_ITEM = 'flex min-h-11 items-center gap-2 rounded-lg px-3 text-[1.0625rem] hover:bg-accent'
-
-const isOnPage = (item: PublicMenuItem, pathname: string) =>
-  !item.external && !item.href.startsWith('/#') && (pathname === item.href || pathname.startsWith(`${item.href}/`))
+const leavesOf = (menu: PublicMenu) => menu.entries.filter((entry): entry is NavLeaf => entry !== 'divider')
 
 /** Opens an internal link client-side, an external one in a new tab without an opener. */
 function useOpen() {
   const router = useRouter()
-  return (item: PublicMenuItem) =>
+  return (item: NavLeaf) =>
     item.external ? window.open(item.href, '_blank', 'noopener,noreferrer') : router.push(item.href)
 }
 
-/** One dropdown in the top bar, with optional section labels (Tools: Basics, Life insurance). */
+/**
+ * One dropdown in the top bar: links and dividers, no submenus (Carlos,
+ * 2026-09-30). "›" marks an entry that opens a section of a page (Tools:
+ * Basics, Accounting, Life insurance).
+ */
 function NavMenu({ menu }: { menu: PublicMenu }) {
   const t = useCopy()
   const pathname = usePathname()
   const open = useOpen()
-  const active = menu.sections.some((section) => section.items.some((item) => isOnPage(item, pathname)))
+  const active = leavesOf(menu).some((item) => isActive(item, pathname))
 
   return (
     <DropdownMenu>
@@ -56,27 +56,96 @@ function NavMenu({ menu }: { menu: PublicMenu }) {
         {t(menu.label)}
         <ChevronDown className="size-3.5" aria-hidden />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-60">
-        {menu.sections.map((section, index) => (
-          <Fragment key={section.label ?? index}>
-            {index > 0 ? <DropdownMenuSeparator /> : null}
-            <DropdownMenuGroup>
-              {section.label ? <DropdownMenuLabel>{t(section.label)}</DropdownMenuLabel> : null}
-              {section.items.map((item) => {
-                const Icon = item.icon
-                return (
-                  <DropdownMenuItem key={item.href} onClick={() => open(item)}>
-                    <Icon />
-                    {t(item.label)}
-                    {item.external ? <ExternalLink className="ml-auto size-3.5 opacity-60" aria-label="Opens in a new tab" /> : null}
-                  </DropdownMenuItem>
-                )
-              })}
-            </DropdownMenuGroup>
-          </Fragment>
-        ))}
+      <DropdownMenuContent align="start" className="w-56">
+        {menu.entries.map((entry, index) => {
+          if (entry === 'divider') return <DropdownMenuSeparator key={`divider-${index}`} />
+          const Icon = entry.icon
+          return (
+            <DropdownMenuItem key={entry.href} onClick={() => open(entry)}>
+              <Icon />
+              {t(entry.label)}
+              {entry.external ? (
+                <ExternalLink className="ml-auto size-3.5 opacity-60" aria-label="Opens in a new tab" />
+              ) : entry.arrow ? (
+                <ChevronRight className="ml-auto size-3.5 opacity-60" aria-hidden />
+              ) : null}
+            </DropdownMenuItem>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+/** A phone-menu row: 17px text on a 48px touch target. */
+const ROW = 'flex min-h-12 w-full items-center gap-3 px-1 text-left text-[1.0625rem] transition-colors hover:text-foreground'
+
+/**
+ * The phone menu (Carlos, 2026-09-30): one divided list. About Papaldo and
+ * Community fold open under a hamburger that turns into an X; Tools always
+ * shows its four entries under a heading; Markets and Support are rows.
+ */
+function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+  const t = useCopy()
+  const pathname = usePathname()
+
+  const leaf = (item: NavLeaf, nested: boolean) => {
+    const active = isActive(item, pathname)
+    const className = cn(
+      ROW,
+      nested && 'min-h-11 pl-4 text-base',
+      active ? 'font-medium text-foreground' : nested ? 'text-muted-foreground' : 'text-foreground',
+    )
+    const trailing = item.external ? (
+      <ExternalLink className="ml-auto size-4 opacity-60" aria-label="Opens in a new tab" />
+    ) : item.arrow || !nested ? (
+      <ChevronRight className="ml-auto size-4 opacity-50" aria-hidden />
+    ) : null
+    return item.external ? (
+      <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" onClick={onNavigate} className={className}>
+        {t(item.label)}
+        {trailing}
+      </a>
+    ) : (
+      <Link key={item.href} href={item.href} onClick={onNavigate} aria-current={active ? 'page' : undefined} className={className}>
+        {t(item.label)}
+        {trailing}
+      </Link>
+    )
+  }
+
+  return (
+    <nav className="-mx-1 mt-2 flex-1 divide-y divide-border overflow-y-auto border-y border-border px-1" aria-label="Mobile">
+      {PUBLIC_NAV.map((entry) => {
+        if (!isPublicMenu(entry)) {
+          return (
+            <div key={entry.href} className="py-1">
+              {leaf({ href: entry.href, label: entry.label, icon: ChevronRight }, false)}
+            </div>
+          )
+        }
+        if (entry.mobile === 'list') {
+          return (
+            <div key={entry.label} className="py-2">
+              <p className="px-1 pt-1 pb-0.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">{t(entry.label)}</p>
+              {leavesOf(entry).map((item) => leaf(item, true))}
+            </div>
+          )
+        }
+        const open = leavesOf(entry).some((item) => isActive(item, pathname))
+        return (
+          <Collapsible key={entry.label} defaultOpen={open} className="py-1">
+            <CollapsibleTrigger className={cn(ROW, 'group/toggle justify-between text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring')}>
+              {t(entry.label)}
+              <MenuToggleIcon />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="h-(--collapsible-panel-height) overflow-hidden pb-1 transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0">
+              {leavesOf(entry).map((item) => leaf(item, true))}
+            </CollapsibleContent>
+          </Collapsible>
+        )
+      })}
+    </nav>
   )
 }
 
@@ -140,47 +209,9 @@ export function PublicNav({ user = null }: { user?: ShellUser | null }) {
             >
               <Menu />
             </SheetTrigger>
-            <SheetContent side="right" className="p-6">
+            <SheetContent side="right" className="flex flex-col gap-0 p-6">
               <SheetTitle className="text-base font-semibold tracking-[0.22em]">PAPALDO KA</SheetTitle>
-              <nav className="mt-4 flex flex-col gap-4 overflow-y-auto" aria-label="Mobile">
-                {PUBLIC_NAV.map((entry) =>
-                  isPublicMenu(entry) ? (
-                    <div key={entry.label} className="grid gap-0.5">
-                      <p className="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t(entry.label)}</p>
-                      {entry.sections.flatMap((section) =>
-                        section.items.map((item) =>
-                          item.external ? (
-                            <a
-                              key={item.href}
-                              href={item.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => setOpen(false)}
-                              className={MOBILE_ITEM}
-                            >
-                              {t(item.label)}
-                              <ExternalLink className="size-4 opacity-60" aria-label="Opens in a new tab" />
-                            </a>
-                          ) : (
-                            <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={MOBILE_ITEM}>
-                              {t(item.label)}
-                            </Link>
-                          ),
-                        ),
-                      )}
-                    </div>
-                  ) : (
-                    <Link
-                      key={entry.href}
-                      href={entry.href}
-                      onClick={() => setOpen(false)}
-                      className="flex min-h-11 items-center rounded-lg px-3 text-[1.0625rem] font-medium hover:bg-accent"
-                    >
-                      {t(entry.label)}
-                    </Link>
-                  ),
-                )}
-              </nav>
+              <MobileNav onNavigate={() => setOpen(false)} />
               <div className="mt-6 grid gap-2">
                 {user ? (
                   <Link href="/dashboard" onClick={() => setOpen(false)} className={cn(buttonVariants(), 'h-11 rounded-full text-base')}>

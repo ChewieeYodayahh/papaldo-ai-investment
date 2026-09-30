@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { Plus, Trash2 } from 'lucide-react'
+import { FileSpreadsheet, Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +15,7 @@ import { useTutorialDemo } from '@/app/features/tutorials/tutorial-store'
 import { cn } from '@/lib/utils'
 
 import { budgetTips, BUCKETS, PRESETS, splitBudget, TARGET_SHARE, type Bucket, type BudgetLine, type BudgetRegion } from '../budget'
+import { budgetSheet } from '../workbook'
 import { ShareResultButton } from './fields'
 
 const BUCKET_LABEL: Record<Bucket, string> = { needs: 'Needs', wants: 'Wants', savings: 'Savings & debt' }
@@ -47,6 +48,7 @@ export function BudgetPlanner() {
   const [region, setRegion] = useState<BudgetRegion>('PH')
   const [pay, setPay] = useState(DEFAULT_PAY.PH)
   const [lines, setLines] = useState<BudgetLine[]>(() => fromPreset('PH'))
+  const [exporting, setExporting] = useState<string | null>(null)
   const { format } = CURRENCY[region]
 
   const result = useMemo(() => splitBudget(pay, lines), [pay, lines])
@@ -232,6 +234,32 @@ export function BudgetPlanner() {
             ))}
           </ul>
 
+          <div className="flex flex-wrap items-center gap-3" data-tut="budget.export">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 gap-2 rounded-full px-4"
+              disabled={exporting === 'busy'}
+              onClick={async () => {
+                setExporting('busy')
+                try {
+                  const { downloadWorkbook } = await import('../workbook-render')
+                  await downloadWorkbook([budgetSheet(pay, lines, CURRENCY[region].code)], CURRENCY[region].code, 'papaldo-budget')
+                  setExporting('Excel file saved to your downloads.')
+                } catch {
+                  setExporting('The Excel file could not be made. Try again.')
+                }
+              }}
+            >
+              <FileSpreadsheet className="size-4" />
+              {exporting === 'busy' ? 'Making the file…' : 'Export to Excel'}
+            </Button>
+            {exporting && exporting !== 'busy' ? (
+              <p className="text-xs text-muted-foreground" role="status">
+                {exporting}
+              </p>
+            ) : null}
+          </div>
           <ShareResultButton
             filename="papaldo-budget"
             build={() => ({

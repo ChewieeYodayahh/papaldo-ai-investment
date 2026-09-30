@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Calculator, ChartLine, CircleCheck, ClipboardList, Coins, Compass, Download, ExternalLink, FileSpreadsheet, Lock, MessageCircle, PiggyBank, Route, ShieldPlus, UserRound, Wallet } from 'lucide-react'
+import { ArrowRight, Calculator, ChartLine, ChartSpline, CircleCheck, ClipboardList, Coins, Compass, Download, ExternalLink, FileSpreadsheet, Hourglass, Lock, MessageCircle, PiggyBank, Route, ShieldPlus, UserRound, Wallet } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -240,6 +240,8 @@ const SIMPLE_ICONS = {
   purchasing: Coins,
   budget: Wallet,
   statements: FileSpreadsheet,
+  dca: ChartSpline,
+  waiting: Hourglass,
 } as const
 
 /**

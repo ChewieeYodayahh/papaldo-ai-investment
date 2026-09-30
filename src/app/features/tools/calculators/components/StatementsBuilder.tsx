@@ -1,14 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { CircleAlert, CircleCheck, Download, FileText, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { CircleAlert, CircleCheck, Download, FileSpreadsheet, FileText, Plus, RotateCcw, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Field, FieldLabel } from '@/components/ui/field'
@@ -26,11 +30,13 @@ import {
   parseDraft,
   sampleStatements,
   serializeDraft,
+  statementLabels,
   statementRows,
   totals,
   type Line,
   type Statements,
 } from '../statements'
+import { SHEET_NAMES, statementSheets, type StatementSheet } from '../workbook'
 
 type LineKey = 'revenue' | 'expenses' | 'assets' | 'liabilities' | 'operating' | 'investing' | 'financing'
 type NumberKey = 'cash' | 'capital' | 'openingRetained' | 'dividends' | 'openingCash'
@@ -72,7 +78,9 @@ export function StatementsBuilder() {
   // after the last *edit*) and an untouched template is never stored.
   const baseline = useRef('')
   const t = totals(s)
+  const L = statementLabels(s.nonProfit)
   const format = (value: number) => FORMAT[s.currency].format(value)
+  const [exporting, setExporting] = useState(false)
 
   // Restore a draft after mount (the server render has no storage).
   useEffect(() => {
@@ -119,6 +127,22 @@ export function StatementsBuilder() {
   const addLine = (key: LineKey) => setS((current) => ({ ...current, [key]: [...current[key], { id: lineId(), label: '', amount: 0 }] }))
   const removeLine = (key: LineKey, id: string) => setS((current) => ({ ...current, [key]: current[key].filter((line) => line.id !== id) }))
   const setNumber = (key: NumberKey, value: number) => setS((current) => ({ ...current, [key]: value }))
+
+  /** Excel with live formulas: all three sheets, or one (2026-09-30). */
+  async function exportExcel(which: StatementSheet | 'all') {
+    setExporting(true)
+    try {
+      const { downloadWorkbook } = await import('../workbook-render')
+      const name = (s.company || 'financial-statements').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      const suffix = which === 'all' ? '' : `-${SHEET_NAMES[which].toLowerCase().replace(/ /g, '-')}`
+      await downloadWorkbook(statementSheets(s, which), s.currency, `${name}${suffix}`)
+      setNotice('Excel file saved to your downloads.')
+    } catch {
+      setNotice('The Excel file could not be made. Try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   function exportAs(kind: 'csv' | 'html') {
     const name = (s.company || 'financial-statements').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -221,7 +245,7 @@ export function StatementsBuilder() {
       <Card className="rounded-2xl border-0 py-5">
         <CardContent className="grid gap-4 px-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
           <Field>
-            <FieldLabel>Business name</FieldLabel>
+            <FieldLabel>{s.nonProfit ? 'Organisation name' : 'Business name'}</FieldLabel>
             <Input value={s.company} maxLength={80} placeholder="e.g. My online shop" onChange={(e) => setS({ ...s, company: e.target.value })} className="h-10 rounded-xl" />
           </Field>
           <Field>
@@ -235,6 +259,16 @@ export function StatementsBuilder() {
               <ToggleGroupItem value="USD" className="h-10 px-4 aria-pressed:bg-primary/10">$</ToggleGroupItem>
             </ToggleGroup>
           </Field>
+          <label className="flex items-start gap-2.5 text-sm md:col-span-3" data-tut="statements.nonprofit">
+            <Checkbox checked={Boolean(s.nonProfit)} onCheckedChange={(checked) => setS({ ...s, nonProfit: checked === true })} className="mt-0.5" />
+            <span>
+              This is a non-profit
+              <span className="block text-xs text-muted-foreground">
+                A student council, club or foundation: uses the Statement of Activities, the Statement of Financial
+                Position and net assets instead of equity.
+              </span>
+            </span>
+          </label>
           <div className="flex flex-wrap items-center gap-2 md:col-span-3">
             <Button type="button" variant="outline" className="rounded-full" data-tut="statements.sample" onClick={loadSample}>
               <FileText />
@@ -245,12 +279,23 @@ export function StatementsBuilder() {
               Start over
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger render={<Button className="rounded-full" data-tut="statements.export" />}>
+              <DropdownMenuTrigger render={<Button className="rounded-full" data-tut="statements.export" disabled={exporting} />}>
                 <Download />
-                Export
+                {exporting ? 'Making the file…' : 'Export'}
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-44">
-                <DropdownMenuItem onClick={() => exportAs('csv')}>CSV (spreadsheet)</DropdownMenuItem>
+              <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuGroup>
+                <DropdownMenuLabel>Excel, with formulas</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => exportExcel('all')}>
+                  <FileSpreadsheet />
+                  All three statements (.xlsx)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportExcel('cash')}>{SHEET_NAMES.cash} only</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportExcel('balance')}>{SHEET_NAMES.balance} only</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportExcel('income')}>{SHEET_NAMES.income} only</DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => exportAs('csv')}>CSV (plain spreadsheet)</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => exportAs('html')}>HTML report</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -260,48 +305,48 @@ export function StatementsBuilder() {
       </Card>
 
       <div className="grid gap-2 sm:grid-cols-3" data-tut="statements.checks">
-        <Check ok label="Net income" detail={format(t.netIncome)} neutral />
-        <Check ok={t.balances} label="Assets = liabilities + equity" detail={t.balances ? 'Balances' : `Off by ${format(t.balanceGap)}`} />
+        <Check ok label={L.netIncome} detail={format(t.netIncome)} neutral />
+        <Check ok={t.balances} label={`Assets = liabilities + ${L.equity.toLowerCase()}`} detail={t.balances ? 'Balances' : `Off by ${format(t.balanceGap)}`} />
         <Check ok={t.cashTies} label="Cash flow ends on balance-sheet cash" detail={t.cashTies ? 'Ties' : `Off by ${format(t.cashGap)}`} />
       </div>
 
       <Tabs defaultValue="income">
         <TabsList className="mb-3 w-full sm:w-auto" data-tut="statements.tabs">
-          <TabsTrigger value="income">Income statement</TabsTrigger>
-          <TabsTrigger value="balance">Balance sheet</TabsTrigger>
+          <TabsTrigger value="income">{s.nonProfit ? 'Activities' : 'Income statement'}</TabsTrigger>
+          <TabsTrigger value="balance">{s.nonProfit ? 'Financial position' : 'Balance sheet'}</TabsTrigger>
           <TabsTrigger value="cash">Cash flow</TabsTrigger>
         </TabsList>
 
         <TabsContent value="income">
-          <StatementCard title="Income statement" description="What the business earned and spent over the period.">
-            <Section title="Revenue">{lineList('revenue', 'Add revenue')}{total('Total revenue', t.revenue)}</Section>
+          <StatementCard title={L.income} description="What came in and went out over the period.">
+            <Section title={L.revenue}>{lineList('revenue', 'Add revenue')}{total(`Total ${L.revenue.toLowerCase()}`, t.revenue)}</Section>
             <Section title="Expenses">{lineList('expenses', 'Add an expense')}{total('Total expenses', t.expenses)}</Section>
-            {total('Net income', t.netIncome, true)}
+            {total(L.netIncome, t.netIncome, true)}
           </StatementCard>
         </TabsContent>
 
         <TabsContent value="balance">
-          <StatementCard title="Balance sheet" description="What the business owns and owes at the end of the period.">
+          <StatementCard title={L.balance} description="What is owned and owed at the end of the period.">
             <Section title="Assets">
               {numberRow('cash', 'Cash', 'Must match the closing cash on the cash-flow tab.')}
               {lineList('assets', 'Add an asset')}
               {total('Total assets', t.assets)}
             </Section>
             <Section title="Liabilities">{lineList('liabilities', 'Add a liability')}{total('Total liabilities', t.liabilities)}</Section>
-            <Section title="Equity">
-              {numberRow('capital', 'Capital put in')}
-              {numberRow('openingRetained', 'Retained earnings at the start')}
-              {numberRow('dividends', 'Dividends or owner’s drawings')}
+            <Section title={L.equity}>
+              {numberRow('capital', L.capital)}
+              {numberRow('openingRetained', L.openingRetained)}
+              {numberRow('dividends', L.dividends)}
               <div className="flex justify-between gap-3 text-sm">
                 <span>
-                  Retained earnings at the end
+                  {L.retainedEnd}
                   <span className="block text-xs text-muted-foreground">Start + net income − drawings</span>
                 </span>
                 <span className="figure">{format(t.retainedEarnings)}</span>
               </div>
-              {total('Total equity', t.equity)}
+              {total(`Total ${L.equity.toLowerCase()}`, t.equity)}
             </Section>
-            {total('Liabilities + equity', t.liabilities + t.equity, true)}
+            {total(`Liabilities + ${L.equity.toLowerCase()}`, t.liabilities + t.equity, true)}
           </StatementCard>
         </TabsContent>
 
@@ -309,7 +354,7 @@ export function StatementsBuilder() {
           <StatementCard title="Cash flow" description="Where cash came from and went. Money in is positive, money out negative.">
             <Section title="Operating">
               <div className="flex justify-between gap-3 text-sm">
-                <span>Net income <span className="text-xs text-muted-foreground">(from the income statement)</span></span>
+                <span>{L.netIncome} <span className="text-xs text-muted-foreground">(from the {L.income.toLowerCase()})</span></span>
                 <span className="figure">{format(t.netIncome)}</span>
               </div>
               {lineList('operating', 'Add an adjustment')}

@@ -520,6 +520,88 @@ cloned to `~/.claude/references/`.
     was gone after a clean reload.
   - The account tour and first-trade steps need Carlos's session.
 
+**2026-09-30 (late): menus, Excel exports, themes, two new tools, domain.**
+- **Menus:**
+  - Landing Tools ▾ is Open Tools, a divider, then Basics › (six tools, a fly-out
+    submenu), Life insurance › (Manulife) and Accounting (straight to statements).
+  - The signed-in sidebar's Tools list is Open Tools, a divider, Basics →, Life
+    insurance → and Accounting, all plain links with no nested lists. Basics and Life
+    insurance open their section of `/tools` with `?open=…`.
+  - One model drives both: `nav.ts` has `TOOLS_MENU`, `BASIC_TOOLS` and `TOOL_LINKS`.
+- **Menus, revised the same night** (Carlos: "the ugliest sub menu"):
+  - No submenus anywhere. Tools is Open Tools, a divider, Basics, Accounting, Life
+    insurance, each "›" to its section of `/tools`. The top bar also gains Support.
+  - The phone sheet is one divided list. About Papaldo and Community fold open under
+    the hamburger-to-X toggle (`src/components/menu-toggle-icon.tsx`, now shared);
+    Tools lists its four links under a heading; Markets and Support are rows.
+  - 48px rows, and the current page is in bold.
+- **`/tools` hub:**
+  - No boxes: sections are separated by dividers, and each toggle is a hamburger that
+    morphs into an X when open (`MenuToggleIcon`, driven by `aria-expanded`, reduced
+    motion respected).
+  - It honours `?open=basics|insurance|…`.
+  - The accordion primitive's link underline and chevrons are overridden. The old
+    box-in-a-box came from the primitive's own border plus our ring.
+- **Excel exports** (`exceljs`, MIT, loaded only on click):
+  - `workbook.ts` holds pure layouts: cells, formulas and style names, all tested.
+    `workbook-render.ts` turns them into styled .xlsx.
+  - **Statements:** export all three (sheets "Cash Flow", "Balance Sheet",
+    "Income Sheet", in that order) or one at a time.
+    - The Cash Flow sheet follows UP Cebu USC's Statement of Cash Flows (vault raw,
+      2026-09-30): yellow title block, beginning cash, green Inflows and red Outflows
+      bands by activity, ₱(…) negatives, tinted totals, highlighted ending cash.
+    - Totals are formulas. With all three exported, net income is
+      `'Income Sheet'!C…` in the other two.
+    - The Balance Sheet carries a "should be 0" check row.
+    - Each sheet ends with "Statement from Papaldo Ka by David Jamandre".
+    - A test evaluates every formula and gets the app's own totals; an exceljs
+      round-trip test confirms sheet names and formats.
+  - **Non-profit checkbox:** Statement of Activities, Statement of Financial Position,
+    net assets with and without donor restrictions, and change in net assets, both in
+    the app and in the Excel file.
+  - **Budget:** "Export to Excel" gives a Budget sheet with lines, SUMIF bucket totals
+    against the 50/30/20 targets (formulas off the pay cell), share of pay, and not yet
+    planned.
+- **Themes:**
+  - **Midnight is the default.** It's server-rendered on `<html>`, and saved
+    preferences still on the old Forest default migrate (store v3).
+  - New palettes: **Black** (true black) and **White** (paper white, light sidebar),
+    in light and dark.
+  - **Custom…** opens a dialog with a 255 × 255 saturation/brightness square, a hue
+    bar (Slider primitive) and a hex field. You pick primary and secondary; they're
+    applied as inline variables over Midnight's neutrals, with text colour picked for
+    contrast.
+  - `colors.ts` has tests. Chart colours re-read on change.
+- **New tools (Basics):**
+  - **DCA vs lump sum** (`/tools/dca`): the same total monthly vs at once on real
+    prices, over 1 to 15 years. It shows the average price paid and, over every window
+    of that length, how often the lump sum won. Checked: S&P 500, 83% of 170 1-year
+    windows, 100% of 62 10-year windows.
+  - **Cost of waiting** (`/tools/cost-of-waiting`): start today vs 5, 10 or 15 years
+    later, one line per start age. Checked: $50/month from 22 to 60 at 7% is $113K;
+    waiting 10 years costs $61K for $6K less saved.
+  - `strategies.ts` has tests.
+- **Tutorials updated:**
+  - new `dca` (6 steps) and `waiting` (4 steps, "Show me") tours;
+  - new steps for statements (non-profit) and budget (Excel export);
+  - the export and settings copy mention Excel and the new palettes.
+- **Bugs found:**
+  - A menu label outside a group crashes Base UI. The new export menu hit it, and so
+    did the pre-existing **notification bell** (a signed-in user opening it would
+    have crashed the page). Both are wrapped now.
+  - A stray invalid CSS line was dropped.
+- **Domain:**
+  - Docs now name **https://papaldo-ka.vercel.app**.
+  - Adding the domain through the Vercel connector failed: its `requestBody` argument
+    arrives as a string. Carlos adds it in Vercel.
+- **Checks:**
+  - `npm run verify:full` passes: 173 tests, 15 Python tests, 66 routes.
+  - In the browser as a guest: the landing menu with its submenu, the hub dividers,
+    the X toggle and `?open=`, both new tools, statements and budget .xlsx (built and
+    handed to the download), the non-profit labels, the custom theme applied
+    (`--primary` #3b82f6), and the waiting tour. No console errors.
+  - The sidebar needs Carlos's session.
+
 **Bug found in Phase 8's work:** quiz-result recommendations were always empty.
 `recommendations.ts` filtered `risk_tier` by the person's band
 (`Low/Medium/High`), but assets use `conservative/moderate/aggressive`. The

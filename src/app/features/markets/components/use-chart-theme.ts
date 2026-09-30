@@ -86,6 +86,7 @@ export function withAlpha(rgb: string, alpha: number): string {
 export function useChartTheme(): ChartTheme | null {
   const { resolvedTheme } = useTheme()
   const palette = usePreferences((s) => s.palette)
+  const customColors = usePreferences((s) => s.customColors)
   const [theme, setTheme] = useState<ChartTheme | null>(null)
 
   useEffect(() => {
@@ -112,7 +113,7 @@ export function useChartTheme(): ChartTheme | null {
     return () => cancelAnimationFrame(frame)
     // resolvedTheme and palette are the triggers: the tokens change under
     // `.dark` and under `data-palette`.
-  }, [resolvedTheme, palette])
+  }, [resolvedTheme, palette, customColors])
 
   return theme
 }

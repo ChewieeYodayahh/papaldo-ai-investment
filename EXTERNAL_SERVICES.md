@@ -113,7 +113,8 @@ reading it.
   Locally that is now `http://localhost:3001` (the dev port moved 2026-09-26), so
   Supabase → Authentication → URL Configuration must list
   `http://localhost:3001/**`, and the Vercel project needs its real origin in
-  both `NEXT_PUBLIC_SITE_URL` and the allow list. A URL missing from the list
+  both `NEXT_PUBLIC_SITE_URL` and the allow list. Since 2026-09-30 that origin
+  is `https://papaldo-ka.vercel.app`. A URL missing from the list
   makes Supabase fall back to the Site URL.
 - **The curated ~60-symbol/6-industry ticker universe** that `REQUIREMENTS.md`
   Part 3 calls for is still Carlos's open item — separate from the 7-symbol

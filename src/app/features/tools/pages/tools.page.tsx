@@ -1,4 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { MenuToggleIcon } from "@/components/menu-toggle-icon";
 import { getProfile, isSetupComplete } from "@/app/features/auth/api/profile";
 import { getBenchmarks } from "@/app/features/markets/benchmarks/api/benchmarks";
 import { getCurrentRiskProfile } from "@/app/features/tools/quiz/api/submit";
@@ -26,7 +27,9 @@ const GRID = "grid items-stretch gap-4 pb-2 lg:grid-cols-2 2xl:grid-cols-3";
  * Guests get the sections that need no account: Basics, Accounting and Life
  * insurance. The quiz, profile, export and walkthroughs appear once signed in.
  */
-export async function ToolsPage() {
+const SECTIONS = ["started", "basics", "accounting", "insurance", "tutorials"] as const;
+
+export async function ToolsPage({ open }: { open?: string }) {
   const [profile, risk, benchmarks] = await Promise.all([
     getProfile(),
     getCurrentRiskProfile(),
@@ -84,6 +87,22 @@ export async function ToolsPage() {
         href="/tools/budget"
         action="Plan my month"
       />
+      <SimpleToolCard
+        icon="dca"
+        title="DCA vs lump sum"
+        body="A little every month or all at once? Replay both on real prices and see which won, and how often."
+        badge="Real history"
+        href="/tools/dca"
+        action="Compare the two"
+      />
+      <SimpleToolCard
+        icon="waiting"
+        title="The cost of waiting"
+        body="The same monthly savings started today or 5, 10 or 15 years from now, side by side at retirement."
+        badge="Start now vs later"
+        href="/tools/cost-of-waiting"
+        action="See the gap"
+      />
       <BenchmarkToolCard preview={preview} since={since} />
     </div>
   );
@@ -93,7 +112,7 @@ export async function ToolsPage() {
         icon="statements"
         title="Financial statements"
         body="Income statement, balance sheet and cash flow that check each other. Kept only in this browser."
-        badge="CSV · HTML"
+        badge="Excel · CSV · HTML"
         href="/tools/statements"
         action="Build statements"
       />
@@ -120,7 +139,7 @@ export async function ToolsPage() {
             </div>
           ),
         },
-        { value: "basics", label: "nav.tools.basics", count: 5, content: basics },
+        { value: "basics", label: "nav.tools.basics", count: 7, content: basics },
         { value: "accounting", label: "nav.tools.accounting", count: 1, content: accounting },
         { value: "insurance", label: "nav.tools.lifeInsurance", count: 1, content: insurance },
         {
@@ -155,7 +174,7 @@ export async function ToolsPage() {
         },
       ]
     : [
-        { value: "basics", label: "nav.tools.basics", count: 5, content: basics },
+        { value: "basics", label: "nav.tools.basics", count: 7, content: basics },
         { value: "accounting", label: "nav.tools.accounting", count: 1, content: accounting },
         { value: "insurance", label: "nav.tools.lifeInsurance", count: 1, content: insurance },
       ];
@@ -165,16 +184,26 @@ export async function ToolsPage() {
       <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
         <T k="tools.subtitle" />
       </p>
-      <Accordion multiple defaultValue={profile ? ["started", "basics"] : ["basics"]} className="gap-3">
+      {/* No boxes (Carlos, 2026-09-30): a divider between sections and a
+          hamburger that becomes an X when a section is open. `?open=` (the
+          sidebar's Basics → and Life insurance →) opens that section. */}
+      <Accordion
+        multiple
+        defaultValue={
+          SECTIONS.includes(open as (typeof SECTIONS)[number]) ? [open as string] : profile ? ["started", "basics"] : ["basics"]
+        }
+        className="border-y border-border"
+      >
         {sections.map((section) => (
-          <AccordionItem key={section.value} value={section.value} className="rounded-2xl border-0 bg-card/60 px-4 ring-1 ring-foreground/5">
-            <AccordionTrigger className="py-4 text-base font-semibold hover:no-underline">
+          <AccordionItem key={section.value} value={section.value} id={section.value} className="scroll-mt-24">
+            <AccordionTrigger className="group/toggle items-center rounded-none py-4 text-base font-semibold hover:no-underline [&_[data-slot=accordion-trigger-icon]]:hidden!">
               <span className="flex items-baseline gap-2">
                 <T k={section.label} />
                 <span className="figure text-xs font-normal text-muted-foreground">{section.count}</span>
               </span>
+              <MenuToggleIcon className="ml-auto" />
             </AccordionTrigger>
-            <AccordionContent>{section.content}</AccordionContent>
+            <AccordionContent className="pb-5 [&_a]:no-underline">{section.content}</AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>

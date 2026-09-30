@@ -16,6 +16,12 @@ export type Statements = {
   company: string
   period: string
   currency: 'PHP' | 'USD'
+  /**
+   * A non-profit (a student council, a foundation): the statements take their
+   * non-profit names -- Statement of Activities, Statement of Financial
+   * Position, net assets instead of equity (2026-09-30). The maths is the same.
+   */
+  nonProfit?: boolean
   revenue: Line[]
   expenses: Line[]
   /** Balance-sheet cash, the figure the cash-flow statement must end on. */
@@ -103,6 +109,7 @@ export function emptyStatements(currency: Statements['currency'] = 'PHP'): State
     company: '',
     period: '',
     currency,
+    nonProfit: false,
     revenue: lines([['Sales', 0]]),
     expenses: lines([['Cost of goods sold', 0]]),
     cash: 0,
@@ -124,6 +131,7 @@ export function sampleStatements(): Statements {
     company: 'Aling Nena’s Sari-Sari Store',
     period: 'Year to 31 Dec 2026',
     currency: 'PHP',
+    nonProfit: false,
     revenue: lines([
       ['Sales', 480_000],
       ['Load and bills-payment commissions', 5_000],
@@ -216,4 +224,35 @@ export function statementRows(s: Statements): Array<[string, string, string, num
     [cf, 'Cash', 'Opening cash', s.openingCash],
     [cf, 'Cash', 'Closing cash', t.closingCash],
   ]
+}
+
+/** What each statement and figure is called, for a business or a non-profit. */
+export function statementLabels(nonProfit = false) {
+  return nonProfit
+    ? {
+        income: 'Statement of Activities',
+        balance: 'Statement of Financial Position',
+        cash: 'Statement of Cash Flows',
+        revenue: 'Revenue and support',
+        expenses: 'Expenses',
+        netIncome: 'Change in net assets (surplus or deficit)',
+        equity: 'Net assets',
+        capital: 'Net assets with donor restrictions',
+        openingRetained: 'Net assets without donor restrictions, at the start',
+        dividends: 'Transfers out',
+        retainedEnd: 'Net assets without donor restrictions, at the end',
+      }
+    : {
+        income: 'Income Statement',
+        balance: 'Balance Sheet',
+        cash: 'Statement of Cash Flows',
+        revenue: 'Revenue',
+        expenses: 'Expenses',
+        netIncome: 'Net income',
+        equity: 'Equity',
+        capital: 'Capital put in',
+        openingRetained: 'Retained earnings at the start',
+        dividends: 'Dividends or owner’s drawings',
+        retainedEnd: 'Retained earnings at the end',
+      }
 }
