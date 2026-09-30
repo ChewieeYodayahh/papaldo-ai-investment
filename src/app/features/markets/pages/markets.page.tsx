@@ -11,6 +11,7 @@ import { AssetTable } from '../components/AssetTable'
 import { MarketNews } from '../components/MarketNews'
 import { MoversList } from '../components/MarketSidePanels'
 import { QuoteCard } from '../components/QuoteCard'
+import { MarketSearch } from '../components/MarketSearch'
 import { SectorTreemap } from '../components/SectorTreemap'
 import { UniverseTable } from '../components/UniverseTable'
 
@@ -60,6 +61,9 @@ export async function MarketsPage({ query }: { query: string }) {
       <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
         <T k="mkt.subtitle" /> Simulated trading only — no real money and no broker orders.
       </p>
+      <div className="mb-4">
+        <MarketSearch />
+      </div>
 
       {quotes.ok ? (
         <div className="grid gap-4">
@@ -82,7 +86,7 @@ export async function MarketsPage({ query }: { query: string }) {
             </CardContent>
           </Card>
 
-          <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
             {/* Left: the table, then the heatmap under it -- which also fills
                 the space the taller movers column used to leave empty. */}
             <div className="grid min-w-0 gap-4">
@@ -92,9 +96,15 @@ export async function MarketsPage({ query }: { query: string }) {
               </div>
               <SectorTreemap quotes={quotes.data} />
             </div>
-            <div className="grid gap-4">
-              <MoversList title="mkt.topGainers" quotes={movers?.gainers ?? []} trends={trends} />
-              <MoversList title="mkt.topLosers" quotes={movers?.losers ?? []} trends={trends} />
+            {/* The rail is pinned to the left column's height on wide screens
+                (absolute inset), so neither side leaves an empty block; Market
+                Insight takes what the movers leave and scrolls inside. */}
+            <div className="xl:relative xl:min-h-[48rem]">
+              <div className="flex flex-col gap-4 xl:absolute xl:inset-0">
+                <MoversList title="mkt.topGainers" quotes={movers?.gainers ?? []} trends={trends} />
+                <MoversList title="mkt.topLosers" quotes={movers?.losers ?? []} trends={trends} />
+                <MarketNews items={news} fill />
+              </div>
             </div>
           </div>
         </div>
@@ -106,7 +116,7 @@ export async function MarketsPage({ query }: { query: string }) {
         </Card>
       )}
 
-      <div className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="mt-4 grid gap-4">
         {assets.ok ? (
           <AssetTable assets={matches} total={assets.data.length} query={query} />
         ) : (
@@ -116,7 +126,8 @@ export async function MarketsPage({ query }: { query: string }) {
             </CardContent>
           </Card>
         )}
-        <MarketNews items={news} />
+        {/* With no quotes there is no rail, so the headlines sit here instead. */}
+        {quotes.ok ? null : <MarketNews items={news} />}
       </div>
     </>
   )

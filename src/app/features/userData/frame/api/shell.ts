@@ -66,7 +66,7 @@ export const getShellUser = cache(async (): Promise<ShellUser | null> => {
 
   const [profile, admin] = await Promise.all([getProfile(), isAdmin()])
   const displayName = session.fullName ?? profile?.username ?? session.email?.split('@')[0] ?? 'Investor'
-  const first = displayName.split(/s+/)[0]
+  const first = displayName.split(/\s+/)[0]
   return {
     displayName,
     // Usernames are often lowercase; a greeting reads better capitalised.

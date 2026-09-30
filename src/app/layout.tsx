@@ -9,14 +9,19 @@ import { NavigationProgress } from '@/app/features/userData/frame/components/Nav
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
+// Geist and Geist Mono are only used when picked in Settings -> Fonts, so they
+// are not preloaded on every page (that preload was the browser's
+// "preloaded but not used" console warning).
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
+  preload: false,
 })
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  preload: false,
 })
 
 export const metadata: Metadata = {

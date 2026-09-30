@@ -12,7 +12,8 @@ import { orderSchema } from '@/app/features/trading/schema'
  * price the browser supplies is a price the browser picked.
  */
 export async function POST(request: Request) {
-  const parsed = orderSchema.safeParse(await request.json())
+  // A body that is not JSON is a bad request, not a server error.
+  const parsed = orderSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json(
       { ok: false, message: 'Please fix the highlighted fields.', fieldErrors: fieldErrors(parsed.error) },

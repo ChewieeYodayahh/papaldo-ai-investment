@@ -40,10 +40,25 @@ export function supabaseAnonKey(): string {
  * bare HTTP 500, and the button reported a network error (2026-09-26). An
  * explicit NEXT_PUBLIC_SITE_URL still wins, e.g. behind a proxy that rewrites
  * the host.
+ *
+ * On Vercel's production deployment two more guards apply (2026-09-30, after
+ * Google sign-in landed on vercel.com/login): a localhost value baked into the
+ * build is ignored, and the project's production domain
+ * (`VERCEL_PROJECT_PRODUCTION_URL`, set by Vercel) comes before the request
+ * origin, which could be a deployment-specific URL behind Vercel
+ * Authentication. The result never ends in a slash, so `${siteUrl()}/path`
+ * cannot produce `//path`.
  */
 export function siteUrl(requestOrigin?: string): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
-  if (requestOrigin) return requestOrigin
+  const production = process.env.VERCEL_ENV === 'production'
+  const configured = process.env.NEXT_PUBLIC_SITE_URL
+  if (configured && !(production && /\/\/(localhost|127\.0\.0\.1)\b/.test(configured))) return trimSlash(configured)
+  if (production && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${trimSlash(process.env.VERCEL_PROJECT_PRODUCTION_URL)}`
+  }
+  if (requestOrigin) return trimSlash(requestOrigin)
   if (process.env.NODE_ENV === 'development') return 'http://localhost:3001'
   return required('NEXT_PUBLIC_SITE_URL')
 }
+
+const trimSlash = (url: string) => url.replace(/\/+$/, '')

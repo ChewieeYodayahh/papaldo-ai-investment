@@ -24,8 +24,9 @@ export type PortfolioSummary = {
  * Lives in `trading` because trading owns the money: `place_order()` is the
  * only thing that may change either number, and the dashboard is a reader.
  *
- * Every account gets exactly one portfolio row, seeded with a $500,000 USD
- * demo cash balance by the `on_auth_user_created_portfolio` trigger at signup,
+ * Every account gets exactly one portfolio row, seeded with demo cash by the
+ * `on_auth_user_created_portfolio` trigger at signup ($100,000 USD since
+ * 2026-09-30; older accounts started with $500,000),
  * so a null return here means "not signed in," never "no portfolio yet."
  * `holdings` is written by `place_order` and by nothing else.
  */
@@ -58,4 +59,19 @@ export async function getPortfolio(): Promise<PortfolioSummary | null> {
       avgCost: h.avg_cost,
     })),
   }
+}
+
+/**
+ * What the signed-in account started with, derived by the database as
+ * cash + buys - sells (`my_starting_cash()`, under the caller's RLS). Exact for
+ * old $500,000 and new $100,000 accounts alike; null when signed out.
+ */
+export async function getStartingCash(): Promise<number | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('my_starting_cash')
+  if (error) {
+    console.error('[trading] starting cash unavailable:', error.message)
+    return null
+  }
+  return data === null ? null : Number(data)
 }

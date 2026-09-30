@@ -1,12 +1,14 @@
 import { TrendingUp } from "lucide-react"
 
+import { Money } from "@/app/features/userData/preferences/components/Money"
 import { Card, CardContent } from "@/components/ui/card"
 
 /**
  * A still of the Home dashboard, in the same card style as the real one
  * (rounded-2xl, borderless, palette tokens) so the landing page previews the
  * app it leads into rather than a different product. Illustrative numbers --
- * the $500,000 is what every new account really starts with.
+ * the $100,000 is what every new account really starts with (since
+ * 2026-09-30), shown in pesos at the live rate when the visitor picks ₱.
  */
 const HOLDINGS = [
   { symbol: "VOO", pct: 45 },
@@ -24,7 +26,7 @@ export function MockDashboard() {
             <span className="rounded-full bg-muted px-2 py-0.5 text-[0.6875rem] text-muted-foreground">$ / ₱</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="figure text-3xl font-semibold">$500,000.00</span>
+            <Money usd={100_000} className="figure text-3xl font-semibold" />
             <span className="flex items-center gap-1 text-xs font-medium text-gain">
               <TrendingUp className="size-3.5" /> +1.2% today
             </span>

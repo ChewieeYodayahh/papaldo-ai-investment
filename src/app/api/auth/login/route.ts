@@ -4,7 +4,7 @@ import { signInWithPassword } from '@/app/features/auth/api/sign-in'
 import { fieldErrors, loginSchema } from '@/app/features/auth/schema'
 
 export async function POST(request: Request) {
-  const parsed = loginSchema.safeParse(await request.json())
+  const parsed = loginSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json(
       { ok: false, message: 'Please fix the highlighted fields.', fieldErrors: fieldErrors(parsed.error) },

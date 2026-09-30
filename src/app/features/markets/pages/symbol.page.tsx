@@ -85,6 +85,8 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
           </div>
 
           <div className="space-y-6">
+            {/* The header's Trade button jumps here. */}
+            <div id="trade" className="scroll-mt-24">
             {portfolio ? (
               <OrderTicket
                 symbol={symbol}
@@ -110,6 +112,7 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
                 </CardContent>
               </Card>
             )}
+            </div>
 
             <KeyStats quote={quote} metrics={metrics} />
             <AnalystRatings ratings={ratings} />

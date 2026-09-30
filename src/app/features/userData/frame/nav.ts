@@ -1,4 +1,5 @@
 import {
+  BadgeQuestionMark,
   Calculator,
   ChartNoAxesCombined,
   ChartSpline,
@@ -10,6 +11,9 @@ import {
   MessagesSquare,
   Newspaper,
   PiggyBank,
+  ShieldCheck,
+  ShieldPlus,
+  Sparkles,
   Users,
   Wrench,
   type LucideIcon,
@@ -48,3 +52,54 @@ export function isActive(item: NavLeaf, pathname: string): boolean {
   if (item.exact) return pathname === item.href
   return [item.href, ...(item.also ?? [])].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
+
+/**
+ * Manulife Philippines' own calculators. The only life-insurance resource
+ * Papaldo links to (Carlos, 2026-09-30): no in-app insurance calculators and
+ * no other insurers. Opens Manulife's site in a new tab.
+ */
+export const MANULIFE_TOOLS_URL = 'https://www.manulife.com/ph/services/tools-calculators'
+
+export type PublicMenuItem = { href: string; label: CopyKey; icon: LucideIcon; external?: boolean }
+export type PublicMenu = { label: CopyKey; sections: Array<{ label?: CopyKey; items: PublicMenuItem[] }> }
+export type PublicNavEntry = { href: string; label: CopyKey } | PublicMenu
+
+export const isPublicMenu = (entry: PublicNavEntry): entry is PublicMenu => 'sections' in entry
+
+/**
+ * The top bar outside the app (Carlos, 2026-09-30): About Papaldo ▾, Markets,
+ * Community ▾, Tools ▾. Tools lists what a guest can open without an account;
+ * the quiz and export need one and live in the signed-in sidebar. Purchasing
+ * power, budget and accounting join Basics as they ship (plan Phase 7).
+ * Section links are absolute (`/#…`) so they also work from other pages.
+ */
+export const PUBLIC_NAV: PublicNavEntry[] = [
+  {
+    label: 'pub.about',
+    sections: [
+      {
+        items: [
+          { href: '/#features', label: 'pub.how', icon: Sparkles },
+          { href: '/#trust', label: 'pub.why', icon: ShieldCheck },
+          { href: '/#faq', label: 'pub.faq', icon: BadgeQuestionMark },
+        ],
+      },
+    ],
+  },
+  { href: '/markets', label: 'pub.markets' },
+  { label: 'nav.community', sections: [{ items: COMMUNITY_LINKS }] },
+  {
+    label: 'nav.tools',
+    sections: [
+      {
+        label: 'nav.tools.basics',
+        items: TOOL_LINKS.filter((link) => ['/tools/returns', '/tools/savings'].includes(link.href)),
+      },
+      {
+        label: 'nav.tools.lifeInsurance',
+        items: [{ href: MANULIFE_TOOLS_URL, label: 'nav.tools.manulife', icon: ShieldPlus, external: true }],
+      },
+    ],
+  },
+]
+

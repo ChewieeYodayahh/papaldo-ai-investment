@@ -3,6 +3,13 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   /*
+   * `npm run verify:full` builds into `.next-verify` (it sets NEXT_DIST_DIR) so
+   * a check never overwrites the `.next` a running `npm run dev` is serving
+   * from -- that left the dev server answering 500 on 2026-09-30.
+   */
+  distDir: process.env.NEXT_DIST_DIR || '.next',
+
+  /*
    * A stray package-lock.json in the user profile directory makes Next infer
    * the wrong workspace root, which would mis-trace files when deploying.
    * Pin it to this project.

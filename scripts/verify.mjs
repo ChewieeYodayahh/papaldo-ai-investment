@@ -29,15 +29,16 @@ const CHECKS = [
   existsSync(venvPython) && { name: 'python', cmd: venvPython, args: ['-m', 'unittest', 'discover', '-s', 'python', '-q'], direct: true },
 ].filter(Boolean)
 
-const BUILD = { name: 'build', cmd: 'npx', args: ['next', 'build'] }
+// Its own output folder, so the check never clobbers a running dev server's .next.
+const BUILD = { name: 'build', cmd: 'npx', args: ['next', 'build'], env: { NEXT_DIST_DIR: '.next-verify' } }
 
 const ANSI = /\x1b\[[0-9;]*[A-Za-z]/g
 // Lines worth showing from a failure: errors, failed assertions and the file:line that points at them.
 const SIGNAL = /(^[A-Za-z]:\\\S|^\/\S+\.\w+$|error|✖|×|FAIL|failed|Failed|Assertion|Expected|Received|Traceback|warning|⚠|^\s*at .*\.(?:t|j)sx?:\d+|\.(?:t|j)sx?[:(]\d+|\.py", line \d+)/
 
-function run({ name, cmd, args: cmdArgs, direct = false }) {
+function run({ name, cmd, args: cmdArgs, direct = false, env: extraEnv = {} }) {
   const started = Date.now()
-  const env = { ...process.env, FORCE_COLOR: '0', CI: '1' }
+  const env = { ...process.env, FORCE_COLOR: '0', CI: '1', ...extraEnv }
   // npx is a .cmd shim on Windows and needs a shell; the arguments are the fixed ones above.
   const useShell = !direct && process.platform === 'win32'
   return new Promise((resolve) => {

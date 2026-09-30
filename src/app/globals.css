@@ -85,6 +85,17 @@ html:has([data-app-shell]) {
 }
 
 /*
+ * Phones get the browser's own 16px instead (Carlos, 2026-09-30: side menus
+ * and headers read too small). The clamp above floors at 13.5px, which made
+ * text-sm about 11.8px on a phone; at 16px it is 14px. Desktop is unchanged.
+ */
+@media (max-width: 767px) {
+  html:has([data-app-shell]) {
+    font-size: 16px;
+  }
+}
+
+/*
  * The gap around the app frame. One value for all four sides, so the space
  * above the frame always matches the space beside it (Carlos, 2026-09-25).
  * px, not rem: it should track the window, not the fluid root size.
@@ -431,3 +442,24 @@ html[data-font="system"] {
   html {
     @apply font-sans;
   }
+
+/*
+ * /markets search hint (Carlos, 2026-09-30: a "Trade now..." that disappears).
+ * Types itself out left to right, holds, fades, repeats. Reduced motion shows
+ * it still.
+ */
+@keyframes search-hint-type {
+  0% { clip-path: inset(0 100% 0 0); opacity: 1; }
+  45%, 75% { clip-path: inset(0 0 0 0); opacity: 1; }
+  92%, 100% { clip-path: inset(0 0 0 0); opacity: 0; }
+}
+
+.search-hint {
+  animation: search-hint-type 4.8s steps(14, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-hint {
+    animation: none;
+  }
+}

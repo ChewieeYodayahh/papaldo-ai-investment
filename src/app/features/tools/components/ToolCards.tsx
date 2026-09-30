@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Calculator, ChartLine, ClipboardList, Download, Lock, PiggyBank, Route, UserRound } from 'lucide-react'
+import { ArrowRight, Calculator, ChartLine, ClipboardList, Download, ExternalLink, Lock, PiggyBank, Route, ShieldPlus, UserRound } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -230,7 +230,7 @@ export function WalkthroughToolCard({ quizDone }: { quizDone: boolean }) {
   )
 }
 
-const SIMPLE_ICONS = { returns: Calculator, savings: PiggyBank, export: Download } as const
+const SIMPLE_ICONS = { returns: Calculator, savings: PiggyBank, export: Download, insurance: ShieldPlus } as const
 
 /**
  * A tool card with no live preview: icon, name, one line on what it does, and
@@ -243,6 +243,7 @@ export function SimpleToolCard({
   badge,
   href,
   action,
+  external = false,
 }: {
   icon: keyof typeof SIMPLE_ICONS
   title: string
@@ -250,6 +251,8 @@ export function SimpleToolCard({
   badge?: string
   href: string
   action: string
+  /** Another site (Manulife): opens in a new tab without an opener. */
+  external?: boolean
 }) {
   return (
     <Card className={CARD}>
@@ -267,10 +270,22 @@ export function SimpleToolCard({
       </CardHeader>
       <CardContent className="flex-1" />
       <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
-        <Link href={href} className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
-          {action}
-          <ArrowRight data-icon="inline-end" />
-        </Link>
+        {external ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}
+          >
+            {action}
+            <ExternalLink data-icon="inline-end" aria-label="Opens in a new tab" />
+          </a>
+        ) : (
+          <Link href={href} className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+            {action}
+            <ArrowRight data-icon="inline-end" />
+          </Link>
+        )}
       </CardFooter>
     </Card>
   )

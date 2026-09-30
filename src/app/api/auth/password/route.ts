@@ -5,7 +5,7 @@ import { fieldErrors, passwordChangeSchema } from '@/app/features/auth/schema'
 
 /** Sets a new password. Only works after the confirmation email was opened. */
 export async function POST(request: Request) {
-  const parsed = passwordChangeSchema.safeParse(await request.json())
+  const parsed = passwordChangeSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json(
       { ok: false, message: 'Please fix the highlighted fields.', fieldErrors: fieldErrors(parsed.error) },

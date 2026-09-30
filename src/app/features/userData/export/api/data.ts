@@ -5,12 +5,14 @@ import { getPerformanceHistory, getValuation } from '@/app/features/dashboard/ap
 import { getUniverseQuotes } from '@/app/features/markets/api/movers'
 import { getCurrentAnswers, getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
 import { getOrderHistory } from '@/app/features/trading/api/orders'
-import { getPortfolio } from '@/app/features/trading/api/portfolio'
+import { getPortfolio, getStartingCash } from '@/app/features/trading/api/portfolio'
 
-/** Every account opens with this much simulated cash (the portfolios table default). */
-export const STARTING_CASH = 500_000
-
-/** Far more fills than any simulated account has made; the query is RLS-scoped to the caller. */
+/**
+ * Far more fills than any simulated account has made; the query is RLS-scoped
+ * to the caller. PostgREST still caps one read at 1,000 rows, so the trade list
+ * in an export holds the latest 1,000 fills at most. Starting cash does not
+ * depend on it: the database derives that over every order.
+ */
 const ORDER_LIMIT = 10_000
 
 export type ExportData = {
@@ -76,12 +78,13 @@ const incomeText = (income: { amount: number; currency: string } | null) =>
  * Null when signed out.
  */
 export async function getExportData(): Promise<ExportData | null> {
-  const [profile, portfolio, risk, orders, market] = await Promise.all([
+  const [profile, portfolio, risk, orders, market, startingCash] = await Promise.all([
     getProfile(),
     getPortfolio(),
     getCurrentRiskProfile(),
     getOrderHistory(ORDER_LIMIT),
     getUniverseQuotes(),
+    getStartingCash(),
   ])
   if (!profile || !portfolio) return null
 
@@ -104,7 +107,8 @@ export async function getExportData(): Promise<ExportData | null> {
       quizTakenAt: risk?.computed_at ?? null,
       answers: answers.map((a) => ({ question: a.prompt, answer: a.choice?.label ?? 'Answered in an earlier version' })),
     },
-    startingCash: STARTING_CASH,
+    // Only null if the database call failed; cash alone then understates the start.
+    startingCash: startingCash ?? portfolio.cashBalance,
     cash: valuation.cash,
     total: valuation.total,
     pricedLive: valuation.live,

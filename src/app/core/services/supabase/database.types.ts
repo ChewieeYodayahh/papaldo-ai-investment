@@ -702,6 +702,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      my_starting_cash: { Args: never; Returns: number }
       place_order: {
         Args: {
           p_asset_class: string

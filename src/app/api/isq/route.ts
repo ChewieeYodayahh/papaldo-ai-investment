@@ -11,7 +11,7 @@ const submissionSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const parsed = submissionSchema.safeParse(await request.json())
+  const parsed = submissionSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json(
       { ok: false, message: 'Answer every question before submitting.' },

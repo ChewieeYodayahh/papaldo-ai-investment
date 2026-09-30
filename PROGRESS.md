@@ -92,6 +92,90 @@ cloned to `~/.claude/references/`.
     /login, and the old benchmarks URL forwards.
   - No server errors.
 
+**2026-09-30 (Phase 2 of the v0.5 plan): fixes affecting live users.**
+- **The `/markets` 500, found in Vercel's runtime errors** (read through the Vercel
+  connector).
+  - The cause was `Cannot read properties of undefined (reading 'hasHydrated')` on
+    signed-in `/dashboard`, `/portfolio`, `/markets` and `/tools/benchmarks`.
+  - `FirstTimeSetup` called `useSetupStore.persist.hasHydrated()` in a `useState`
+    initialiser, which also runs during server rendering. There is no localStorage
+    there, so zustand attaches no `.persist` API.
+  - The store is now touched only inside the effect, and the initial state is `false`,
+    so the server and the first client render match.
+- **The other log group, `fetch failed` to `data.alpaca.markets`, isn't a 500.**
+  `alpacaFetch` already turns network errors into `AlpacaError`, and those raw lines
+  are Next's background cache revalidation logging a network blip. Because the real
+  cause was found, the planned `/api/markets/heatmap` endpoint wasn't built; the
+  whole-page refresh keeps the table, movers and heatmap consistent.
+- **Error pages:** added `src/app/error.tsx` and `global-error.tsx`. A render error now
+  shows a "Try again" page with the error id instead of Next's bare 500.
+- **Six API routes returned 500 on a body that wasn't JSON** (orders, isq, login,
+  sign-up, password, profile). They now answer 400.
+- **Geist fonts:** set to `preload: false` (they're only used when picked in Settings),
+  which clears the browser's "preloaded but not used" font warnings.
+- **Google SSO:** production now sends `redirect_to` to
+  `https://papaldo-ai-investment.vercel.app/api/auth/callback`, after Carlos set
+  `NEXT_PUBLIC_SITE_URL`. I checked this by generating the URL, not by signing in.
+  - `siteUrl()` hardening: it ignores a localhost value on Vercel production, prefers
+    `VERCEL_PROJECT_PRODUCTION_URL` over a deployment-specific request origin, and
+    trims trailing slashes. There are 4 tests.
+  - The callback still redirects to its own origin, on purpose: the session cookie is
+    set on the host the callback arrives at.
+- **Quiz recommendations (my v0.4 bug):** the band is now mapped to a tier
+  (`tools/quiz/tiers.ts`, 2 tests), giving up to 5 ETFs plus the tier's 5 largest
+  stocks. Every tier has 5 ETFs and at least 9 stocks with market caps (checked in
+  SQL).
+- **$100,000 start:** migration `20260930120000_starting_cash_100k` (applied live)
+  changes only the `cash_balance` default.
+  - New function `my_starting_cash()`: SECURITY INVOKER, computes cash + buys − sells
+    in SQL (a client-side sum would be capped at 1,000 rows). Execute is granted to
+    authenticated only.
+  - Role-switched check: all 3 existing accounts (10 orders) derive exactly
+    $500,000; the default reads 100000.00; anon can't execute the function.
+  - Export uses it in place of the `STARTING_CASH` constant. The landing mock shows
+    `<Money usd={100_000}>`.
+- **Found in passing, my v0.4 bug:** `getShellUser` split names on `/s+/` (the letter
+  s), so "sirstephen" got an empty greeting. It's now `/\s+/`. I scanned every regex
+  added in v0.4; none had the same damage.
+- **Header:** the permanently disabled "Buy" became a "Trade" button that jumps to
+  the trade panel. The Buy/Sell redesign is Phase 5.
+- **Checks:** `verify:full` passes (lint, types, 113 tests, 13 Python tests, 54-route
+  build). In the browser, the landing page shows $100,000.00, a non-JSON order gets
+  400, and the Trade button jumps to `#trade`.
+- **Still to confirm with Carlos's own account:** signed-in pages no longer 500, and
+  Google sign-in ends on the production domain.
+
+**2026-09-30 (Phase 3 of the v0.5 plan): mobile text, landing nav, tools open to guests.**
+- **Mobile text:** the app root was `clamp(13.5px, …, 15px)`, so on a phone `text-sm`
+  was about 11.8px. Below 768px the root is now the browser's 16px.
+  - Sidebar rows are `max-md:h-11 text-base` with 20px icons; sub-rows are 40px.
+  - The header title is `text-2xl` on phones.
+  - Phone-menu rows in the public nav are 17px on 44px targets.
+  - Desktop sizes are unchanged. Signed-in sidebar sizes still need a look on
+    Carlos's phone; the agent can't sign in.
+- **Landing nav, config-driven:** `PUBLIC_NAV` in `userData/frame/nav.ts`, rendered
+  by one `NavMenu` dropdown with section labels. It reads About Papaldo ▾ (How it
+  works, Why Papaldo, FAQ) · Markets · Community ▾ (Chat, Blog) · Tools ▾.
+  - Tools has two sections: Basics (Returns, Savings) and Life insurance
+    (`MANULIFE_TOOLS_URL`, a new tab, `noopener`).
+  - Purchasing Power, Budget and Accounting join Basics when Phase 7 builds them, so
+    the nav never links to a 404.
+  - The phone menu groups the same entries.
+- **Tools for guests:** `PROTECTED_PREFIXES` now has `/tools/export` instead of
+  `/tools`; the matcher stays, because it refreshes the session cookie.
+  - `ToolsPage` no longer redirects guests. They get the calculators, the benchmarker
+    and a Life insurance card; `SimpleToolCard` gained `external`.
+  - Signed in, the Life insurance card is added after the walkthrough.
+- **Found while checking:** `verify:full` built into the same `.next` a running
+  `npm run dev` serves from, which broke the dev server with ENOENT and a 500. The
+  build now goes to `.next-verify`: `distDir` reads `NEXT_DIST_DIR`, and the folder is
+  gitignored and ignored by eslint and tsc. Next rewrote `tsconfig.json` once (its
+  formatting, plus the `.next-verify/types` include, which the exclude cancels out).
+  The dev server kept answering 200 during the next full check.
+- **Checks:** `verify:full` passes (113 tests, 13 Python tests, 54 routes). In the
+  browser, guest `/tools` renders the calculators, benchmarker and Manulife card, and
+  the desktop Tools dropdown shows Basics and Life insurance with the external mark.
+
 **Bug found in Phase 8's work:** quiz-result recommendations were always empty.
 `recommendations.ts` filtered `risk_tier` by the person's band
 (`Low/Medium/High`), but assets use `conservative/moderate/aggressive`. The

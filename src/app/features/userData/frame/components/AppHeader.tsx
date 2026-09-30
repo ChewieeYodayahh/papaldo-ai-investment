@@ -35,7 +35,7 @@ export function AppHeader({
     <header className="flex flex-wrap items-center gap-x-3 gap-y-3 pt-5 pb-4">
       <SidebarTrigger className="md:hidden" />
 
-      <h1 className="mr-auto text-xl font-medium tracking-tight lg:text-[1.625rem]">
+      <h1 className="mr-auto text-2xl font-medium tracking-tight md:text-xl lg:text-[1.625rem]">
         {title === 'greeting' ? (
           <>
             {pickGreeting(language, greetingSeed)}

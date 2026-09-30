@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { hierarchy, treemap, treemapSquarify, type HierarchyRectangularNode } from 'd3-hierarchy'
-import { Search, X } from 'lucide-react'
+import { LayoutGrid, List, Search, X } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Money } from '@/app/features/userData/preferences/components/Money'
 import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
@@ -81,9 +82,11 @@ function layoutWide(sectors: HeatSector[], width: number, height: number, header
  * of 20px tiles nobody could tap (2026-09-26). Within a sector, area is still
  * proportional to cap.
  */
-const PHONE_HEIGHT_PER_WIDTH = 1.5
-const PHONE_MIN_SECTOR_PER_WIDTH = 0.5
-const PHONE_SECTOR_GAP = 10
+// Tuned 2026-09-30 ("too large on mobile"): about 550px tall at 400px wide,
+// down from about 1,000px, while the smallest sector stays tappable.
+const PHONE_HEIGHT_PER_WIDTH = 0.8
+const PHONE_MIN_SECTOR_PER_WIDTH = 0.26
+const PHONE_SECTOR_GAP = 8
 
 function layoutStacked(sectors: HeatSector[], width: number, header: number): { blocks: Block[]; height: number } {
   const total = sectors.reduce((sum, s) => sum + s.tiles.reduce((acc, t) => acc + t.size, 0), 0) || 1
@@ -133,6 +136,7 @@ export function SectorTreemap({ quotes }: { quotes: UniverseQuote[] }) {
   const [steps, setSteps] = useState<number[]>([])
   const [query, setQuery] = useState('')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [view, setView] = useState<'map' | 'list'>('map')
 
   // New quotes arrive as new props after each refresh.
   useEffect(() => setUpdatedAt(new Date()), [quotes])
@@ -210,15 +214,32 @@ export function SectorTreemap({ quotes }: { quotes: UniverseQuote[] }) {
               ) : null}
             </form>
             <Legend active={steps} onToggle={toggleStep} onReset={() => setSteps([])} />
+            <ToggleGroup
+              value={[view]}
+              onValueChange={(next: string[]) => (next[0] ? setView(next[0] as 'map' | 'list') : null)}
+              variant="outline"
+              size="sm"
+              spacing={0}
+              aria-label={t('mkt.heatmapView')}
+            >
+              <ToggleGroupItem value="map" aria-label={t('mkt.heatmapMap')} className="px-2.5 data-pressed:bg-accent">
+                <LayoutGrid className="size-3.5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label={t('mkt.heatmapList')} className="px-2.5 data-pressed:bg-accent">
+                <List className="size-3.5" />
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
 
         {/* Wide: the frame's aspect ratio sets the height and the treemap fills
             it. Phone: the stacked layout sets the height inline (an explicit
-            height overrides aspect-ratio), 1:2 until first measured. */}
+            height overrides aspect-ratio), 5:8 until first measured. */}
+        {view === 'list' ? <HeatList sectors={sectors} lit={lit} /> : null}
         <div
           ref={ref}
-          className="relative aspect-[1/2] w-full overflow-hidden rounded-xl bg-background sm:aspect-[16/10] xl:aspect-[2/1]"
+          hidden={view === 'list'}
+          className="relative aspect-[5/8] w-full overflow-hidden rounded-xl bg-background sm:aspect-[16/10] xl:aspect-[2/1]"
           style={layout?.height ? { height: layout.height } : undefined}
           onPointerLeave={() => setHover(null)}
         >
@@ -317,6 +338,8 @@ function Tile({
   const logo = showLogo ? logoUrl(tile.symbol) : null
 
   const report = (event: React.PointerEvent | React.FocusEvent) => {
+    // Touch and pen taps navigate; only a mouse (or keyboard focus) gets the card.
+    if ('pointerType' in event && event.pointerType !== 'mouse') return
     const frame = (event.currentTarget as HTMLElement).offsetParent as HTMLElement | null
     const rect = frame?.getBoundingClientRect()
     if ('clientX' in event && rect) onHover(tile, event.clientX - rect.left, event.clientY - rect.top)
@@ -447,3 +470,43 @@ function Legend({ active, onToggle, onReset }: { active: number[]; onToggle: (st
     </div>
   )
 }
+
+/**
+ * The heatmap as a list, for small screens or anyone who prefers reading:
+ * each sector with its move, then its stocks by market cap with today's move
+ * on the same colour scale as the tiles.
+ */
+function HeatList({ sectors, lit }: { sectors: HeatSector[]; lit: (tile: HeatTile) => boolean }) {
+  return (
+    // minmax(0, 1fr): long company names truncate instead of widening the column.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
+      {sectors.map((sector) => (
+        <section key={sector.sector} aria-label={sector.sector}>
+          <h3 className="mb-1 flex items-center gap-2 px-1 text-xs font-semibold tracking-wide">
+            {sector.sector} <Change percent={sector.changePercent} className="text-xs" />
+          </h3>
+          <ul className="divide-y divide-border overflow-hidden rounded-xl bg-background">
+            {sector.tiles.filter(lit).map((tile) => (
+              <li key={tile.symbol}>
+                <Link
+                  href={`/markets/${encodeURIComponent(tile.symbol)}`}
+                  className="flex min-h-11 items-center gap-3 px-3 py-2 hover:bg-accent/50"
+                >
+                  <span className="w-14 font-semibold">{tile.symbol}</span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{tile.name}</span>
+                  <span
+                    className="figure rounded-md px-2 py-0.5 text-xs font-semibold"
+                    style={{ backgroundColor: stepFill(colorStep(tile.changePercent)), color: 'var(--heat-text)' }}
+                  >
+                    {`${tile.changePercent > 0 ? '+' : ''}${tile.changePercent.toFixed(2)}%`}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  )
+}
+

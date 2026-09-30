@@ -42,7 +42,7 @@ function LeafItem({ item }: { item: NavLeaf }) {
         isActive={isActive(item, pathname)}
         tooltip={t(item.label)}
         render={<Link href={item.href} />}
-        className="h-9 data-active:bg-linear-to-r data-active:from-sidebar-accent data-active:to-sidebar-accent/40"
+        className="h-9 max-md:h-11 max-md:text-base max-md:[&_svg]:size-5 data-active:bg-linear-to-r data-active:from-sidebar-accent data-active:to-sidebar-accent/40"
       >
         <Icon />
         <span>{t(item.label)}</span>
@@ -74,7 +74,7 @@ function GroupItem({ group }: { group: NavGroup }) {
   if (state === 'collapsed' && !isMobile) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton isActive={active} tooltip={t(group.label)} render={<Link href={group.href} />} className="h-9">
+        <SidebarMenuButton isActive={active} tooltip={t(group.label)} render={<Link href={group.href} />} className="h-9 max-md:h-11 max-md:text-base max-md:[&_svg]:size-5">
           <Icon />
           <span>{t(group.label)}</span>
         </SidebarMenuButton>
@@ -88,7 +88,7 @@ function GroupItem({ group }: { group: NavGroup }) {
         render={
           <SidebarMenuButton
             isActive={active && !open}
-            className="group/trigger h-9 data-active:bg-linear-to-r data-active:from-sidebar-accent data-active:to-sidebar-accent/40"
+            className="group/trigger h-9 max-md:h-11 max-md:text-base max-md:[&_svg]:size-5 data-active:bg-linear-to-r data-active:from-sidebar-accent data-active:to-sidebar-accent/40"
           />
         }
       >
@@ -108,7 +108,7 @@ function GroupItem({ group }: { group: NavGroup }) {
                 <SidebarMenuSubButton
                   isActive={isActive(child, pathname)}
                   render={<Link href={child.href} />}
-                  className="h-8 data-active:font-medium data-active:text-sidebar-primary"
+                  className="h-8 max-md:h-10 max-md:text-base! max-md:[&_svg]:size-5 data-active:font-medium data-active:text-sidebar-primary"
                 >
                   <ChildIcon />
                   <span>{t(child.label)}</span>
@@ -139,7 +139,7 @@ export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
       <SidebarHeader className="flex-row items-center justify-between gap-2 px-3 pt-4 pb-5 group-data-[collapsible=icon]:px-1">
         <Link
           href="/dashboard"
-          className="truncate text-[0.9375rem] font-medium tracking-[0.2em] group-data-[collapsible=icon]:hidden"
+          className="truncate text-[0.9375rem] font-medium max-md:text-base tracking-[0.2em] group-data-[collapsible=icon]:hidden"
         >
           PAPALDO KA
         </Link>

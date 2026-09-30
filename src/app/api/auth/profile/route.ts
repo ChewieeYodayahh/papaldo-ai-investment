@@ -5,7 +5,7 @@ import { fieldErrors, profileUpdateSchema } from '@/app/features/auth/schema'
 
 /** Saves any subset of the profile: one card of the profile page, or one setup step. */
 export async function PATCH(request: Request) {
-  const parsed = profileUpdateSchema.safeParse(await request.json())
+  const parsed = profileUpdateSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json(
       { ok: false, message: 'Please fix the highlighted fields.', fieldErrors: fieldErrors(parsed.error) },

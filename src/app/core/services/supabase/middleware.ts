@@ -6,7 +6,10 @@ import { supabaseAnonKey, supabaseUrl } from '@/lib/env'
 import type { Database } from './database.types'
 
 /** Routes that require a session. Keep in step with the matcher in src/middleware.ts. */
-const PROTECTED_PREFIXES = ['/dashboard', '/portfolio', '/isq', '/onboarding', '/profile', '/tools', '/admin']
+// /tools itself and the calculators are open to guests (Carlos, 2026-09-30);
+// only the export reads account data. The /tools matcher in src/middleware.ts
+// stays, because this middleware is what refreshes the session cookie there.
+const PROTECTED_PREFIXES = ['/dashboard', '/portfolio', '/isq', '/onboarding', '/profile', '/tools/export', '/admin']
 
 /** Routes that a signed-in user should be bounced away from. */
 const AUTH_ROUTES = ['/login', '/sign-up']

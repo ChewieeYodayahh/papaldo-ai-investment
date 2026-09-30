@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowDownRight, ArrowLeft, ArrowUpRight } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 
 import type { FinnhubCompanyProfile } from '@/app/core/services/finnhub'
 import type { Quote } from '../api/quotes'
@@ -75,12 +75,12 @@ export function SymbolHeader({
             </div>
           </div>
 
-          {/* Shown disabled on purpose. Order placement does not exist yet, and
-              a button that silently did nothing would be worse than one that
-              says so. */}
-          <Button disabled title="Order placement ships with the Trading phase">
-            Buy
-          </Button>
+          {/* Jumps to the trade panel (or the sign-in card) further down.
+              Until 2026-09-30 this was a permanently disabled "Buy" left over
+              from before trading existed. */}
+          <a href="#trade" className={buttonVariants({ className: 'rounded-full px-4' })}>
+            Trade
+          </a>
         </div>
       </div>
 

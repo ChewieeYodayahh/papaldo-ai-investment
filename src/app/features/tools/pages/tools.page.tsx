@@ -1,9 +1,8 @@
-import { redirect } from 'next/navigation'
-
-import { getProfile, isSetupComplete } from '@/app/features/auth/api/profile'
-import { getBenchmarks } from '@/app/features/markets/benchmarks/api/benchmarks'
-import { getCurrentRiskProfile } from '@/app/features/tools/quiz/api/submit'
-import { T } from '@/app/features/userData/preferences/copy'
+import { getProfile, isSetupComplete } from "@/app/features/auth/api/profile";
+import { getBenchmarks } from "@/app/features/markets/benchmarks/api/benchmarks";
+import { getCurrentRiskProfile } from "@/app/features/tools/quiz/api/submit";
+import { MANULIFE_TOOLS_URL } from "@/app/features/userData/frame/nav";
+import { T } from "@/app/features/userData/preferences/copy";
 
 import {
   BenchmarkToolCard,
@@ -12,28 +11,87 @@ import {
   SimpleToolCard,
   WalkthroughToolCard,
   type BenchmarkPreview,
-} from '../components/ToolCards'
+} from "../components/ToolCards";
 
 /**
  * Tools (Carlos, 2026-09-26): the things that shape how someone invests, as
  * cards. The quiz lives here for good -- take it, view the results, retake
  * it -- alongside the profile, the index benchmarker, the calculators and the
  * export tool (2026-09-29), and the first-trade walkthrough.
+ *
+ * Guests get the tools that need no account (2026-09-30): the calculators,
+ * the benchmarker and the Manulife life-insurance link. The quiz, profile,
+ * export and walkthrough appear once signed in.
  */
 export async function ToolsPage() {
-  const [profile, risk, benchmarks] = await Promise.all([getProfile(), getCurrentRiskProfile(), getBenchmarks()])
-  if (!profile) redirect('/login')
+  const [profile, risk, benchmarks] = await Promise.all([
+    getProfile(),
+    getCurrentRiskProfile(),
+    getBenchmarks(),
+  ]);
 
   // Each index's total gain over the whole window: the last normalised value
   // is growth from 100, so gain = last - 100 (in percent).
-  const latest = benchmarks.growth.at(-1)
+  const latest = benchmarks.growth.at(-1);
   const preview: BenchmarkPreview[] = benchmarks.indexes.flatMap((index) => {
-    const last = latest?.[index.key]
-    return typeof last === 'number'
-      ? [{ key: index.key, label: index.isProxy ? `${index.label} (EPHE)` : index.label, totalGainPct: last - 100 }]
-      : []
-  })
-  const since = benchmarks.growth[0]?.date.slice(0, 4) ?? null
+    const last = latest?.[index.key];
+    return typeof last === "number"
+      ? [
+          {
+            key: index.key,
+            label: index.isProxy ? `${index.label} (EPHE)` : index.label,
+            totalGainPct: last - 100,
+          },
+        ]
+      : [];
+  });
+  const since = benchmarks.growth[0]?.date.slice(0, 4) ?? null;
+
+  const calculators = (
+    <>
+      <SimpleToolCard
+        icon="returns"
+        title="Returns calculator"
+        body="Replay real prices: what money in an index, fund or stock would be worth today, and what that buys."
+        badge="Indices · 50 stocks"
+        href="/tools/returns"
+        action="Run the numbers"
+      />
+      <SimpleToolCard
+        icon="savings"
+        title="Savings goal"
+        body="How much to put away each week, fortnight or month to reach a target by a date."
+        href="/tools/savings"
+        action="Plan a goal"
+      />
+    </>
+  );
+  const insurance = (
+    <SimpleToolCard
+      icon="insurance"
+      title="Life insurance"
+      body="Protection and investment-linked plans, with Manulife Philippines' own calculators."
+      badge="Manulife PH"
+      href={MANULIFE_TOOLS_URL}
+      action="Open Manulife's calculators"
+      external
+    />
+  );
+
+  if (!profile) {
+    return (
+      <>
+        <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
+          <T k="tools.subtitle" />
+        </p>
+        <div className="grid items-stretch gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+          {calculators}
+          <BenchmarkToolCard preview={preview} since={since} />
+          {insurance}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -41,24 +99,23 @@ export async function ToolsPage() {
         <T k="tools.subtitle" />
       </p>
       <div className="grid items-stretch gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-        <QuizToolCard risk={risk ? { band: risk.band, score: risk.score, takenAt: risk.computed_at } : null} />
+        <QuizToolCard
+          risk={
+            risk
+              ? {
+                  band: risk.band,
+                  score: risk.score,
+                  takenAt: risk.computed_at,
+                }
+              : null
+          }
+        />
         <BenchmarkToolCard preview={preview} since={since} />
-        <ProfileToolCard profile={profile} complete={isSetupComplete(profile)} />
-        <SimpleToolCard
-          icon="returns"
-          title="Returns calculator"
-          body="Replay real prices: what money in an index, fund or stock would be worth today, and what that buys."
-          badge="Indices · 50 stocks"
-          href="/tools/returns"
-          action="Run the numbers"
+        <ProfileToolCard
+          profile={profile}
+          complete={isSetupComplete(profile)}
         />
-        <SimpleToolCard
-          icon="savings"
-          title="Savings goal"
-          body="How much to put away each week, fortnight or month to reach a target by a date."
-          href="/tools/savings"
-          action="Plan a goal"
-        />
+        {calculators}
         <SimpleToolCard
           icon="export"
           title="Export my data"
@@ -68,7 +125,8 @@ export async function ToolsPage() {
           action="Build a report"
         />
         <WalkthroughToolCard quizDone={Boolean(risk)} />
+        {insurance}
       </div>
     </>
-  )
+  );
 }

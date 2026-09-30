@@ -28,7 +28,8 @@ const SIDEBAR_COOKIE = 'sidebar_state'
  * never scroll away. Below md there is no frame: the sidebar is a sheet and
  * the page scrolls normally.
  *
- * Signed out (only `/markets` is public) there is no sidebar at all: the page
+ * Signed out (on the public routes: /markets, /tools and its calculators,
+ * /community, /blog, /support) there is no sidebar at all: the page
  * gets the same frame as the landing page, with its top bar (Carlos,
  * 2026-09-26). Signed in, the Get Started checklist rides along on every page.
  */
