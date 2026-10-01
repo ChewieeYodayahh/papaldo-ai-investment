@@ -4,3 +4,42 @@
 /* Tailwind scans the app's source, since the components come from there. */
 @source "../../../src";
 @source "./";
+
+/*
+ * Video only (2026-10-02). Every frame is a photograph taken whenever the
+ * renderer gets to it, so motion must come from the frame number, never from
+ * CSS timing: the app's own animations and transitions are switched off.
+ */
+*,
+*::before,
+*::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* A portalled dialog's opening, driven per frame by usePortalOpen (clips/kit). */
+[data-slot="alert-dialog-content"] {
+  opacity: var(--clip-portal-opacity, 1);
+  scale: var(--clip-portal-scale, 1);
+}
+[data-slot="alert-dialog-overlay"] {
+  opacity: var(--clip-portal-opacity, 1);
+}
+
+/*
+ * The dashboard's performance line drawing in: a curtain in the card's own
+ * colour slides off the plot, left to right. 72px is the chart's y-axis;
+ * the x-axis labels at the bottom stay visible.
+ */
+[data-clip-reveal] .recharts-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 26px;
+  left: calc(72px + (100% - 84px) * var(--clip-reveal, 1));
+  z-index: 10;
+  background: var(--card);
+}

@@ -56,7 +56,7 @@ const en = {
   'header.signingOut': 'Signing out…',
   'header.guestNote': 'Sign in to keep these settings.',
   'isq.recommended': 'Recommended for you',
-  'isq.recommendedNote': 'Funds and stocks rated for a {band} profile. Open one to practise a trade.',
+  'isq.recommendedNote': 'Funds and stocks rated for {band}. Open one to practise a trade.',
   'isq.recommendedDisclaimer': 'Picked by each asset’s risk tier in Papaldo’s universe, for practice with simulated money. Not investment advice.',
   'isq.fund': 'Fund',
   'isq.trade': 'Trade',
@@ -199,14 +199,13 @@ const en = {
   'pub.menu': 'Menu',
   'pub.back': 'About Papaldo Ka',
 
-  // Landing headlines. Disclaimers under them stay plain English.
-  'land.badge': 'Safe investing simulation for every Filipino',
-  'land.title': 'Test your investing instincts before you risk a peso.',
+  // Landing headlines (2026-10-02: calm, and never casino words). Disclaimers stay plain English.
+  'land.title': 'Practice the stock market before you put in a peso.',
   'land.body':
-    'Answer six quick questions, get your risk profile, and practice trading with simulated funds — no real money, no broker, no pressure.',
-  'land.cta': 'Get started — it’s free',
+    'Start with $100,000 in practice money and real US market prices. Find your risk level in six questions, then learn by doing.',
+  'land.cta': 'Start practicing',
   'land.secondary': 'See how it works',
-  'land.ctaTitle': 'Ready to understand your investing style?',
+  'land.ctaTitle': 'Your practice account is ready when you are.',
 
   // Get Started checklist (first-time setup, after Investopedia's).
   'gs.button': 'Get Started',
@@ -383,11 +382,10 @@ const slang: Dictionary = {
   'pub.markets': 'The Market',
   'pub.faq': 'Questions',
   'pub.getStarted': "Let's go",
-  'land.badge': 'Practice investing, zero stress',
-  'land.title': 'Try investing before you bet a single peso.',
-  'land.cta': "Jump in — it's free",
+  'land.title': 'Try the stock market before you spend a single peso.',
+  'land.cta': "Jump in, it's free",
   'land.secondary': 'Show me how',
-  'land.ctaTitle': 'Ready to find your investing style?',
+  'land.ctaTitle': 'Your practice account is waiting.',
   'gs.button': "Let's go",
   'gs.title': "Let's get you set",
   'gs.subtitle': 'Three quick steps',
@@ -498,7 +496,6 @@ const brainrot: Dictionary = {
   'pub.login': 'Lock in',
   'pub.getStarted': 'Start the Grind',
   'pub.back': 'Back to the lore',
-  'land.badge': 'Paper-trade era, no cap',
   'land.title': 'Test your aura before you risk a single peso.',
   'land.body':
     'Six questions read your investing aura, then you paper-trade with simulated bread. No real money, no broker, no crash out.',

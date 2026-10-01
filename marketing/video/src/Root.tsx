@@ -1,31 +1,56 @@
 import { Composition, Folder } from "remotion";
 
-import { PapaldoPromo } from "./PapaldoPromo";
+import { DashboardClip } from "./clips/DashboardClip";
+import { CLIP_FRAMES, DEVICE_SIZE, type Device } from "./clips/kit";
+import { LearnClip } from "./clips/LearnClip";
+import { MarketsClip } from "./clips/MarketsClip";
+import { QuizClip } from "./clips/QuizClip";
+import { TradeClip } from "./clips/TradeClip";
+import { PapaldoPromo, PROMO_FRAMES } from "./PapaldoPromo";
 import { Brand } from "./scenes/Brand";
 import { Cta } from "./scenes/Cta";
 import { Hook } from "./scenes/Hook";
-import { Learn } from "./scenes/Learn";
-import { Markets } from "./scenes/Markets";
-import { Problem } from "./scenes/Problem";
-import { Quiz } from "./scenes/Quiz";
-import { Tools } from "./scenes/Tools";
-import { Trade } from "./scenes/Trade";
-import { RealTest } from "./scenes/RealTest";
+import { QuizScene } from "./scenes/QuizScene";
+
+/**
+ * The landing page's device clips (2026-10-02): each scene at a laptop
+ * (1280 x 800) and a phone (392 x 848) viewport, so the phone clips are the
+ * app's real phone layout. Rendered to public/landing by scripts/render-clips.
+ */
+const CLIPS = {
+  Dashboard: DashboardClip,
+  Quiz: QuizClip,
+  Trade: TradeClip,
+  Learn: LearnClip,
+  Markets: MarketsClip,
+} as const;
+
+const DEVICES: Device[] = ["laptop", "phone"];
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      <Composition id="PapaldoPromo" component={PapaldoPromo} durationInFrames={1215} fps={30} width={1920} height={1080} />
-      <Composition id="RealTest" component={RealTest} durationInFrames={30} fps={30} width={1920} height={1080} />
+      <Folder name="Landing">
+        {Object.entries(CLIPS).flatMap(([name, Clip]) =>
+          DEVICES.map((device) => (
+            <Composition
+              key={`${name}-${device}`}
+              id={`Clip-${name}-${device === "laptop" ? "Laptop" : "Phone"}`}
+              component={Clip}
+              defaultProps={{ device }}
+              durationInFrames={CLIP_FRAMES}
+              fps={30}
+              width={DEVICE_SIZE[device].width}
+              height={DEVICE_SIZE[device].height}
+            />
+          )),
+        )}
+      </Folder>
+      <Composition id="PapaldoPromo" component={PapaldoPromo} durationInFrames={PROMO_FRAMES} fps={30} width={1920} height={1080} />
       <Folder name="PapaldoPromo-Scenes">
         <Composition id="Hook" component={Hook} durationInFrames={120} fps={30} width={1920} height={1080} />
-        <Composition id="Problem" component={Problem} durationInFrames={120} fps={30} width={1920} height={1080} />
+        <Composition id="Quiz" component={QuizScene} durationInFrames={150} fps={30} width={1920} height={1080} />
         <Composition id="Brand" component={Brand} durationInFrames={105} fps={30} width={1920} height={1080} />
-        <Composition id="Quiz" component={Quiz} durationInFrames={165} fps={30} width={1920} height={1080} />
-        <Composition id="Trade" component={Trade} durationInFrames={180} fps={30} width={1920} height={1080} />
-        <Composition id="Markets" component={Markets} durationInFrames={135} fps={30} width={1920} height={1080} />
-        <Composition id="Tools" component={Tools} durationInFrames={225} fps={30} width={1920} height={1080} />
-        <Composition id="Learn" component={Learn} durationInFrames={135} fps={30} width={1920} height={1080} />
         <Composition id="CTA" component={Cta} durationInFrames={150} fps={30} width={1920} height={1080} />
       </Folder>
     </>

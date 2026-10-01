@@ -1,78 +1,52 @@
-"use client"
+import Link from 'next/link'
 
-import Link from "next/link"
-import { motion, type Variants } from "motion/react"
-import { ArrowRight } from "lucide-react"
+import { buttonVariants } from '@/components/ui/button'
+import { T } from '@/app/features/userData/preferences/copy'
+import { cn } from '@/lib/utils'
 
-import { buttonVariants } from "@/components/ui/button"
-import { useCopy } from "@/app/features/userData/preferences/copy"
-import { cn } from "@/lib/utils"
+import { DevicePair } from '../components/devices'
+import { MarketClock } from '../components/MarketClock'
+import { Skyline } from '../components/Skyline'
 
-import { MockDashboard } from "./mock-dashboard"
-
-const container: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } },
-}
-
-const item: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-}
-
+/**
+ * The hero (2026-10-02, "High Street Blue Hour"): what Papaldo is, in one
+ * line, then the real app on a laptop and a phone standing in front of a BGC
+ * skyline, with the street ticker as the ground they stand on (rendered by
+ * the page, straight after). Morning in light mode, blue hour in dark.
+ */
 export function Hero() {
-  const t = useCopy()
-
   return (
-    <section className="hero-mesh">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 md:grid-cols-2 md:px-6 md:py-24">
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col items-start gap-5"
-        >
-          <motion.span
-            variants={item}
-            className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-primary/20"
-          >
-            {t("land.badge")}
-          </motion.span>
+    <section className="relative isolate overflow-hidden bg-linear-to-b from-sky-top to-sky-horizon">
+      {/* The last of the sun (or the first), behind the towers. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_40%_at_78%_12%,color-mix(in_oklch,var(--window)_26%,transparent),transparent_72%)]"
+      />
+      <Skyline className="absolute inset-x-0 bottom-0 -z-10 h-[52%] w-full sm:h-[58%]" />
 
-          <motion.h1
-            variants={item}
-            className="text-4xl font-semibold tracking-tight text-balance md:text-5xl"
-          >
-            {t("land.title")}
-          </motion.h1>
+      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pt-12 text-center md:px-6 md:pt-20">
+        <h1 className="max-w-[17ch] font-display text-[2.35rem] leading-[1.04] font-semibold tracking-[-0.025em] text-balance font-stretch-[116%] sm:text-[3.25rem] lg:text-[4rem]">
+          <T k="land.title" />
+        </h1>
+        <p className="mt-5 max-w-[36rem] text-base text-pretty text-foreground/80 sm:text-lg">
+          <T k="land.body" />
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/sign-up" className={cn(buttonVariants({ size: 'lg' }), 'h-12 rounded-full px-7 text-base font-semibold')}>
+            <T k="land.cta" />
+          </Link>
+          <Link href="#how-it-works" className={cn(buttonVariants({ size: 'lg', variant: 'ghost' }), 'h-12 rounded-full px-5 text-base')}>
+            <T k="land.secondary" />
+          </Link>
+        </div>
+        <MarketClock className="mt-6 justify-center" />
 
-          <motion.p variants={item} className="max-w-lg text-base text-muted-foreground text-pretty">
-            {t("land.body")}
-          </motion.p>
-
-          <motion.div variants={item} className="flex flex-wrap items-center gap-3">
-            <Link href="/sign-up" className={cn(buttonVariants({ size: "lg" }), "h-11 rounded-full px-6 text-[0.9375rem] font-semibold")}>
-              {t("land.cta")}
-              <ArrowRight data-icon="inline-end" />
-            </Link>
-            <Link href="/#features" className={cn(buttonVariants({ size: "lg", variant: "ghost" }), "h-11 rounded-full px-5")}>
-              {t("land.secondary")}
-            </Link>
-          </motion.div>
-
-          <motion.p variants={item} className="text-xs text-muted-foreground">
-            No real money moves. Papaldo is an investment simulator, not financial advice.
-          </motion.p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-          className="w-full justify-self-center md:justify-self-end"
-        >
-          <MockDashboard />
-        </motion.div>
+        <DevicePair
+          scene="dashboard"
+          eager
+          label="The Papaldo dashboard on a laptop and a phone, for a sample account: total holdings, risk appetite, today's movers and the portfolio's performance."
+          className="mt-12 w-full max-w-[60rem] md:mt-16"
+        />
       </div>
     </section>
   )

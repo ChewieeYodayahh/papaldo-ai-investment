@@ -49,6 +49,5 @@ Config.overrideWebpackConfig((config) => {
       },
     },
   };
-  if (process.env.DEBUG_ALIAS) console.log("ALIAS", JSON.stringify(withAliases.resolve?.alias).slice(0, 600), Array.isArray(config.resolve?.alias));
   return enableTailwind(withAliases);
 });

@@ -9,6 +9,10 @@ import { Card, CardContent } from "@/components/ui/card"
  * app it leads into rather than a different product. Illustrative numbers --
  * the $100,000 is what every new account really starts with (since
  * 2026-09-30), shown in pesos at the live rate when the visitor picks ₱.
+ *
+ * No longer on the landing page (2026-10-02: it shows the real app in device
+ * clips now); kept for the promo video's opening scene
+ * (marketing/video/src/scenes/Hook.tsx), which imports it.
  */
 const HOLDINGS = [
   { symbol: "VOO", pct: 45 },

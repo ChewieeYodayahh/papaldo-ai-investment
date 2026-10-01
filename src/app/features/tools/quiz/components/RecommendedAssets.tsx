@@ -49,7 +49,7 @@ export function RecommendedAssets({ band, assets }: { band: RiskBand; assets: Re
       </CardHeader>
       <CardContent className="grid gap-4 px-5 sm:px-6">
         {groups.map((group) => (
-          <section key={group.key}>
+          <section key={group.key} className="min-w-0">
             <h3 className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">{group.label}</h3>
             <ul className="grid gap-2">
               {group.items.map((asset) => (
