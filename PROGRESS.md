@@ -520,6 +520,98 @@ cloned to `~/.claude/references/`.
     was gone after a clean reload.
   - The account tour and first-trade steps need Carlos's session.
 
+**2026-10-01: tools as lessons, plus mobile fixes** (plan: `TOOLS_LESSONS_PLAN.md`, steps A–G done).
+- **Tools hub:**
+  - section titles padded;
+  - 3 cards per row (`sm:2`, `lg:3`);
+  - every corner tag removed (a finished tour now shows a tick by its title);
+  - card text cut to one question.
+- **Phones:**
+  - root text is 15px (it was 16);
+  - calculator cards, charts and stats are tighter below `sm`;
+  - the header keeps the menu, bell, settings and avatar on row 1, with the title on row 2;
+  - the tutorial card docks to the bottom of the screen and scrolls the target into
+    the top half (measured at 375 px).
+- **Profiles:**
+  - `/profile` drops "Simulated account" and the email from the header;
+  - Member profile, Export and Sign out are now a row list;
+  - `/u/[name]`: the friend control is a full-width row on phones, and "Request
+    sent" / "Friends" are one button each, with Cancel / Unfriend in a menu.
+- **Lesson shape:** the shared pieces live in `tools/calculators/components/lesson.tsx`:
+  - `ToolIntro` gives Tutorial Mode, the $/₱ switch and the question; Budget and
+    Statements keep their own ₱/$;
+  - `TermHelp` and `LessonCard` (key-term chips) draw on `terms.ts`;
+  - `ResultHeadline`;
+  - `src/components/help-tip.tsx` is the shared [?], and `StatHelp` now uses it.
+- **Copy rewrites:**
+  - **DCA** is now "Cost averaging vs lump sum", with the "You put … between …"
+    result line and a plain lesson;
+  - **Returns**, **Purchasing power** and **Budget** get plain result lines and
+    lessons. Purchasing power follows the page $/₱ switch, and Budget gets a
+    verdict line;
+  - **Statements** and **Benchmarks** get lessons.
+- **Cost of Waiting, rebuilt:**
+  - It now answers "how much must I save each month to retire on X?":
+    `retirementPlan()` uses the 4% rule (×25) and inflation-grown income;
+    `monthlySavingNeeded()` (6 tests) replaces `costOfWaiting()`.
+  - Inflation defaults to each country's last 20 years of CPI.
+  - A signed-in user's profile figure fills the income field.
+  - "Ideal income" is relabelled **Retirement income** with a [?] on the profile,
+    the setup journey, the tools card and the export. Same column.
+  - `tools/calculators` may now read `auth` (rule updated).
+- **Savings planner:**
+  - one chart: investing for the goal, deposits and a goal line, plus an "Include
+    an emergency fund" checkbox that adds the bank-deposit line;
+  - the bank picker shows logos from Google's favicon CDN
+    (`deposit-rates.ts` `domain`; MariBank uses `maribank.ph`).
+- **Tutorials:** every tool tour is now 4 steps of 20 words or fewer: the question,
+  your inputs, the result, the lesson.
+- **Chart legends** keep their drawn order (`itemSorter={null}`). Recharts 3 sorted
+  them alphabetically, which is why Cost of Waiting read 0, 10, 15, 5.
+- **Checks:**
+  - `npm run verify`: 176 tests;
+  - all 8 tool routes return 200 with their new text;
+  - DCA and Cost of Waiting numbers were read in the browser;
+  - all 4 bank logos load.
+- **Not checked visually:** `/profile`, `/u/[name]` and the header avatar row need
+  Carlos's session.
+
+**2026-10-01: Google sign-in landed on the team URL** (reported as
+`…-chewieeyodayahhs-projects.vercel.app/?error=…flow_state_already_used`).
+- **Cause (Supabase's auth logs, read-only):** the sign-in itself succeeded at
+  Supabase. Then Supabase ignored the app's `redirect_to`
+  (`https://papaldo-ai-investment.vercel.app/api/auth/callback`, confirmed by
+  generating the URL on production) and fell back to its **Site URL**. That Site URL
+  is the Vercel-protected team URL. Retrying replayed the spent OAuth state, hence
+  `flow_state_already_used`. The logs also show no allowed `redirect_to`, so the
+  alias is missing from the redirect allow list.
+- **Code:** `siteUrl()` now returns to the host the request came from, then
+  `NEXT_PUBLIC_SITE_URL`, and no longer reads `VERCEL_PROJECT_PRODUCTION_URL`. The
+  PKCE verifier cookie lives only on the starting host, so sending a user from the
+  old alias to `papaldo-ka` (or the reverse) would always fail the exchange. My
+  2026-09-30 reordering is undone: its diagnosis was wrong. There are 4 tests.
+- **Carlos (dashboards):**
+  - Supabase → Authentication → URL Configuration:
+    - Site URL `https://papaldo-ai-investment.vercel.app`, switching to
+      `papaldo-ka` once it is live;
+    - redirect URLs `https://papaldo-ai-investment.vercel.app/**`,
+      `https://papaldo-ka.vercel.app/**` and `http://localhost:3001/**`;
+    - remove the team URL.
+  - Vercel → Domains: add `papaldo-ka.vercel.app`. It answers 404 today.
+
+**2026-10-01: marketing video** (`marketing/video/`, Remotion; see its README).
+- Built with the official `remotion-best-practices` skill (installed globally from
+  `remotion-dev/skills`).
+- The promo is 40 s, 9 scenes, 1920 × 1080 at 30 fps, in the Midnight palette and
+  Figtree font. It uses only real app content: quiz question 5, the $100k start, and
+  the tool figures checked 2026-09-30.
+- It's a separate package, excluded from the app's tsconfig and ESLint. The Studio
+  runs via the `papaldo-video` launch config on port 3002.
+- **Upstream bug:** Remotion 4.0.531 ships an empty render-queue module, so the
+  package is pinned to 4.0.530.
+- Checks: I rendered 11 key frames and fixed the hook underline and the quiz card
+  overflow. The app's `npm run verify` still passes.
+
 **2026-09-30 (late): menus, Excel exports, themes, two new tools, domain.**
 - **Menus:**
   - Landing Tools ▾ is Open Tools, a divider, then Basics › (six tools, a fly-out

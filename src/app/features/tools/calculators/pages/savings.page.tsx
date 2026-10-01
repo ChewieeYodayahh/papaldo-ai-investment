@@ -1,8 +1,6 @@
-import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
-
 import { getHistory, INDEX_OPTIONS } from '../api/history'
+import { ToolIntro } from '../components/lesson'
 import type { RatePreset } from '../components/SavingsGoalCalculator'
-import { EmergencyFundPlanner } from '../components/EmergencyFundPlanner'
 import { SavingsGoalCalculator } from '../components/SavingsGoalCalculator'
 import { lastYears, seriesCagr } from '../math'
 
@@ -10,7 +8,8 @@ import { lastYears, seriesCagr } from '../math'
 const PRESET_YEARS = 10
 
 /**
- * `/tools/savings` -- the Savings & Investment Goal calculator. The return
+ * `/tools/savings` -- the Savings & Investment Goal calculator, with the
+ * emergency fund in a bank deposit on the same chart (2026-10-01). The return
  * presets are each index's real CAGR over the last ten years.
  */
 export async function SavingsPage() {
@@ -23,18 +22,11 @@ export async function SavingsPage() {
 
   return (
     <>
-      <TutorialTrigger tour="savings" className="mb-2" />
-      <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
-        Work out how much to save for a goal. Start from a steady yearly return, or tap an index to use its real
-        growth over the last ten years.
-      </p>
-      <SavingsGoalCalculator presets={presets} />
-      <h2 className="mt-8 mb-1 text-lg font-semibold tracking-tight">Emergency fund</h2>
-      <p className="mb-4 max-w-3xl text-[0.8125rem] text-muted-foreground">
-        Before investing for a goal, most planners keep three to six months of expenses in cash. See what that
-        fund earns in a Philippine time deposit, after tax, next to investing it.
-      </p>
-      <EmergencyFundPlanner />
+      <ToolIntro tour="savings" question="How much should you save each month to reach your goal?">
+        Set a goal and a date to see the monthly amount. Keep an emergency fund safe in a bank deposit while you
+        invest the rest: both show on one chart.
+      </ToolIntro>
+      <SavingsGoalCalculator presets={presets} emergencyFund />
     </>
   )
 }

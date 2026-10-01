@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { budgetTips, BUCKETS, PRESETS, splitBudget, TARGET_SHARE, type Bucket, type BudgetLine, type BudgetRegion } from '../budget'
 import { budgetSheet } from '../workbook'
 import { ShareResultButton } from './fields'
+import { LessonCard, ResultHeadline, TermHelp } from './lesson'
 
 const BUCKET_LABEL: Record<Bucket, string> = { needs: 'Needs', wants: 'Wants', savings: 'Savings & debt' }
 
@@ -53,6 +54,7 @@ export function BudgetPlanner() {
 
   const result = useMemo(() => splitBudget(pay, lines), [pay, lines])
   const tips = budgetTips(result, pay)
+  const verdict = budgetVerdict(result.buckets)
   const chartRows = result.buckets.map((b) => ({ bucket: BUCKET_LABEL[b.bucket], target: b.target, actual: b.actual }))
 
   // "Show me": a typical month for the preset's first lines.
@@ -67,12 +69,12 @@ export function BudgetPlanner() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
-      <Card className="rounded-2xl border-0 py-5">
-        <CardHeader className="px-5">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardHeader className="px-4 sm:px-5">
           <CardTitle className="text-base font-semibold">Your month</CardTitle>
           <CardDescription>Take-home pay, then what each peso or dollar is for.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 px-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5">
           <Field data-tut="budget.region">
             <FieldLabel>Where you live</FieldLabel>
             <ToggleGroup
@@ -97,7 +99,10 @@ export function BudgetPlanner() {
             </ToggleGroup>
           </Field>
           <Field data-tut="budget.pay">
-            <FieldLabel htmlFor={payId}>Monthly take-home pay ({CURRENCY[region].code})</FieldLabel>
+            <div className="flex items-center gap-1">
+              <FieldLabel htmlFor={payId}>Monthly take-home pay ({CURRENCY[region].code})</FieldLabel>
+              <TermHelp id="takeHome" />
+            </div>
             <Input
               id={payId}
               type="number"
@@ -178,16 +183,20 @@ export function BudgetPlanner() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="grid gap-4 px-5">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5">
+          <ResultHeadline lead={<>You take home <span className="figure font-medium text-foreground">{format.format(pay)}</span> a month. Here is where it goes.</>} verdict={verdict} />
+
           <div className="grid gap-2" data-tut="budget.buckets">
             {result.buckets.map((b) => {
               const over = b.gap > 0
               return (
                 <div key={b.bucket} className="rounded-xl bg-muted/50 p-3">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-sm font-medium">
-                      {BUCKET_LABEL[b.bucket]} <span className="text-muted-foreground">· target {TARGET_SHARE[b.bucket] * 100}%</span>
+                    <p className="flex items-center gap-1 text-sm font-medium">
+                      {BUCKET_LABEL[b.bucket]}
+                      <TermHelp id={b.bucket} />
+                      <span className="text-muted-foreground">· target {TARGET_SHARE[b.bucket] * 100}%</span>
                     </p>
                     <p className={cn('figure text-sm font-semibold', over ? 'text-loss' : 'text-gain')}>{b.sharePct.toFixed(0)}%</p>
                   </div>
@@ -220,7 +229,7 @@ export function BudgetPlanner() {
                   <span className="figure font-medium">{format.format(Number(value))}</span>
                 </span>
               )} />} />
-              <ChartLegend content={<ChartLegendContent />} />
+              <ChartLegend itemSorter={null} content={<ChartLegendContent />} />
               <Bar dataKey="target" fill="var(--color-target)" radius={[4, 4, 0, 0]} />
               <Bar dataKey="actual" fill="var(--color-actual)" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -233,6 +242,11 @@ export function BudgetPlanner() {
               </li>
             ))}
           </ul>
+
+          <LessonCard data-tut="budget.lesson" terms={['budgetRule', 'needs', 'wants', 'savings']}>
+            Needs first, a little fun, then pay yourself. Even 10% saved every month builds the habit; raise it when
+            you can.
+          </LessonCard>
 
           <div className="flex flex-wrap items-center gap-3" data-tut="budget.export">
             <Button
@@ -280,4 +294,34 @@ export function BudgetPlanner() {
       </Card>
     </div>
   )
+}
+
+/** The one-line verdict: the biggest miss against the guide, or that it fits. */
+function budgetVerdict(buckets: ReturnType<typeof splitBudget>['buckets']): React.ReactNode {
+  const needs = buckets.find((b) => b.bucket === 'needs')
+  const savings = buckets.find((b) => b.bucket === 'savings')
+  if (needs && needs.gap > 0) {
+    return (
+      <>
+        Needs take <span className="figure text-loss">{needs.sharePct.toFixed(0)}%</span> of your pay,{' '}
+        {(needs.sharePct - TARGET_SHARE.needs * 100).toFixed(0)}% over the 50% guide
+      </>
+    )
+  }
+  if (savings && savings.gap > 0) {
+    return (
+      <>
+        You save <span className="figure text-loss">{savings.sharePct.toFixed(0)}%</span>, short of the 20% guide
+      </>
+    )
+  }
+  const wants = buckets.find((b) => b.bucket === 'wants')
+  if (wants && wants.gap > 0) {
+    return (
+      <>
+        Wants take <span className="figure text-loss">{wants.sharePct.toFixed(0)}%</span>, over the 30% guide
+      </>
+    )
+  }
+  return <>Your month fits the 50/30/20 guide</>
 }

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
 import { BriefcaseBusiness, Check, Globe, KeyRound, Link2, MailCheck, Plus, ShieldCheck, UserRound, X } from 'lucide-react'
 
+import { HelpTip } from '@/components/help-tip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,10 +15,11 @@ import { Switch } from '@/components/ui/switch'
 import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 
 import { useFormSubmit } from '../hooks/use-form-submit'
+import { RETIREMENT_INCOME_HELP } from '../income'
 import type { Income, IncomeCurrency } from '../schema'
 import type { UserProfile } from '../types'
 import { GoogleButton } from './GoogleButton'
-import { IncomeInput, OccupationCombobox, formatIncome, parseAmount, toDisplay } from './profile-fields'
+import { IncomeInput, OccupationCombobox, parseAmount, toDisplay } from './profile-fields'
 
 /**
  * The profile page's editable cards. Each card saves only its own fields
@@ -174,10 +176,6 @@ export function WorkIncomeCard({ profile }: { profile: UserProfile }) {
     })
   }
 
-  const current = incomeOf(annual)
-  const goal = incomeOf(ideal)
-  const gap = current && goal && current.currency === goal.currency ? goal.amount - current.amount : null
-
   return (
     <SectionCard icon={BriefcaseBusiness} title="prof.work" description="What you do, what you earn, and where you want to be.">
       <form onSubmit={onSubmit} noValidate>
@@ -236,7 +234,11 @@ export function WorkIncomeCard({ profile }: { profile: UserProfile }) {
             <FieldError>{errors.annualIncome}</FieldError>
           </Field>
           <Field data-invalid={Boolean(errors.idealIncome) || undefined}>
-            <FieldLabel htmlFor="ideal-income">Ideal income</FieldLabel>
+            {/* Relabelled from "Ideal income" (Carlos, 2026-10-01); same column. */}
+            <div className="flex items-center gap-1">
+              <FieldLabel htmlFor="ideal-income">Retirement income</FieldLabel>
+              <HelpTip label="Retirement income" text={RETIREMENT_INCOME_HELP} />
+            </div>
             <IncomeInput
               id="ideal-income"
               amount={ideal.amount}
@@ -249,9 +251,7 @@ export function WorkIncomeCard({ profile }: { profile: UserProfile }) {
               <FieldError>{errors.idealIncome}</FieldError>
             ) : (
               <FieldDescription>
-                {gap !== null && gap > 0 && goal
-                  ? `That is ${formatIncome(gap, goal.currency)} a year above where you are now.`
-                  : 'The yearly income you are working toward.'}
+                A year, in today’s money. The Cost of Waiting tool starts from it.
               </FieldDescription>
             )}
           </Field>

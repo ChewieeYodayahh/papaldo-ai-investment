@@ -37,6 +37,7 @@ import {
   type Statements,
 } from '../statements'
 import { SHEET_NAMES, statementSheets, type StatementSheet } from '../workbook'
+import { LessonCard } from './lesson'
 
 type LineKey = 'revenue' | 'expenses' | 'assets' | 'liabilities' | 'operating' | 'investing' | 'financing'
 type NumberKey = 'cash' | 'capital' | 'openingRetained' | 'dividends' | 'openingCash'
@@ -242,8 +243,8 @@ export function StatementsBuilder() {
 
   return (
     <div className="grid gap-4">
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="grid gap-4 px-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
           <Field>
             <FieldLabel>{s.nonProfit ? 'Organisation name' : 'Business name'}</FieldLabel>
             <Input value={s.company} maxLength={80} placeholder="e.g. My online shop" onChange={(e) => setS({ ...s, company: e.target.value })} className="h-10 rounded-xl" />
@@ -369,6 +370,11 @@ export function StatementsBuilder() {
           </StatementCard>
         </TabsContent>
       </Tabs>
+      <LessonCard data-tut="statements.lesson" terms={['assets', 'liabilities', 'equity', 'netIncome']}>
+        Three views of one story: the {L.income.toLowerCase()} shows profit, the {L.balance.toLowerCase()} shows what
+        is owned and owed, and the cash flow shows where the cash actually went. Profit is not cash: you can earn on
+        paper and still run short.
+      </LessonCard>
       <p className="text-xs text-muted-foreground">
         Kept only in this browser and cleared after five days without an edit. Nothing is uploaded. A learning tool,
         not an audited statement.
@@ -392,12 +398,12 @@ function Check({ ok, label, detail, neutral = false }: { ok: boolean; label: str
 
 function StatementCard({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <Card className="rounded-2xl border-0 py-5">
-      <CardHeader className="px-5">
+    <Card className="rounded-2xl border-0 py-4 sm:py-5">
+      <CardHeader className="px-4 sm:px-5">
         <CardTitle className="text-base font-semibold">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="grid max-w-3xl gap-5 px-5">{children}</CardContent>
+      <CardContent className="grid max-w-3xl gap-5 px-4 sm:px-5">{children}</CardContent>
     </Card>
   )
 }

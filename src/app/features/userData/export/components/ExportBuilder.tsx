@@ -262,7 +262,7 @@ export function ExportBuilder({ data }: { data: ExportData }) {
         ['Email', a.email],
         ['Occupation', a.occupation],
         ['Annual income', a.annualIncome],
-        ['Ideal income', a.idealIncome],
+        ['Retirement income', a.idealIncome],
         ['Risk band', a.riskBand],
         ['Risk score (of 100)', a.riskScore],
         ['Quiz taken', a.quizTakenAt?.slice(0, 10) ?? null],

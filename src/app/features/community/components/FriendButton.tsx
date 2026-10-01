@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Check, UserPlus, X } from 'lucide-react'
+import { Check, ChevronDown, UserMinus, UserPlus, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
 import { useCopy } from '@/app/features/userData/preferences/copy'
+import { cn } from '@/lib/utils'
 
 import type { FriendAction, FriendResult, Relation } from '../api/friends'
 
@@ -47,8 +49,13 @@ export function useFriendAction() {
   return { run, pending, error }
 }
 
-/** The profile page's friend control: add, cancel, accept/decline or remove. */
-export function FriendButton({ username, relation: initial }: { username: string; relation: Relation }) {
+/**
+ * The profile page's friend control: add, cancel, accept/decline or remove.
+ * A sent request and a friendship are one button each, with the undo in its
+ * menu (Carlos, 2026-10-01: a label beside a button read as clutter).
+ * `fill` stretches the controls across the row, for the header on phones.
+ */
+export function FriendButton({ username, relation: initial, fill = false }: { username: string; relation: Relation; fill?: boolean }) {
   const t = useCopy()
   const router = useRouter()
   const [relation, setRelation] = useState(initial)
@@ -79,13 +86,12 @@ export function FriendButton({ username, relation: initial }: { username: string
       break
     case 'outgoing':
       controls = (
-        <>
-          <span className="text-sm text-muted-foreground">{t('soc.requestSent')}</span>
-          <Button variant="outline" className="rounded-full" disabled={pending !== null} onClick={() => act('remove')}>
-            {busy('remove')}
+        <StateMenu label={t('soc.requestSent')} busy={pending !== null} fill={fill}>
+          <DropdownMenuItem variant="destructive" onClick={() => act('remove')}>
+            <X />
             {t('soc.cancelRequest')}
-          </Button>
-        </>
+          </DropdownMenuItem>
+        </StateMenu>
       )
       break
     case 'incoming':
@@ -104,28 +110,40 @@ export function FriendButton({ username, relation: initial }: { username: string
       break
     case 'friends':
       controls = (
-        <>
-          <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
-            <Check className="size-4" />
-            {t('soc.friends')}
-          </span>
-          <Button variant="ghost" size="sm" className="rounded-full" disabled={pending !== null} onClick={() => act('remove')}>
-            {busy('remove')}
+        <StateMenu label={t('soc.friends')} busy={pending !== null} fill={fill}>
+          <DropdownMenuItem variant="destructive" onClick={() => act('remove')}>
+            <UserMinus />
             {t('soc.unfriend')}
-          </Button>
-        </>
+          </DropdownMenuItem>
+        </StateMenu>
       )
       break
   }
 
   return (
-    <div className="grid justify-items-end gap-1">
-      <div className="flex flex-wrap items-center justify-end gap-2">{controls}</div>
+    <div className={cn('grid gap-1', fill ? 'w-full' : 'justify-items-end')}>
+      <div className={cn('flex flex-wrap items-center gap-2', fill ? '*:flex-1' : 'justify-end')}>{controls}</div>
       {error ? (
         <p role="alert" className="text-xs text-destructive">
           {error}
         </p>
       ) : null}
     </div>
+  )
+}
+
+/** A settled state (request sent, friends) as one button; its menu holds the undo. */
+function StateMenu({ label, busy, fill, children }: { label: string; busy: boolean; fill: boolean; children: React.ReactNode }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline" className={cn('rounded-full', fill && 'w-full')} disabled={busy} />}>
+        {busy ? <Spinner className="size-4" /> : <Check className="text-primary" />}
+        {label}
+        <ChevronDown className="text-muted-foreground" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {children}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

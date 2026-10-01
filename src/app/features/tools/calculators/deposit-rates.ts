@@ -19,6 +19,8 @@ export type DepositTerm = {
 export type DepositProduct = {
   id: string
   bank: string
+  /** The bank's own site, for its logo (Google's favicon CDN, 2026-10-01). */
+  domain: string
   product: string
   kind: 'time-deposit' | 'savings'
   terms: DepositTerm[]
@@ -32,6 +34,7 @@ export const DEPOSIT_PRODUCTS: DepositProduct[] = [
   {
     id: 'maya-td-plus',
     bank: 'Maya',
+    domain: 'maya.ph',
     product: 'Time Deposit Plus',
     kind: 'time-deposit',
     terms: [
@@ -46,6 +49,7 @@ export const DEPOSIT_PRODUCTS: DepositProduct[] = [
   {
     id: 'cimb-maxsave',
     bank: 'CIMB',
+    domain: 'cimbbank.com.ph',
     product: 'MaxSave Time Deposit',
     kind: 'time-deposit',
     terms: [
@@ -60,6 +64,8 @@ export const DEPOSIT_PRODUCTS: DepositProduct[] = [
   {
     id: 'maribank-td',
     bank: 'MariBank',
+    // maribank.com.ph has no icon on the CDN; maribank.ph does.
+    domain: 'maribank.ph',
     product: 'Upfront Time Deposit',
     kind: 'time-deposit',
     terms: [{ termMonths: 3, ratePct: 3.75 }],
@@ -71,6 +77,7 @@ export const DEPOSIT_PRODUCTS: DepositProduct[] = [
   {
     id: 'gotyme-go-save',
     bank: 'GoTyme',
+    domain: 'gotyme.com.ph',
     product: 'Go Save (savings)',
     kind: 'savings',
     terms: [{ termMonths: 0, ratePct: 3.0 }],
@@ -99,4 +106,9 @@ export function termLabel(termMonths: number): string {
   if (termMonths === 0) return 'No lock-in'
   if (termMonths % 12 === 0) return termMonths === 12 ? '1 year' : `${termMonths / 12} years`
   return `${termMonths} months`
+}
+
+/** A bank's logo from Google's favicon CDN: free and keyless, falls back to initials in the UI. */
+export function bankLogoUrl(domain: string): string {
+  return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=128'
 }

@@ -6,6 +6,7 @@ import { CircleHelp, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverDescription, PopoverTitle } from '@/components/ui/popover'
 import { Spinner } from '@/components/ui/spinner'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 import { useTutorialCopy } from '../copy'
@@ -58,6 +59,7 @@ export function TourRunner({
   const direction = useRef<1 | -1>(1)
   const shownAny = useRef(false)
   const [demoReady, setDemoReady] = useState(false)
+  const phone = useIsMobile()
   // The parents pass fresh callbacks each render; the search must not restart for that.
   const callbacks = useRef({ onIndex, onDone, onFound })
   useEffect(() => {
@@ -75,7 +77,11 @@ export function TourRunner({
       if (found) {
         window.clearInterval(timer)
         found.setAttribute('data-tour-active', '')
-        found.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        // Phones dock the card at the bottom, so the step's element goes to
+        // the top half instead of the middle, clear of the header.
+        const docked = window.matchMedia('(max-width: 767px)').matches
+        found.style.scrollMarginTop = docked ? '88px' : ''
+        found.scrollIntoView({ block: docked ? 'start' : 'center', behavior: 'smooth' })
         shownAny.current = true
         setAnchor(found)
         callbacks.current.onFound?.()
@@ -117,6 +123,82 @@ export function TourRunner({
   if (!step || !anchor) return null
 
   const last = index === steps.length - 1
+  const header = (
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-medium text-highlight">
+        {t('ui.step', { n: String(index + 1), m: String(steps.length) })}
+      </span>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label={t('ui.exit')}
+        className="grid size-6 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        <X className="size-3.5" />
+      </button>
+    </div>
+  )
+  const actions = (
+    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+      {demoReady ? (
+        <Button variant="outline" size="sm" className="rounded-full" onClick={() => runDemo(step.id)}>
+          <Sparkles />
+          {t('ui.showMe')}
+        </Button>
+      ) : (
+        <span />
+      )}
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-full"
+          disabled={index === 0}
+          onClick={() => {
+            direction.current = -1
+            onIndex(index - 1)
+          }}
+        >
+          {t('ui.back')}
+        </Button>
+        <Button
+          size="sm"
+          className="rounded-full px-4"
+          onClick={() => {
+            direction.current = 1
+            if (last) onDone()
+            else onIndex(index + 1)
+          }}
+        >
+          {last ? t('ui.done') : t('ui.next')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  // Phones (Carlos, 2026-10-01): a card docked to the bottom of the screen
+  // instead of one pinned beside the element, which covered what it pointed at.
+  if (phone) {
+    return (
+      <div
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="tour-step-title"
+        aria-describedby="tour-step-body"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-50 grid max-h-[45svh] gap-2 overflow-y-auto rounded-2xl bg-popover p-4 text-popover-foreground shadow-2xl ring-2 ring-primary/50"
+      >
+        {header}
+        <h2 id="tour-step-title" className="text-[0.9375rem] font-semibold">
+          {t(`${step.id}.title`)}
+        </h2>
+        <p id="tour-step-body" className="text-sm leading-relaxed text-muted-foreground">
+          {t(`${step.id}.body`)}
+        </p>
+        {actions}
+      </div>
+    )
+  }
+
   return (
     <Popover open modal={false}>
       <PopoverContent
@@ -127,56 +209,10 @@ export function TourRunner({
         initialFocus={false}
         className="w-80 max-w-[calc(100vw-1.5rem)] gap-3 rounded-2xl p-5 shadow-2xl ring-2 ring-primary/50"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-highlight">
-            {t('ui.step', { n: String(index + 1), m: String(steps.length) })}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('ui.exit')}
-            className="grid size-6 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
+        {header}
         <PopoverTitle className="text-base font-semibold">{t(`${step.id}.title`)}</PopoverTitle>
         <PopoverDescription className="text-sm leading-relaxed">{t(`${step.id}.body`)}</PopoverDescription>
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-          {demoReady ? (
-            <Button variant="outline" size="sm" className="rounded-full" onClick={() => runDemo(step.id)}>
-              <Sparkles />
-              {t('ui.showMe')}
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full"
-              disabled={index === 0}
-              onClick={() => {
-                direction.current = -1
-                onIndex(index - 1)
-              }}
-            >
-              {t('ui.back')}
-            </Button>
-            <Button
-              size="sm"
-              className="rounded-full px-4"
-              onClick={() => {
-                direction.current = 1
-                if (last) onDone()
-                else onIndex(index + 1)
-              }}
-            >
-              {last ? t('ui.done') : t('ui.next')}
-            </Button>
-          </div>
-        </div>
+        {actions}
       </PopoverContent>
     </Popover>
   )

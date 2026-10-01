@@ -31,43 +31,49 @@ export async function MemberProfilePage({ username }: { username: string }) {
 
   return (
     <div className="mx-auto grid w-full max-w-4xl gap-4">
-      <Card className="hero-mesh rounded-2xl border-0 py-5">
-        <CardContent className="flex flex-wrap items-center gap-4 px-5 sm:px-6">
-          <Avatar className="size-16 text-lg">
-            {profile.avatarUrl ? <AvatarImage src={profile.avatarUrl} alt="" /> : null}
-            <AvatarFallback>{initials(profile.username)}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-xl font-semibold tracking-tight">@{profile.username}</h2>
-            {profile.occupations.length > 0 ? (
-              <p className="truncate text-sm text-muted-foreground">{profile.occupations.join(' · ')}</p>
-            ) : null}
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              {profile.isPrivate ? (
-                <Badge variant="outline" className="rounded-full">
-                  <Lock />
-                  <T k="soc.private" />
-                </Badge>
+      {/* Phones: who it is on top, the friend control as a full-width row
+          beneath (Carlos, 2026-10-01). One row from sm. */}
+      <Card className="hero-mesh rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:flex sm:items-center sm:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <Avatar className="size-14 text-lg sm:size-16">
+              {profile.avatarUrl ? <AvatarImage src={profile.avatarUrl} alt="" /> : null}
+              <AvatarFallback>{initials(profile.username)}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-lg font-semibold tracking-tight sm:text-xl">@{profile.username}</h2>
+              {profile.occupations.length > 0 ? (
+                <p className="truncate text-sm text-muted-foreground">{profile.occupations.join(' · ')}</p>
               ) : null}
-              {profile.band ? (
-                <Badge className="rounded-full bg-primary/15 text-primary">
-                  <T k="soc.riskBand" vars={{ band: profile.band }} />
-                </Badge>
-              ) : null}
-              {profile.website ? (
-                <a
-                  href={profile.website}
-                  target="_blank"
-                  rel="nofollow ugc noopener noreferrer"
-                  className="inline-flex max-w-full items-center gap-1 truncate text-sm text-primary underline-offset-2 hover:underline"
-                >
-                  {hostOf(profile.website)}
-                  <ExternalLink className="size-3.5 shrink-0" />
-                </a>
-              ) : null}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {profile.isPrivate ? (
+                  <Badge variant="outline" className="rounded-full">
+                    <Lock />
+                    <T k="soc.private" />
+                  </Badge>
+                ) : null}
+                {profile.band ? (
+                  <Badge className="rounded-full bg-primary/15 text-primary">
+                    <T k="soc.riskBand" vars={{ band: profile.band }} />
+                  </Badge>
+                ) : null}
+                {profile.website ? (
+                  <a
+                    href={profile.website}
+                    target="_blank"
+                    rel="nofollow ugc noopener noreferrer"
+                    className="inline-flex max-w-full items-center gap-1 truncate text-sm text-primary underline-offset-2 hover:underline"
+                  >
+                    {hostOf(profile.website)}
+                    <ExternalLink className="size-3.5 shrink-0" />
+                  </a>
+                ) : null}
+              </div>
             </div>
           </div>
-          <FriendButton username={profile.username} relation={profile.relation} />
+          <div className="w-full sm:w-auto">
+            <FriendButton username={profile.username} relation={profile.relation} fill />
+          </div>
         </CardContent>
       </Card>
 
@@ -153,7 +159,7 @@ function PortfolioCard({ portfolio }: { portfolio: NonNullable<PublicProfile['po
         <CardTitle className="text-sm font-medium text-muted-foreground">
           <T k="soc.balance" />
         </CardTitle>
-        <p className="figure text-3xl font-semibold tracking-tight">
+        <p className="figure text-2xl font-semibold tracking-tight sm:text-3xl">
           <Money usd={portfolio.total} />
         </p>
       </CardHeader>

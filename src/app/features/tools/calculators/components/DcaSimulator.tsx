@@ -16,14 +16,15 @@ import type { AssetOption, HistoryResult } from '../api/history'
 import { lastYears, type MonthlyPoint } from '../math'
 import { compareDcaLump, dcaWinRate } from '../strategies'
 import { AmountField, ShareResultButton, Stat, useMoney } from './fields'
+import { LessonCard, ResultHeadline, TermHelp } from './lesson'
 
 const PERIODS = [1, 3, 5, 10, 15] as const
 const GROUP_LABEL = { index: 'Stock market indices', fund: 'Funds (ETFs)', stock: 'Stocks' } as const
 
 const config = {
-  dca: { label: 'Every month (DCA)', color: 'var(--chart-1)' },
+  dca: { label: 'Monthly (cost averaging)', color: 'var(--chart-1)' },
   lump: { label: 'All at once (lump sum)', color: 'var(--chart-3)' },
-  invested: { label: 'Put in by monthly buying', color: 'var(--muted-foreground)' },
+  invested: { label: 'Put in so far, monthly', color: 'var(--muted-foreground)' },
 } satisfies ChartConfig
 
 const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
@@ -79,10 +80,13 @@ export function DcaSimulator({ options, defaultAsset }: { options: AssetOption[]
 
   return (
     <div className="grid gap-4">
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="grid gap-4 px-5 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5 md:grid-cols-2 lg:grid-cols-4">
           <Field className="md:col-span-2" data-tut="dca.asset">
-            <FieldLabel htmlFor={selectId}>Invest in</FieldLabel>
+            <div className="flex items-center gap-1">
+              <FieldLabel htmlFor={selectId}>Invest in</FieldLabel>
+              <TermHelp id="investment" />
+            </div>
             <NativeSelect id={selectId} value={asset} onChange={(event) => setAsset(event.target.value)} className="h-10 w-full rounded-xl">
               {(['index', 'fund', 'stock'] as const).map((group) => (
                 <NativeSelectOptGroup key={group} label={GROUP_LABEL[group]}>
@@ -98,10 +102,13 @@ export function DcaSimulator({ options, defaultAsset }: { options: AssetOption[]
             </NativeSelect>
           </Field>
           <div data-tut="dca.amount">
-            <AmountField label="Every month" usd={monthlyUsd} onChange={setMonthlyUsd} />
+            <AmountField label="Every month" usd={monthlyUsd} onChange={setMonthlyUsd} help="monthlyAmount" />
           </div>
           <Field data-tut="dca.period">
-            <FieldLabel>Over the last</FieldLabel>
+            <div className="flex items-center gap-1">
+              <FieldLabel>Over the last</FieldLabel>
+              <TermHelp id="period" />
+            </div>
             <ToggleGroup
               variant="outline"
               spacing={0}
@@ -119,35 +126,41 @@ export function DcaSimulator({ options, defaultAsset }: { options: AssetOption[]
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="grid gap-4 px-5">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5">
           {loading && !result ? (
             <div className="grid gap-3">
               <Skeleton className="h-16 rounded-xl" />
-              <Skeleton className="h-[260px] rounded-xl" />
+              <Skeleton className="h-[220px] sm:h-[260px] rounded-xl" />
             </div>
           ) : history && !history.ok ? (
             <p className="py-10 text-center text-sm text-muted-foreground">{history.message}</p>
           ) : result ? (
             <>
-              <div data-tut="dca.result">
-                <p className="text-sm text-muted-foreground">
-                  {money.format(result.total)} into {label} since {monthLabel.format(asDate(result.rows[0].date))}:{' '}
-                  {money.format(monthlyUsd)} every month, or all of it at the start.
-                </p>
-                <p className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
-                  {lumpAhead ? 'The lump sum' : 'Buying every month'} came out{' '}
-                  <span className="figure text-primary">{money.format(gap)}</span> ahead
-                </p>
-              </div>
+              {/* Plain words first (Carlos, 2026-10-01): who put in what, when, two ways. */}
+              <ResultHeadline
+                data-tut="dca.result"
+                lead={
+                  <>
+                    You put <span className="figure font-medium text-foreground">{money.format(result.total)}</span> into {label} between{' '}
+                    {monthLabel.format(asDate(result.rows[0].date))} and {monthLabel.format(asDate(result.rows[result.rows.length - 1].date))}:{' '}
+                    {money.format(monthlyUsd)} every month, or all of it on day one.
+                  </>
+                }
+                verdict={
+                  <>
+                    {lumpAhead ? 'All at once' : 'Monthly'} ended <span className="figure text-primary">{money.format(gap)}</span> ahead
+                  </>
+                }
+              />
               <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-                <Stat label="Every month (DCA)" value={money.compact(result.dcaFinal)} tone={lumpAhead ? undefined : 'gain'} />
+                <Stat label="Monthly" value={money.compact(result.dcaFinal)} tone={lumpAhead ? undefined : 'gain'} />
                 <Stat label="All at once" value={money.compact(result.lumpFinal)} tone={lumpAhead ? 'gain' : undefined} />
-                <Stat label="Average price, DCA" value={money.format(result.dcaAvgPrice)} />
-                <Stat label="Price, lump sum" value={money.format(result.lumpPrice)} />
+                <Stat label="Avg price paid, monthly" value={money.format(result.dcaAvgPrice)} />
+                <Stat label="Price paid, all at once" value={money.format(result.lumpPrice)} />
               </div>
 
-              <ChartContainer config={config} className="aspect-auto h-[260px] w-full" data-tut="dca.chart">
+              <ChartContainer config={config} className="aspect-auto h-[220px] sm:h-[260px] w-full" data-tut="dca.chart">
                 <LineChart data={result.rows} margin={{ left: 4, right: 8, top: 8 }}>
                   <CartesianGrid vertical={false} />
                   <XAxis
@@ -174,21 +187,25 @@ export function DcaSimulator({ options, defaultAsset }: { options: AssetOption[]
                       />
                     }
                   />
-                  <ChartLegend content={<ChartLegendContent />} />
+                  <ChartLegend itemSorter={null} content={<ChartLegendContent />} />
                   <Line dataKey="lump" type="monotone" stroke="var(--color-lump)" strokeWidth={2} dot={pointDot(result.rows.length, 'var(--color-lump)')} isAnimationActive={false} />
                   <Line dataKey="dca" type="monotone" stroke="var(--color-dca)" strokeWidth={2.25} dot={pointDot(result.rows.length, 'var(--color-dca)')} isAnimationActive={false} />
                   <Line dataKey="invested" type="stepAfter" stroke="var(--color-invested)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} isAnimationActive={false} />
                 </LineChart>
               </ChartContainer>
 
-              {wins.windows > 1 ? (
-                <p className="rounded-xl bg-muted/50 p-3 text-sm" data-tut="dca.history">
-                  Across all <span className="figure font-medium">{wins.windows}</span> {years}-year windows in {label}’s history, the lump
-                  sum finished ahead <span className="figure font-medium">{Math.round((wins.lumpWins / wins.windows) * 100)}%</span> of the time.
-                  Markets rise more often than they fall, so money in sooner usually wins; buying every month wins after a
-                  drop, and it is how most people invest a salary anyway. The habit matters more than the timing.
-                </p>
-              ) : null}
+              <LessonCard data-tut="dca.history" terms={['dca', 'lumpSum']}>
+                Markets rise more often than they fall, so money invested sooner usually ends ahead
+                {wins.windows > 1 ? (
+                  <>
+                    {' '}
+                    — in {label} it did in <span className="figure font-medium">{Math.round((wins.lumpWins / wins.windows) * 100)}%</span> of past{' '}
+                    {years}-year periods
+                  </>
+                ) : null}
+                . Investing monthly wins when prices drop first, and it is how most people invest from a salary.{' '}
+                <span className="font-semibold">Starting matters more than timing.</span>
+              </LessonCard>
 
               <ShareResultButton
                 filename={`papaldo-dca-${asset.toLowerCase()}`}

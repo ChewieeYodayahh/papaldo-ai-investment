@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 
+import { LessonCard } from '@/app/features/tools/calculators/components/lesson'
 import { ReturnsCompare, type CompareSeries } from '@/app/features/tools/calculators/components/ReturnsCompare'
 
 import { getBenchmarks } from '../api/benchmarks'
@@ -43,6 +44,10 @@ export async function BenchmarksPage() {
     <div className="grid gap-6">
       <Benchmarker data={data} />
       <ReturnsCompare series={series} />
+      <LessonCard terms={['diversification', 'indexFund']}>
+        Each market had its own good and bad stretches, and none led every year. Spreading money across markets
+        smooths the ride, so one slow market hurts less.
+      </LessonCard>
     </div>
   )
 }

@@ -34,29 +34,25 @@ export function supabaseAnonKey(): string {
  * server listens on -- `next dev` never reads it. The port is pinned in the
  * package.json scripts (`--port 3001`), and the two have to agree.
  *
- * `requestOrigin` is the origin the current request arrived on. When the env
- * var is unset it is the right answer by definition, and it is what kept
- * Google sign-in alive on Vercel: without it this threw, the route answered a
- * bare HTTP 500, and the button reported a network error (2026-09-26). An
- * explicit NEXT_PUBLIC_SITE_URL still wins, e.g. behind a proxy that rewrites
- * the host.
+ * `requestOrigin` is the origin the current request arrived on. It is what
+ * kept Google sign-in alive on Vercel: without it this threw, the route
+ * answered a bare HTTP 500, and the button reported a network error
+ * (2026-09-26).
  *
- * On Vercel's production deployment two more guards apply (2026-09-30, after
- * Google sign-in landed on vercel.com/login): a localhost value baked into the
- * build is ignored, and the project's production domain
- * (`VERCEL_PROJECT_PRODUCTION_URL`, set by Vercel) comes before the request
- * origin, which could be a deployment-specific URL behind Vercel
- * Authentication. The result never ends in a slash, so `${siteUrl()}/path`
- * cannot produce `//path`.
+ * The request origin now comes first (2026-10-01). Sign-in uses PKCE: the
+ * code verifier is a cookie on the host the user started from, and vercel.app
+ * hosts never share cookies, so a callback on any other host -- the old alias,
+ * the new domain, the team URL -- cannot finish the exchange. The configured
+ * value is only the fallback when there is no request. (The 2026-09-30
+ * "vercel.com/login" landing was Supabase's Site URL pointing at the
+ * Vercel-protected team URL, not this function; `VERCEL_PROJECT_PRODUCTION_URL`
+ * was dropped because it can name that same protected URL.) The result never
+ * ends in a slash, so `${siteUrl()}/path` cannot produce `//path`.
  */
 export function siteUrl(requestOrigin?: string): string {
-  const production = process.env.VERCEL_ENV === 'production'
-  const configured = process.env.NEXT_PUBLIC_SITE_URL
-  if (configured && !(production && /\/\/(localhost|127\.0\.0\.1)\b/.test(configured))) return trimSlash(configured)
-  if (production && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${trimSlash(process.env.VERCEL_PROJECT_PRODUCTION_URL)}`
-  }
   if (requestOrigin) return trimSlash(requestOrigin)
+  const configured = process.env.NEXT_PUBLIC_SITE_URL
+  if (configured) return trimSlash(configured)
   if (process.env.NODE_ENV === 'development') return 'http://localhost:3001'
   return required('NEXT_PUBLIC_SITE_URL')
 }

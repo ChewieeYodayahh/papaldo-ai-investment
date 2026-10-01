@@ -22,11 +22,11 @@ export function useSignOut() {
   return { pending, signOut }
 }
 
-export function SignOutButton({ className }: { className?: string }) {
+export function SignOutButton({ className, variant = 'outline' }: { className?: string; variant?: 'outline' | 'ghost' }) {
   const { pending, signOut } = useSignOut()
 
   return (
-    <Button type="button" variant="outline" onClick={signOut} disabled={pending} className={cn('rounded-full px-4', className)}>
+    <Button type="button" variant={variant} onClick={signOut} disabled={pending} className={cn('rounded-full px-4', className)}>
       <LogOut data-icon="inline-start" />
       {pending ? 'Signing out…' : 'Sign out'}
     </Button>

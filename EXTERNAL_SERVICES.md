@@ -109,13 +109,18 @@ reading it.
   the placeholder; the named candidate to replace it is Alpaca.
 - **AI Investment Advising Engine** - Use Claude Haiku 4.5 API, where it also reads monthly market insights of the ff allocations of the users, generates its own prospective outlooks from different authoritative sources (fund managers, hedge funds, banks, governments, research tanks), tailor-fits to the risk appetite of the user (e.g. Conservative, Moderate, Aggressive). So we should feature different asset classes for all kinds of risk appetites -> forex (USD, PHP, GBP), fixed-income (Conservative), stocks/equities, commodities, crypto (automatically aggressive),  
 - **Redirect allow list** — every Supabase redirect (Google sign-in, Google
-  linking, the password email) returns to `${NEXT_PUBLIC_SITE_URL}/api/auth/callback`.
-  Locally that is now `http://localhost:3001` (the dev port moved 2026-09-26), so
-  Supabase → Authentication → URL Configuration must list
-  `http://localhost:3001/**`, and the Vercel project needs its real origin in
-  both `NEXT_PUBLIC_SITE_URL` and the allow list. Since 2026-09-30 that origin
-  is `https://papaldo-ka.vercel.app`. A URL missing from the list
-  makes Supabase fall back to the Site URL.
+  linking, the password email) returns to `<the host the user is on>/api/auth/callback`
+  (2026-10-01; the PKCE cookie only exists on that host). Supabase →
+  Authentication → URL Configuration must therefore list every public host:
+  `https://papaldo-ka.vercel.app/**`, `https://papaldo-ai-investment.vercel.app/**`
+  and `http://localhost:3001/**`. A URL missing from the list makes Supabase
+  fall back to the **Site URL**, which must be `https://papaldo-ka.vercel.app`
+  (or the old alias until that domain is live) — never the team URL
+  `papaldo-ai-investment-chewieeyodayahhs-projects.vercel.app`, which sits
+  behind Vercel Authentication. On 2026-10-01 the Site URL *was* that team URL
+  and the allow list lacked the alias, so Google sign-in succeeded at Supabase
+  and then dropped users on the protected team URL
+  (`flow_state_already_used` when they retried).
 - **The curated ~60-symbol/6-industry ticker universe** that `REQUIREMENTS.md`
   Part 3 calls for is still Carlos's open item — separate from the 7-symbol
   `WATCHLIST_SYMBOLS` the Finnhub dashboard uses today, which was chosen only

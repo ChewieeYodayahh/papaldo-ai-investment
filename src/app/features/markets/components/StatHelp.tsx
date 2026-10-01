@@ -1,8 +1,6 @@
 'use client'
 
-import { ArrowUpRight, CircleHelp } from 'lucide-react'
-
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { HelpTip } from '@/components/help-tip'
 import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 
 /** Each key stat: its one-line meaning (copy key) and a longer read. */
@@ -28,26 +26,5 @@ export function StatHelp({ id, label }: { id: StatId; label: string }) {
   const t = useCopy()
   const help = STAT_HELP[id]
 
-  return (
-    <Popover>
-      <PopoverTrigger
-        aria-label={t('stat.whatIs', { label })}
-        className="inline-grid size-5 place-items-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-      >
-        <CircleHelp className="size-3.5" />
-      </PopoverTrigger>
-      <PopoverContent className="w-64 text-sm" align="start">
-        <p className="font-medium">{label}</p>
-        <p className="mt-1 text-muted-foreground">{t(help.text)}</p>
-        <a
-          href={help.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-        >
-          {t('stat.learnMore')} <ArrowUpRight className="size-3.5" />
-        </a>
-      </PopoverContent>
-    </Popover>
-  )
+  return <HelpTip label={label} text={t(help.text)} href={help.href} ariaLabel={t('stat.whatIs', { label })} learnMore={t('stat.learnMore')} />
 }

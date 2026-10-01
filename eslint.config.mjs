@@ -19,6 +19,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "graphify-out/**",
+      // The Remotion marketing video is its own package with its own lint.
+      "marketing/**",
       "next-env.d.ts",
     ],
   },

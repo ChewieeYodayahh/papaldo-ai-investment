@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Calculator, ChartLine, ChartSpline, CircleCheck, ClipboardList, Coins, Compass, Download, ExternalLink, FileSpreadsheet, Hourglass, Lock, MessageCircle, PiggyBank, Route, ShieldPlus, UserRound, Wallet } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatIncome } from '@/app/features/auth/components/profile-fields'
@@ -17,13 +16,13 @@ import { useTutorialStore } from '@/app/features/tutorials/tutorial-store'
 import { TOUR_HOME, type TourId } from '@/app/features/tutorials/tours'
 import { cn } from '@/lib/utils'
 
-const CARD = 'h-full rounded-2xl border-0 py-5'
+const CARD = 'h-full gap-3 rounded-2xl border-0 py-4 sm:gap-4 sm:py-5'
 
 function ToolIcon({ icon: Icon, accent }: { icon: typeof UserRound; accent?: boolean }) {
   return (
     <span
       className={cn(
-        'grid size-11 place-items-center rounded-xl',
+        'grid size-10 place-items-center rounded-xl sm:size-11',
         accent ? 'bg-primary text-primary-foreground' : 'bg-primary/12 text-primary',
       )}
     >
@@ -39,13 +38,8 @@ export function QuizToolCard({ risk }: { risk: { band: RiskBand; score: number; 
   return (
     <Card className={cn(CARD, 'hero-mesh')}>
       <CardHeader className="px-5 sm:px-6">
-        <div className="flex items-start justify-between gap-3">
-          <ToolIcon icon={BandIcon} accent />
-          <Badge variant="outline" className="rounded-full">
-            6 questions · ~5 min
-          </Badge>
-        </div>
-        <CardTitle className="pt-3 text-lg font-semibold">{t('dash.quizTitle')}</CardTitle>
+        <ToolIcon icon={BandIcon} accent />
+        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">{t('dash.quizTitle')}</CardTitle>
         <CardDescription className="text-[0.8125rem]">Find the level of risk that suits you.</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-3 px-5 sm:px-6">
@@ -69,15 +63,15 @@ export function QuizToolCard({ risk }: { risk: { band: RiskBand; score: number; 
       <CardFooter className="flex flex-wrap gap-2 border-0 bg-transparent px-5 pt-2 sm:px-6">
         {risk ? (
           <>
-            <Link href="/isq/results" className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+            <Link href="/isq/results" className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}>
               {t('tools.viewResults')}
             </Link>
-            <Link href="/isq" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-10 rounded-full px-5')}>
+            <Link href="/isq" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5')}>
               {t('tools.retake')}
             </Link>
           </>
         ) : (
-          <Link href="/isq" className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+          <Link href="/isq" className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}>
             {t('tools.take')}
             <ArrowRight data-icon="inline-end" />
           </Link>
@@ -92,19 +86,14 @@ export function ProfileToolCard({ profile, complete }: { profile: UserProfile; c
   const rows: Array<[string, string | null]> = [
     ['Occupation', profile.occupation],
     ['Annual income', profile.annualIncome ? formatIncome(profile.annualIncome.amount, profile.annualIncome.currency) : null],
-    ['Income goal', profile.idealIncome ? formatIncome(profile.idealIncome.amount, profile.idealIncome.currency) : null],
+    ['Retirement income', profile.idealIncome ? formatIncome(profile.idealIncome.amount, profile.idealIncome.currency) : null],
   ]
 
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
-        <div className="flex items-start justify-between gap-3">
-          <ToolIcon icon={UserRound} />
-          <Badge className={cn('rounded-full', complete ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground')}>
-            {complete ? 'Complete' : 'Setup 1 of 3'}
-          </Badge>
-        </div>
-        <CardTitle className="pt-3 text-lg font-semibold">{t('tools.profileTitle')}</CardTitle>
+        <ToolIcon icon={UserRound} />
+        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">{t('tools.profileTitle')}</CardTitle>
         <CardDescription className="text-[0.8125rem]">{t('tools.profileBody')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 px-5 sm:px-6">
@@ -120,7 +109,7 @@ export function ProfileToolCard({ profile, complete }: { profile: UserProfile; c
       <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
         <Link
           href={complete ? '/profile' : '/onboarding/profile'}
-          className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-10 rounded-full px-5')}
+          className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5')}
         >
           {complete ? t('tools.editProfile') : t('gs.profile')}
         </Link>
@@ -135,20 +124,15 @@ export type BenchmarkPreview = { key: string; label: string; totalGainPct: numbe
  * The Stock Exchange Index Benchmarker. The bars are each index's total gain
  * over the full window, scaled to the leader -- a glance, not the chart.
  */
-export function BenchmarkToolCard({ preview, since }: { preview: BenchmarkPreview[]; since: string | null }) {
+export function BenchmarkToolCard({ preview }: { preview: BenchmarkPreview[] }) {
   const t = useCopy()
   const best = Math.max(...preview.map((p) => p.totalGainPct), 1)
 
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
-        <div className="flex items-start justify-between gap-3">
-          <ToolIcon icon={ChartLine} />
-          <Badge variant="outline" className="rounded-full">
-            {since ? `Since ${since}` : 'PSEi · NYSE · NASDAQ · S&P'}
-          </Badge>
-        </div>
-        <CardTitle className="pt-3 text-lg font-semibold">{t('bm.title')}</CardTitle>
+        <ToolIcon icon={ChartLine} />
+        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">{t('bm.title')}</CardTitle>
         <CardDescription className="text-[0.8125rem]">{t('bm.cardBody')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 px-5 sm:px-6">
@@ -175,7 +159,7 @@ export function BenchmarkToolCard({ preview, since }: { preview: BenchmarkPrevie
         )}
       </CardContent>
       <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
-        <Link href="/markets/benchmarks" className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+        <Link href="/markets/benchmarks" className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}>
           {t('bm.open')}
           <ArrowRight data-icon="inline-end" />
         </Link>
@@ -192,13 +176,8 @@ export function WalkthroughToolCard({ quizDone }: { quizDone: boolean }) {
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
-        <div className="flex items-start justify-between gap-3">
-          <ToolIcon icon={Route} />
-          <Badge variant="outline" className="rounded-full">
-            2 steps
-          </Badge>
-        </div>
-        <CardTitle className="pt-3 text-lg font-semibold">{t('tools.tradeTitle')}</CardTitle>
+        <ToolIcon icon={Route} />
+        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">{t('tools.tradeTitle')}</CardTitle>
         <CardDescription className="text-[0.8125rem]">{t('tools.tradeBody')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 px-5 sm:px-6">
@@ -221,7 +200,7 @@ export function WalkthroughToolCard({ quizDone }: { quizDone: boolean }) {
             startTour()
             router.push('/markets')
           }}
-          className="h-10 rounded-full px-5 font-semibold"
+          className="h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold"
         >
           {quizDone ? null : <Lock data-icon="inline-start" />}
           {t('tools.startTour')}
@@ -252,7 +231,6 @@ export function SimpleToolCard({
   icon,
   title,
   body,
-  badge,
   href,
   action,
   external = false,
@@ -260,7 +238,6 @@ export function SimpleToolCard({
   icon: keyof typeof SIMPLE_ICONS
   title: string
   body: string
-  badge?: string
   href: string
   action: string
   /** Another site (Manulife): opens in a new tab without an opener. */
@@ -269,31 +246,24 @@ export function SimpleToolCard({
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
-        <div className="flex items-start justify-between gap-3">
-          <ToolIcon icon={SIMPLE_ICONS[icon]} />
-          {badge ? (
-            <Badge variant="outline" className="rounded-full">
-              {badge}
-            </Badge>
-          ) : null}
-        </div>
-        <CardTitle className="pt-3 text-lg font-semibold">{title}</CardTitle>
+        <ToolIcon icon={SIMPLE_ICONS[icon]} />
+        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">{title}</CardTitle>
         <CardDescription className="text-[0.8125rem]">{body}</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1" />
+      <CardContent className="flex-1 max-sm:hidden" />
       <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
         {external ? (
           <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}
+            className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}
           >
             {action}
             <ExternalLink data-icon="inline-end" aria-label="Opens in a new tab" />
           </a>
         ) : (
-          <Link href={href} className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}>
+          <Link href={href} className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}>
             {action}
             <ArrowRight data-icon="inline-end" />
           </Link>
@@ -312,29 +282,24 @@ export function LifeInsuranceToolCard({ href }: { href: string }) {
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
-        <div className="flex items-start justify-between gap-3">
-          <ToolIcon icon={ShieldPlus} />
-          <Badge variant="outline" className="rounded-full">
-            Manulife PH
-          </Badge>
-        </div>
-        <CardTitle className="pt-3 text-lg font-semibold">Life insurance</CardTitle>
+        <ToolIcon icon={ShieldPlus} />
+        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">Life insurance</CardTitle>
         <CardDescription className="text-[0.8125rem]">
           Protection and investment-linked plans, worked out with Manulife Philippines’ own calculators.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1" />
+      <CardContent className="flex-1 max-sm:hidden" />
       <CardFooter className="flex flex-wrap gap-2 border-0 bg-transparent px-5 pt-2 sm:px-6">
         <a
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(buttonVariants({ size: 'lg' }), 'h-10 rounded-full px-5 font-semibold')}
+          className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}
         >
           Open Manulife’s calculators
           <ExternalLink data-icon="inline-end" aria-label="Opens in a new tab" />
         </a>
-        <Button size="lg" variant="outline" disabled className="h-10 rounded-full px-5">
+        <Button size="lg" variant="outline" disabled className="h-9 rounded-full px-4 sm:h-10 sm:px-5">
           <MessageCircle data-icon="inline-start" />
           Talk to an Advisor · Coming soon
         </Button>
@@ -356,20 +321,11 @@ export function TourToolCard({ tour, title, body, steps }: { tour: TourId; title
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
-        <div className="flex items-start justify-between gap-3">
-          <ToolIcon icon={Compass} />
-          <Badge variant="outline" className={cn('rounded-full', done && 'text-gain')}>
-            {done ? (
-              <>
-                <CircleCheck data-icon="inline-start" />
-                Done
-              </>
-            ) : (
-              `${steps.length} steps`
-            )}
-          </Badge>
-        </div>
-        <CardTitle className="pt-3 text-lg font-semibold">{title}</CardTitle>
+        <ToolIcon icon={Compass} />
+        <CardTitle className="flex items-center gap-1.5 pt-2 text-base font-semibold sm:pt-3 sm:text-lg">
+          {title}
+          {done ? <CircleCheck className="size-4 text-gain" aria-label="Done" /> : null}
+        </CardTitle>
         <CardDescription className="text-[0.8125rem]">{body}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 px-5 sm:px-6">
@@ -385,7 +341,7 @@ export function TourToolCard({ tour, title, body, steps }: { tour: TourId; title
       <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
         <Button
           size="lg"
-          className="h-10 rounded-full px-5 font-semibold"
+          className="h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold"
           onClick={() => {
             start(tour)
             router.push(TOUR_HOME[tour])

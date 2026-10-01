@@ -9,21 +9,23 @@ import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartToo
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useTutorialDemo } from '@/app/features/tutorials/tutorial-store'
 import { useFx } from '@/app/features/userData/preferences/components/Money'
+import { usePreferences } from '@/app/features/userData/preferences/store'
 import { pointDot } from '@/lib/chart-dots'
 
 import type { CpiData } from '../api/cpi'
 import { averageInflation, buyingPower, cpiAt, equivalent, projectBuyingPower } from '../inflation'
 import { NumberField, ShareResultButton, Stat } from './fields'
+import { LessonCard, TermHelp } from './lesson'
 
 type Currency = 'PHP' | 'USD'
 const SERIES_FOR: Record<Currency, keyof CpiData> = { PHP: 'PHL', USD: 'USA' }
 const COUNTRY: Record<Currency, string> = { PHP: 'Philippine', USD: 'US' }
 
 // This tool works in one currency's own history, so amounts are shown in the
-// currency picked here, never converted (like self-reported incomes).
+// currency picked, never converted (like self-reported incomes). The pick is
+// the page's $ / ₱ switch (2026-10-01), which also chooses whose prices.
 const FORMAT: Record<Currency, Intl.NumberFormat> = {
   PHP: new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 2 }),
   USD: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }),
@@ -51,14 +53,16 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
   const amountId = useId()
   const fromId = useId()
   const toId = useId()
-  const [currency, setCurrency] = useState<Currency>('PHP')
+  const currency: Currency = usePreferences((s) => s.currency) === 'PHP' ? 'PHP' : 'USD'
   const series = cpi[SERIES_FOR[currency]]
   const firstYear = series[0]?.year ?? 1960
   const lastYear = series.at(-1)?.year ?? firstYear
   const [amount, setAmount] = useState(1_000)
   const [fromYear, setFromYear] = useState(2000)
   const [toYear, setToYear] = useState(lastYear)
-  const [usedPortfolio, setUsedPortfolio] = useState(false)
+  // Which currency the portfolio balance was filled in for: switching clears it.
+  const [portfolioIn, setPortfolioIn] = useState<Currency | null>(null)
+  const usedPortfolio = portfolioIn === currency
 
   // Keep the years inside what this currency's series has.
   const from = Math.min(Math.max(fromYear, firstYear), lastYear)
@@ -89,8 +93,8 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
 
   if (!cpiFrom || !cpiTo) {
     return (
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="px-5 py-10 text-center text-sm text-muted-foreground">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="px-4 sm:px-5 py-10 text-center text-sm text-muted-foreground">
           The price index could not be loaded. Try again in a moment.
         </CardContent>
       </Card>
@@ -109,38 +113,25 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
     if (portfolioUsd === null) return
     const value = currency === 'PHP' && fx ? portfolioUsd * fx.rate : portfolioUsd
     setAmount(Math.round(value * 100) / 100)
-    setUsedPortfolio(true)
+    setPortfolioIn(currency)
   }
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      <Card className="rounded-2xl border-0 py-5">
-        <CardHeader className="px-5">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardHeader className="px-4 sm:px-5">
           <CardTitle className="text-base font-semibold">Money across the years</CardTitle>
           <CardDescription>Pick an amount and two years to compare.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 px-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5">
           <Field data-tut="purchasing.currency">
-            <FieldLabel>Currency</FieldLabel>
-            <ToggleGroup
-              variant="outline"
-              spacing={0}
-              className="w-full"
-              value={[currency]}
-              onValueChange={(value) => {
-                if (!value[0]) return
-                setCurrency(value[0] as Currency)
-                setUsedPortfolio(false)
-                setToYear(cpi[SERIES_FOR[value[0] as Currency]].at(-1)?.year ?? lastYear)
-              }}
-            >
-              <ToggleGroupItem value="PHP" className="h-9 flex-1 text-xs aria-pressed:bg-primary/10 aria-pressed:text-foreground">
-                Philippine peso (₱)
-              </ToggleGroupItem>
-              <ToggleGroupItem value="USD" className="h-9 flex-1 text-xs aria-pressed:bg-primary/10 aria-pressed:text-foreground">
-                US dollar ($)
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <div className="flex items-center gap-1">
+              <FieldLabel>Whose prices</FieldLabel>
+              <TermHelp id="cpi" />
+            </div>
+            <FieldDescription>
+              {COUNTRY[currency]} prices, in {currency === 'PHP' ? 'pesos (₱)' : 'dollars ($)'}. Use the $ / ₱ switch at the top to change.
+            </FieldDescription>
           </Field>
           <Field>
             <FieldLabel htmlFor={amountId}>Amount</FieldLabel>
@@ -153,7 +144,7 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
               onChange={(event) => {
                 const next = Number(event.target.value)
                 if (Number.isFinite(next) && next >= 0) setAmount(next)
-                setUsedPortfolio(false)
+                setPortfolioIn(null)
               }}
               className="figure h-10 rounded-xl"
             />
@@ -194,6 +185,7 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
           <div className="grid grid-cols-2 gap-3" data-tut="purchasing.future">
             <NumberField
               label="Future inflation"
+              help="inflation"
               value={projectionRate}
               onChange={setInflationPct}
               min={0}
@@ -202,19 +194,21 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
               suffix="% / yr"
               hint={`Long-run average since ${firstYear}: ${longRun.toFixed(1)}%.`}
             />
-            <NumberField label="Project ahead" value={aheadYears} onChange={setAheadYears} min={0} max={50} suffix="yrs" />
+            <NumberField label="Project ahead" value={aheadYears} onChange={setAheadYears} min={0} max={50} suffix="yrs" help="projection" />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="grid gap-4 px-5">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5">
           <div data-tut="purchasing.result">
             <p className="text-sm text-muted-foreground">
-              {format(amount)} in {from} buys about the same as
+              To buy what {format(amount)} bought in {from}, in {to} you need
             </p>
             <p className="figure text-3xl font-semibold tracking-tight text-primary sm:text-4xl">{format(worth)}</p>
-            <p className="text-sm text-muted-foreground">in {to}.</p>
+            <p className="mt-1 text-sm font-medium">
+              Cash kept since {from} lost <span className="figure text-loss">{lostPct.toFixed(0)}%</span> of its value.
+            </p>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <Stat label="Prices rose" value={`${risePct.toFixed(0)}%`} tone="loss" />
@@ -240,7 +234,7 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
                   />
                 }
               />
-              <ChartLegend content={<ChartLegendContent />} />
+              <ChartLegend itemSorter={null} content={<ChartLegendContent />} />
               <Line dataKey="value" type="monotone" stroke="var(--color-value)" strokeWidth={2.25} dot={pointDot(rows.length, 'var(--color-value)')} isAnimationActive={false} />
               <Line
                 dataKey="projected"
@@ -253,6 +247,10 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
               />
             </LineChart>
           </ChartContainer>
+          <LessonCard data-tut="purchasing.lesson" terms={['inflation', 'cpi']}>
+            Prices rise almost every year, so money that sits still quietly shrinks. Investing aims to grow faster
+            than prices do.
+          </LessonCard>
           <p className="text-xs text-muted-foreground">
             The line is what {format(amount)} kept as cash since {from} buys, in {from} money. Dashed: the same
             loss carried {aheadYears} years ahead at {projectionRate}% a year. {COUNTRY[currency]} consumer prices,

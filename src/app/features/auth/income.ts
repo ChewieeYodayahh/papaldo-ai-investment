@@ -35,3 +35,7 @@ export function toDisplay(amount: number | undefined | null): string {
 export function formatIncome(amount: number, currency: IncomeCurrency): string {
   return `${CURRENCY_SYMBOL[currency]}${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 }
+
+/** The [?] beside "Retirement income" (2026-10-01: the field was "Ideal income"; same column). */
+export const RETIREMENT_INCOME_HELP =
+  'What you want to live on each year once you stop working, in today’s money. The Cost of Waiting tool uses it to show what to save each month.'

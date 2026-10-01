@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, CircleCheck, Target, UserRound } from 'lucide-react'
 
+import { HelpTip } from '@/components/help-tip'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,6 +19,7 @@ import {
   toDisplay,
 } from '@/app/features/auth/components/profile-fields'
 import { useFormSubmit } from '@/app/features/auth/hooks/use-form-submit'
+import { RETIREMENT_INCOME_HELP } from '@/app/features/auth/income'
 import type { IncomeCurrency } from '@/app/features/auth/schema'
 import type { UserProfile } from '@/app/features/auth/types'
 import { cn } from '@/lib/utils'
@@ -215,7 +217,10 @@ export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfil
                 <FieldError>{errors.annualIncome}</FieldError>
               </Field>
               <Field data-invalid={Boolean(errors.idealIncome) || undefined}>
-                <FieldLabel htmlFor="ideal-income">Ideal income</FieldLabel>
+                <div className="flex items-center gap-1">
+                  <FieldLabel htmlFor="ideal-income">Retirement income</FieldLabel>
+                  <HelpTip label="Retirement income" text={RETIREMENT_INCOME_HELP} />
+                </div>
                 <IncomeInput
                   id="ideal-income"
                   amount={ideal.amount}
@@ -224,7 +229,7 @@ export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfil
                   onCurrencyChange={(currency) => setIdeal({ ...ideal, currency })}
                   invalid={Boolean(errors.idealIncome)}
                 />
-                {errors.idealIncome ? <FieldError>{errors.idealIncome}</FieldError> : <FieldDescription>Your yearly income goal.</FieldDescription>}
+                {errors.idealIncome ? <FieldError>{errors.idealIncome}</FieldError> : <FieldDescription>A year, in today’s money.</FieldDescription>}
               </Field>
             </>
           )}

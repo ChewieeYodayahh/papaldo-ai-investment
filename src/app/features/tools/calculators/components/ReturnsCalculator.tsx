@@ -18,6 +18,7 @@ import type { AssetOption, HistoryResult } from '../api/history'
 import { lastYears, projectFromCagr, replayHistory, type MonthlyPoint } from '../math'
 import { whatItBuys } from '../purchases'
 import { AmountField, NumberField, ShareResultButton, Stat, useMoney, WhatItBuys } from './fields'
+import { LessonCard, TermHelp } from './lesson'
 import { SavingsGoalDialog } from './SavingsGoalDialog'
 
 /** 10 or 15 years back (Carlos, 2026-09-30), or everything Papaldo has. */
@@ -113,10 +114,13 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
 
   return (
     <div className="grid gap-4">
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="grid gap-4 px-5 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5 md:grid-cols-2 lg:grid-cols-4">
           <Field className="md:col-span-2" data-tut="returns.asset">
-            <FieldLabel htmlFor={selectId}>Invest in</FieldLabel>
+            <div className="flex items-center gap-1">
+              <FieldLabel htmlFor={selectId}>Invest in</FieldLabel>
+              <TermHelp id="investment" />
+            </div>
             <NativeSelect id={selectId} value={asset} onChange={(event) => setAsset(event.target.value)} className="h-10 w-full rounded-xl">
               {(['index', 'fund', 'stock'] as const).map((group) => (
                 <NativeSelectOptGroup key={group} label={GROUP_LABEL[group]}>
@@ -133,10 +137,13 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
           </Field>
           <div data-tut="returns.amounts" className="grid gap-4 sm:grid-cols-2 md:col-span-2">
             <AmountField label="Start with" usd={initialUsd} onChange={setInitialUsd} />
-            <AmountField label="Add every month" usd={monthlyUsd} onChange={setMonthlyUsd} />
+            <AmountField label="Add every month" usd={monthlyUsd} onChange={setMonthlyUsd} help="monthlyAmount" />
           </div>
           <Field className="md:col-span-2 lg:col-span-3" data-tut="returns.window">
-            <FieldLabel>Starting</FieldLabel>
+            <div className="flex items-center gap-1">
+              <FieldLabel>Starting</FieldLabel>
+              <TermHelp id="period" />
+            </div>
             <ToggleGroup
               variant="outline"
               spacing={2}
@@ -153,6 +160,7 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
           <div data-tut="returns.ahead">
             <NumberField
               label="Project ahead"
+              help="projection"
               value={aheadYears}
               onChange={setAheadYears}
               min={0}
@@ -164,8 +172,8 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-0 py-5">
-        <CardContent className="grid gap-4 px-5">
+      <Card className="rounded-2xl border-0 py-4 sm:py-5">
+        <CardContent className="grid gap-4 px-4 sm:px-5">
           {loading && !result ? (
             <div className="grid gap-3">
               <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
@@ -181,9 +189,8 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
             <>
               <div data-tut="returns.result">
                 <p className="text-sm text-muted-foreground">
-                  {money.format(initialUsd)} in {shortLabel}
-                  {monthlyUsd > 0 ? ` plus ${money.format(monthlyUsd)} a month` : ''} since{' '}
-                  {since ? monthLabel.format(asDate(since)) : '—'} would be worth
+                  You put {money.format(initialUsd)} into {shortLabel} in {since ? monthLabel.format(asDate(since)) : '—'}
+                  {monthlyUsd > 0 ? `, plus ${money.format(monthlyUsd)} every month` : ''}. Today it would be worth
                 </p>
                 <p className="figure text-3xl font-semibold tracking-tight text-primary sm:text-4xl">{money.format(result.finalValue)}</p>
                 {shorterThanAsked ? (
@@ -210,7 +217,7 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
                   label="Times your money"
                   value={result.contributed > 0 ? `${(result.finalValue / result.contributed).toFixed(2)}×` : '—'}
                 />
-                <Stat label="Yearly growth (CAGR)" value={result.cagrPct === null ? '—' : `${result.cagrPct.toFixed(1)}%`} tone="accent" />
+                <Stat label="Avg yearly growth" value={result.cagrPct === null ? '—' : `${result.cagrPct.toFixed(1)}%`} tone="accent" />
               </div>
 
               <ChartContainer config={config} className="aspect-auto h-[240px] w-full" data-tut="returns.chart">
@@ -275,6 +282,12 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
                   />
                 </AreaChart>
               </ChartContainer>
+
+              <LessonCard data-tut="returns.lesson" terms={result.growth >= 0 ? ['indexFund', 'cagr', 'projection'] : ['diversification', 'indexFund']}>
+                {result.growth >= 0
+                  ? 'The dips along the way recovered, and staying invested did most of the work. A projection only carries the past trend forward: it is a guide, not a promise.'
+                  : 'This one lost money over the period. A single company can fall and stay down; spreading money across a whole index lowers that risk.'}
+              </LessonCard>
 
               <WhatItBuys amountUsd={result.finalValue} label="That’s enough for" />
 

@@ -56,37 +56,70 @@ export function dcaWinRate(points: MonthlyPoint[], months: number): { lumpWins: 
   return { lumpWins, windows }
 }
 
-export type WaitScenario = {
+/**
+ * The 4% rule (Carlos, 2026-10-01): enough saved to spend about 4% a year,
+ * which is 25 years of spending.
+ */
+export const NEST_EGG_YEARS = 25
+
+/**
+ * The monthly deposit that grows to `target` in `months`, compounded monthly
+ * at `ratePct` a year with deposits at month end. Null when no months are left.
+ */
+export function monthlySavingNeeded(target: number, months: number, ratePct: number): number | null {
+  if (months <= 0) return null
+  const i = ratePct / 100 / 12
+  if (i === 0) return target / months
+  return (target * i) / ((1 + i) ** months - 1)
+}
+
+export type RetirementStart = {
   delay: number
   startAge: number
-  /** Balance at each age from the current age to retirement (0 before starting). */
-  byAge: Array<{ age: number; balance: number }>
-  final: number
-  contributed: number
+  /** Saving needed each month from `startAge` to retirement; null when the wait reaches retirement. */
+  monthly: number | null
+  /** Everything put in over those months. */
+  contributed: number | null
+}
+
+export type RetirementPlan = {
+  /** The monthly income wanted, grown by inflation from today's money to retirement. */
+  incomeAtRetirement: number
+  /** What to have saved by retirement: 25 years of that income (the 4% rule). */
+  target: number
+  starts: RetirementStart[]
 }
 
 /**
- * Saves `monthly` from `age + delay` to `retireAge`, compounded monthly at
- * `ratePct` a year with deposits at month end. A delay that reaches
- * retirement saves nothing.
+ * The cost of waiting, as Carlos framed it (2026-10-01): not what you would
+ * end up with, but what you must save each month to retire on the income
+ * you want -- starting now, or `delays` years from now. The later the start,
+ * the more each month has to carry.
  */
-export function costOfWaiting(age: number, retireAge: number, monthly: number, ratePct: number, delays: number[]): WaitScenario[] {
-  const i = ratePct / 100 / 12
-  return delays.map((delay) => {
+export function retirementPlan({
+  age,
+  retireAge,
+  monthlyIncome,
+  ratePct,
+  inflationPct,
+  delays,
+}: {
+  age: number
+  retireAge: number
+  /** In today's money. */
+  monthlyIncome: number
+  ratePct: number
+  inflationPct: number
+  delays: number[]
+}): RetirementPlan {
+  const years = Math.max(0, retireAge - age)
+  const incomeAtRetirement = monthlyIncome * (1 + inflationPct / 100) ** years
+  const target = incomeAtRetirement * 12 * NEST_EGG_YEARS
+  const starts = delays.map((delay) => {
     const startAge = age + delay
-    let balance = 0
-    let contributed = 0
-    const byAge = [{ age, balance: 0 }]
-    for (let year = age; year < retireAge; year++) {
-      for (let month = 0; month < 12; month++) {
-        balance *= 1 + i
-        if (year >= startAge) {
-          balance += monthly
-          contributed += monthly
-        }
-      }
-      byAge.push({ age: year + 1, balance })
-    }
-    return { delay, startAge, byAge, final: balance, contributed }
+    const months = (retireAge - startAge) * 12
+    const monthly = monthlySavingNeeded(target, months, ratePct)
+    return { delay, startAge, monthly, contributed: monthly === null ? null : monthly * months }
   })
+  return { incomeAtRetirement, target, starts }
 }

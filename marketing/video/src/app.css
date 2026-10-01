@@ -1,0 +1,6 @@
+/* Papaldo's own stylesheet: tokens, palettes, utilities. */
+@import "../../../src/app/globals.css";
+
+/* Tailwind scans the app's source, since the components come from there. */
+@source "../../../src";
+@source "./";

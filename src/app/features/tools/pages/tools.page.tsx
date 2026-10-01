@@ -17,7 +17,7 @@ import {
   type BenchmarkPreview,
 } from "../components/ToolCards";
 
-const GRID = "grid items-stretch gap-4 pb-2 lg:grid-cols-2 2xl:grid-cols-3";
+const GRID = "grid items-stretch gap-3 pb-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3";
 
 /**
  * Tools (Carlos, 2026-09-26; sections 2026-09-30): every tool as a card,
@@ -51,59 +51,52 @@ export async function ToolsPage({ open }: { open?: string }) {
         ]
       : [];
   });
-  const since = benchmarks.growth[0]?.date.slice(0, 4) ?? null;
 
   const basics = (
     <div className={GRID}>
       <SimpleToolCard
         icon="returns"
         title="Returns calculator"
-        body="Replay real prices: what money in an index, fund or stock would be worth today, and where it could go next."
-        badge="10 & 15 years"
+        body="What if you had invested back then? Replay real prices and see what it would be worth today."
         href="/tools/returns"
         action="Run the numbers"
       />
       <SimpleToolCard
         icon="savings"
         title="Savings planner"
-        body="How much to put away for a goal, plus an emergency fund in a Maya, CIMB, MariBank or GoTyme deposit, after tax."
-        badge="Time deposits"
+        body="How much to save each month for a goal, with an emergency fund kept safe on the side."
         href="/tools/savings"
         action="Plan a goal"
       />
       <SimpleToolCard
         icon="purchasing"
         title="Purchasing power"
-        body="What a peso or dollar from any year since 1960 is worth today, and how fast cash loses value."
-        badge="World Bank CPI"
+        body="What is money from back then worth today? See how fast cash loses value."
         href="/tools/purchasing-power"
         action="Compare the years"
       />
       <SimpleToolCard
         icon="budget"
         title="Budget 50/30/20"
-        body="Split take-home pay into needs, wants and savings, with Philippine or international presets."
-        badge="Needs · wants · savings"
+        body="Where should your pay go each month? Split it into needs, wants and savings."
         href="/tools/budget"
         action="Plan my month"
       />
       <SimpleToolCard
         icon="dca"
-        title="DCA vs lump sum"
-        body="A little every month or all at once? Replay both on real prices and see which won, and how often."
-        badge="Real history"
+        title="Cost averaging vs lump sum"
+        body="Invest all at once, or a little every month? Replay both and see which won."
         href="/tools/dca"
         action="Compare the two"
       />
       <SimpleToolCard
         icon="waiting"
         title="The cost of waiting"
-        body="The same monthly savings started today or 5, 10 or 15 years from now, side by side at retirement."
-        badge="Start now vs later"
+        body="Start now or later? See how much more you would need to save by waiting."
         href="/tools/cost-of-waiting"
         action="See the gap"
       />
-      <BenchmarkToolCard preview={preview} since={since} />
+      <BenchmarkToolCard preview={preview} />
     </div>
   );
   const accounting = (
@@ -111,8 +104,7 @@ export async function ToolsPage({ open }: { open?: string }) {
       <SimpleToolCard
         icon="statements"
         title="Financial statements"
-        body="Income statement, balance sheet and cash flow that check each other. Kept only in this browser."
-        badge="Excel · CSV · HTML"
+        body="Build the three statements and check that the books balance. Stays in this browser."
         href="/tools/statements"
         action="Build statements"
       />
@@ -164,8 +156,7 @@ export async function ToolsPage({ open }: { open?: string }) {
               <SimpleToolCard
                 icon="export"
                 title="Export my data"
-                body="Download your trades, holdings, performance and profile as CSV or an HTML report. Nothing leaves your browser."
-                badge="CSV · HTML"
+                body="Download your trades, holdings and profile as a spreadsheet or report."
                 href="/tools/export"
                 action="Build a report"
               />
@@ -196,7 +187,7 @@ export async function ToolsPage({ open }: { open?: string }) {
       >
         {sections.map((section) => (
           <AccordionItem key={section.value} value={section.value} id={section.value} className="scroll-mt-24">
-            <AccordionTrigger className="group/toggle items-center rounded-none py-4 text-base font-semibold hover:no-underline [&_[data-slot=accordion-trigger-icon]]:hidden!">
+            <AccordionTrigger className="group/toggle min-h-14 items-center rounded-none px-4 py-4 text-base font-semibold sm:px-5 hover:no-underline [&_[data-slot=accordion-trigger-icon]]:hidden!">
               <span className="flex items-baseline gap-2">
                 <T k={section.label} />
                 <span className="figure text-xs font-normal text-muted-foreground">{section.count}</span>

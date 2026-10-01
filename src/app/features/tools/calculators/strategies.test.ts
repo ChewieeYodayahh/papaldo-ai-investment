@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { MonthlyPoint } from './math'
-import { compareDcaLump, costOfWaiting, dcaWinRate } from './strategies'
+import { compareDcaLump, dcaWinRate, monthlySavingNeeded, NEST_EGG_YEARS, retirementPlan } from './strategies'
 
 const series = (closes: number[]): MonthlyPoint[] => closes.map((close, i) => ({ date: `2020-${String(i + 1).padStart(2, '0')}-01`, close }))
 
@@ -36,25 +36,43 @@ describe('dcaWinRate', () => {
   })
 })
 
-describe('costOfWaiting', () => {
-  it('grows each start to retirement, and a later start ends with less', () => {
-    const [now, later] = costOfWaiting(25, 65, 100, 0, [0, 10])
-    expect(now.final).toBe(100 * 12 * 40)
-    expect(later.final).toBe(100 * 12 * 30)
-    expect(later.startAge).toBe(35)
-    expect(now.byAge).toHaveLength(41)
-    expect(later.byAge[10].balance).toBe(0)
+describe('monthlySavingNeeded', () => {
+  it('splits the target evenly with no growth', () => {
+    expect(monthlySavingNeeded(12_000, 120, 0)).toBe(100)
   })
 
-  it('compounds monthly at the yearly rate', () => {
-    const [scenario] = costOfWaiting(30, 31, 100, 12, [0])
-    // 12 month-end deposits at 1% a month: 100 x ((1.01^12 - 1) / 0.01).
-    expect(scenario.final).toBeCloseTo(100 * ((1.01 ** 12 - 1) / 0.01), 6)
-    expect(scenario.contributed).toBe(1_200)
+  it('is the deposit whose month-end compounding reaches the target', () => {
+    const monthly = monthlySavingNeeded(50_000, 240, 6)!
+    const i = 0.06 / 12
+    expect(monthly * (((1 + i) ** 240 - 1) / i)).toBeCloseTo(50_000, 6)
   })
 
-  it('saves nothing when the wait reaches retirement', () => {
-    const [scenario] = costOfWaiting(60, 65, 100, 7, [5])
-    expect(scenario.final).toBe(0)
+  it('has no answer once no months are left', () => {
+    expect(monthlySavingNeeded(1_000, 0, 7)).toBeNull()
+  })
+})
+
+describe('retirementPlan', () => {
+  it('targets 25 years of the income, grown by inflation', () => {
+    const flat = retirementPlan({ age: 30, retireAge: 60, monthlyIncome: 1_000, ratePct: 7, inflationPct: 0, delays: [0] })
+    expect(flat.target).toBe(1_000 * 12 * NEST_EGG_YEARS)
+    const inflated = retirementPlan({ age: 30, retireAge: 60, monthlyIncome: 1_000, ratePct: 7, inflationPct: 4, delays: [0] })
+    expect(inflated.incomeAtRetirement).toBeCloseTo(1_000 * 1.04 ** 30, 6)
+  })
+
+  it('asks more of every month the later you start', () => {
+    const { starts } = retirementPlan({ age: 22, retireAge: 60, monthlyIncome: 1_000, ratePct: 7, inflationPct: 0, delays: [0, 5, 10, 15] })
+    const monthly = starts.map((start) => start.monthly!)
+    expect(monthly[1]).toBeGreaterThan(monthly[0])
+    expect(monthly[3]).toBeGreaterThan(monthly[2])
+    // Starting at 32 instead of 22, at 7% compounded monthly, takes about 2.2 times as much each month.
+    expect(monthly[2] / monthly[0]).toBeCloseTo(2.18, 2)
+    expect(starts[2].startAge).toBe(32)
+  })
+
+  it('has no monthly figure when the wait reaches retirement', () => {
+    const { starts } = retirementPlan({ age: 55, retireAge: 60, monthlyIncome: 1_000, ratePct: 7, inflationPct: 3, delays: [5] })
+    expect(starts[0].monthly).toBeNull()
+    expect(starts[0].contributed).toBeNull()
   })
 })

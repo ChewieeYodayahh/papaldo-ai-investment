@@ -65,10 +65,14 @@ npm run graph         refresh graphify-out/ (AST only, no tokens)
 npm run agents:sync   rebuild AGENTS.md after editing CLAUDE.md or .claude/rules
 ```
 
-Production is **https://papaldo-ka.vercel.app** (2026-09-30; the old
-`papaldo-ai-investment.vercel.app` stays as an alias). `NEXT_PUBLIC_SITE_URL`
-only builds OAuth/email redirect URLs; the dev port is pinned by `--port 3001`
-in package.json. Keep the two in step.
+Production is **https://papaldo-ka.vercel.app** (2026-09-30; still 404 until
+Carlos adds it in Vercel → Domains; the old `papaldo-ai-investment.vercel.app`
+stays as an alias). Auth redirects return to the host the request came from,
+because the PKCE cookie lives there; `NEXT_PUBLIC_SITE_URL` is only the
+fallback. Every public host must be in Supabase's redirect allow list, and
+Supabase's Site URL must never be the Vercel-protected
+`…-chewieeyodayahhs-projects.vercel.app` team URL. The dev port is pinned by
+`--port 3001` in package.json.
 
 ## Working economically
 

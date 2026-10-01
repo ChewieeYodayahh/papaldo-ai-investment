@@ -15,7 +15,9 @@ import { Input } from '@/components/ui/input'
 import { useDisplayCurrency, useFx, useMoneyFormat } from '@/app/features/userData/preferences/components/Money'
 
 import { whatItBuys } from '../purchases'
+import type { TermId } from '../terms'
 import { shareOrDownload, type ImageFormat, type ShareCard } from '../share-image'
+import { TermHelp } from './lesson'
 
 /**
  * An amount typed in the viewer's display currency (dollars or pesos) but
@@ -27,11 +29,14 @@ export function AmountField({
   usd,
   onChange,
   hint,
+  help,
 }: {
   label: string
   usd: number
   onChange: (usd: number) => void
   hint?: string
+  /** A [?] beside the label. */
+  help?: TermId
 }) {
   const id = useId()
   const fx = useFx()
@@ -40,7 +45,7 @@ export function AmountField({
 
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabelWithHelp id={id} label={label} help={help} />
       <div className="relative">
         <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
           {currency === 'PHP' ? '₱' : '$'}
@@ -73,6 +78,7 @@ export function NumberField({
   max,
   step = 1,
   hint,
+  help,
 }: {
   label: string
   value: number
@@ -82,11 +88,13 @@ export function NumberField({
   max?: number
   step?: number
   hint?: string
+  /** A [?] beside the label. */
+  help?: TermId
 }) {
   const id = useId()
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabelWithHelp id={id} label={label} help={help} />
       <div className="relative">
         <Input
           id={id}
@@ -115,17 +123,17 @@ export function NumberField({
 /** One summary figure: label over value. */
 export function Stat({ label, value, tone }: { label: string; value: React.ReactNode; tone?: 'accent' | 'gain' | 'loss' }) {
   return (
-    <div className="rounded-xl bg-muted/50 p-3">
+    <div className="rounded-xl bg-muted/50 p-2.5 sm:p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p
         className={
           tone === 'accent'
-            ? 'figure text-lg font-semibold text-primary sm:text-xl'
+            ? 'figure text-base font-semibold text-primary sm:text-xl'
             : tone === 'gain'
-              ? 'figure text-lg font-semibold text-gain sm:text-xl'
+              ? 'figure text-base font-semibold text-gain sm:text-xl'
               : tone === 'loss'
-                ? 'figure text-lg font-semibold text-loss sm:text-xl'
-                : 'figure text-lg font-semibold sm:text-xl'
+                ? 'figure text-base font-semibold text-loss sm:text-xl'
+                : 'figure text-base font-semibold sm:text-xl'
         }
       >
         {value}
@@ -202,4 +210,15 @@ export function ShareResultButton({ build, filename }: { build: () => ShareCard;
 /** Formats a USD amount in the display currency; compact for big numbers on the image. */
 export function useMoney() {
   return useMoneyFormat()
+}
+
+/** A field label, with its [?] beside it rather than inside the <label>. */
+function FieldLabelWithHelp({ id, label, help }: { id: string; label: string; help?: TermId }) {
+  if (!help) return <FieldLabel htmlFor={id}>{label}</FieldLabel>
+  return (
+    <div className="flex items-center gap-1">
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <TermHelp id={help} />
+    </div>
+  )
 }

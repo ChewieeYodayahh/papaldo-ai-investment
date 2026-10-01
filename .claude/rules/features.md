@@ -25,8 +25,9 @@ paths:
   - `trading` imports `auth`; `community` imports `auth` and `markets`
     (quotes and `SymbolMark` for member profiles); `community/blog` imports none.
   - `tools/quiz` imports `auth`; `tools/calculators` imports preferences,
-    `userData/export` (formats only, for statements), and `trading` +
-    `dashboard` read-only (the purchasing-power balance); the `tools` hub imports `auth`, `markets/benchmarks`,
+    `userData/export` (formats only, for statements), `trading` +
+    `dashboard` read-only (the purchasing-power balance), and `auth`
+    read-only (the retirement-income prefill, 2026-10-01); the `tools` hub imports `auth`, `markets/benchmarks`,
     `tools/quiz` and `tutorials`.
   - `markets` imports `trading` and `tools/quiz` (read-only risk profile for
     the buy gate); `markets/benchmarks` imports `markets` and

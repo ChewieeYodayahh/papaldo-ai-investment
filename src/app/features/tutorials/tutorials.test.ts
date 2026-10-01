@@ -21,7 +21,7 @@ describe('tours', () => {
 describe('translateTutorial', () => {
   it('falls back to English, then to the key', () => {
     expect(translateTutorial('brainrot', 'ui.next')).toBe('Next W')
-    expect(translateTutorial('brainrot', 'budget.pay.title')).toBe('Take-home pay')
+    expect(translateTutorial('brainrot', 'budget.buckets.title')).toBe('How it splits')
     expect(translateTutorial('en', 'no.such.key')).toBe('no.such.key')
   })
 

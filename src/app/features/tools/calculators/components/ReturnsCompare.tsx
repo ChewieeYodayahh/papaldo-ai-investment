@@ -55,14 +55,14 @@ export function ReturnsCompare({ series }: { series: CompareSeries[] }) {
   const sinceLabel = since ? monthLabel.format(new Date(`${since}T00:00:00Z`)) : ''
 
   return (
-    <Card className="rounded-2xl border-0 py-5">
-      <CardHeader className="px-5">
+    <Card className="rounded-2xl border-0 py-4 sm:py-5">
+      <CardHeader className="px-4 sm:px-5">
         <CardTitle className="text-base font-semibold">If you had invested</CardTitle>
         <CardDescription>
           The same money in each index, using their real monthly prices. Tap an index to see what its result buys.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-5 px-5">
+      <CardContent className="grid gap-5 px-4 sm:px-5">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
           <AmountField label="Start with" usd={initialUsd} onChange={setInitialUsd} />
           <AmountField label="Add every month" usd={monthlyUsd} onChange={setMonthlyUsd} />
