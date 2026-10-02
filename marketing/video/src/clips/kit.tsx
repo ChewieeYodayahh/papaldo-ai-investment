@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AbsoluteFill, continueRender, delayRender, Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, continueRender, delayRender, Easing, getInputProps, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 
 /**
  * Small pieces the landing clips share (2026-10-02). A clip is the real app
@@ -168,8 +168,9 @@ export const Pointer: React.FC<{ device: Device; taps: Tap[]; enter?: number; ex
     return () => window.clearInterval(timer);
   }, [handle]);
 
-  if (!points) return null;
-  const onScreen = (p: { x: number; y: number }) => ({ x: p.x, y: p.y - scrollY });
+  // A still (render-shots.mjs passes --props='{"still":true}') shows the screen, not the hand.
+  if (!points || getInputProps().still) return null;
+  const onScreen =(p: { x: number; y: number }) => ({ x: p.x, y: p.y - scrollY });
 
   // Rest off to the side, then travel to each target in turn.
   const rest = device === "phone" ? { x: width * 0.78, y: height * 0.86 } : { x: width * 0.72, y: height * 0.9 };

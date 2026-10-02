@@ -7,10 +7,9 @@ import { createClient } from '@/app/core/services/supabase/server'
 /**
  * The curated buyable universe, read from `tradable_assets`.
  *
- * Two different lists exist in this app and conflating them causes real bugs:
- *
- *   Alpaca's catalogue  8,515 names. What `/markets` browses. View only.
- *   This universe       50 names. What an order may be placed against.
+ * 70 names since 2026-10-02 (50 before), across twelve sectors. It is what
+ * `/markets` shows and searches and what an order may be placed against; the
+ * view-only Alpaca catalogue that used to sit beside it is gone.
  *
  * `place_order` raises `PA007` for anything outside this set, so any symbol
  * the UI *promotes* had better be in it. Before this module existed, the

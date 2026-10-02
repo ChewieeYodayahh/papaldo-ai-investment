@@ -38,7 +38,7 @@ const en = {
   'account.menu.body': 'Your profile, member page and friends, exporting your data, and signing out.',
 
   'markets.search.title': 'Search anything',
-  'markets.search.body': 'Type a company or ticker. Papaldo’s 50 names come first, then thousands of US listings.',
+  'markets.search.body': 'Type a company or ticker to find any of the 70 companies and funds you can trade here.',
   'markets.table.title': 'What you can buy',
   'markets.table.body': 'Every stock and fund Papaldo trades, with live prices. Click one to open its trade page.',
   'markets.movers.title': 'Today’s movers',

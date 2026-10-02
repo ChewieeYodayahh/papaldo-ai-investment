@@ -4,13 +4,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
 import { T } from '@/app/features/userData/preferences/copy'
 
-import { getTradableAssets, searchAssets } from '../api/assets'
 import { getCandlesMany, type Candle } from '../api/candles'
 import { getUniverseQuotes, topMovers } from '../api/movers'
 import { getMarketHeadlines } from '../api/news'
 import { getUniverse } from '../api/universe'
 import { marketUnavailableMessage } from '../market-status'
-import { AssetTable } from '../components/AssetTable'
 import { MarketNews } from '../components/MarketNews'
 import { MoversList } from '../components/MarketSidePanels'
 import { QuoteCard } from '../components/QuoteCard'
@@ -24,12 +22,11 @@ import { UniverseTable } from '../components/UniverseTable'
  *
  * Top to bottom: four benchmark ETFs, the buyable universe with live prices
  * and trend lines beside today's movers, the sector heatmap under the table
- * (2026-09-26, after Perplexity Finance), then the full Alpaca catalogue
- * search and the news feed.
+ * (2026-09-26, after Perplexity Finance), and the news feed.
  *
- * Everything moving-related is drawn from the 50-name buyable universe, so
- * every name promoted here is one `place_order` will accept. The catalogue
- * search below it is the view-only 8,500.
+ * Everything here is drawn from the buyable universe, so every name promoted
+ * is one `place_order` will accept. Alpaca's 8,500-name catalogue table was
+ * removed on 2026-10-02.
  *
  * Two Alpaca requests price the whole top half: one snapshot call for the
  * quotes and one multi-symbol bars call for every trend line.
@@ -41,14 +38,13 @@ const BENCHMARKS = ['VOO', 'QQQ', 'VTI', 'IBIT']
 const MOVER_COUNT = 5
 const TREND_DAYS = 45
 
-export async function MarketsPage({ query }: { query: string }) {
+export async function MarketsPage() {
   const universe = await getUniverse()
   const symbols = universe.map((a) => a.symbol)
 
-  const [quotes, bars, assets, news] = await Promise.all([
+  const [quotes, bars, news] = await Promise.all([
     getUniverseQuotes(),
     getCandlesMany(symbols, TREND_DAYS),
-    getTradableAssets(),
     getMarketHeadlines(),
   ])
 
@@ -56,7 +52,6 @@ export async function MarketsPage({ query }: { query: string }) {
   const trends = Object.fromEntries([...candles.entries()].map(([symbol, list]) => [symbol, list.map((c) => c.close)]))
   const benchmarks = quotes.ok ? quotes.data.filter((q) => BENCHMARKS.includes(q.symbol)) : []
   const movers = quotes.ok ? topMovers(quotes.data, MOVER_COUNT) : null
-  const matches = assets.ok ? searchAssets(assets.data, query) : []
 
   return (
     <>
@@ -129,19 +124,12 @@ export async function MarketsPage({ query }: { query: string }) {
         </Card>
       )}
 
-      <div className="mt-4 grid gap-4">
-        {assets.ok ? (
-          <AssetTable assets={matches} total={assets.data.length} query={query} />
-        ) : (
-          <Card className="rounded-2xl border-0">
-            <CardContent className="p-6 text-sm text-muted-foreground">
-              Asset catalogue unavailable. {marketUnavailableMessage(assets.reason, 'Alpaca')}
-            </CardContent>
-          </Card>
-        )}
-        {/* With no quotes there is no rail, so the headlines sit here instead. */}
-        {quotes.ok ? null : <MarketNews items={news} />}
-      </div>
+      {/* With no quotes there is no rail, so the headlines sit here instead. */}
+      {quotes.ok ? null : (
+        <div className="mt-4">
+          <MarketNews items={news} />
+        </div>
+      )}
     </>
   )
 }

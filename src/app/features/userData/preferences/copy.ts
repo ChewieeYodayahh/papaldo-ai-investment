@@ -173,7 +173,6 @@ const en = {
   'mkt.heatmapFilter': 'Show only stocks that moved by',
   'mkt.heatmapStep': 'Show {step} moves',
   'mkt.heatmapShowAll': 'Show all',
-  'mkt.catalogue': 'Browse all US stocks',
   'mkt.news': 'Market Insight',
 
   'pf.subtitle': 'Everything you hold, what it is worth, and how you got here.',
@@ -193,6 +192,7 @@ const en = {
   'pub.why': 'Why Papaldo',
   'pub.markets': 'Markets',
   'pub.faq': 'FAQ',
+  'pub.built': "How it's built",
   'pub.about': 'About Papaldo',
   'pub.login': 'Log in',
   'pub.getStarted': 'Get Started',
@@ -481,7 +481,6 @@ const brainrot: Dictionary = {
   'mkt.topLosers': 'Fanum Taxed',
   'mkt.heatmap': 'Vibe Map',
   'mkt.heatmapNote': 'Big box = big aura. Green = W, red = cooked.',
-  'mkt.catalogue': 'Every stonk in the lore',
   'mkt.news': 'The Tea',
   'pf.subtitle': 'Your whole bag, its aura, and the lore behind it.',
   'page.profile': 'My Lore',

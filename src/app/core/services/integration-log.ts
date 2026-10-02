@@ -7,7 +7,7 @@ import { supabaseAnonKey, supabaseUrl } from '@/lib/env'
 
 import type { Database } from './supabase/database.types'
 
-export type IntegrationTarget = 'alpaca' | 'finnhub' | 'exchange-rate' | 'claude' | 'gemini' | 'supabase-auth' | 'cloudinary'
+export type IntegrationTarget = 'alpaca' | 'finnhub' | 'exchange-rate' | 'supabase-auth' | 'cloudinary'
 
 export type IntegrationEntry = {
   target: IntegrationTarget

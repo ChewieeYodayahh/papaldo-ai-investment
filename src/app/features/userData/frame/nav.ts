@@ -7,6 +7,7 @@ import {
   FileSpreadsheet,
   Hourglass,
   House,
+  Layers,
   LayoutGrid,
   LayoutList,
   MessagesSquare,
@@ -33,8 +34,6 @@ export type NavLeaf = {
   activeOn?: string[]
   /** Another site: opens in a new tab without an opener. */
   external?: boolean
-  /** Shows "→": the link opens a section of a page rather than a single tool. */
-  arrow?: boolean
 }
 export type NavGroup = { label: CopyKey; icon: LucideIcon; href: string; children: Array<NavLeaf | 'divider'> }
 
@@ -61,11 +60,11 @@ export const BASIC_TOOLS: NavLeaf[] = [
  * submenus: each opens its own section of /tools.
  */
 export const TOOL_LINKS: Array<NavLeaf | 'divider'> = [
-  { href: '/tools', label: 'nav.tools.open', icon: LayoutList, exact: true, arrow: true },
+  { href: '/tools', label: 'nav.tools.open', icon: LayoutList, exact: true },
   'divider',
-  { href: '/tools?open=basics', label: 'nav.tools.basics', icon: Calculator, arrow: true, activeOn: BASIC_TOOLS.map((tool) => tool.href) },
-  { href: '/tools?open=accounting', label: 'nav.tools.accounting', icon: FileSpreadsheet, arrow: true, activeOn: ['/tools/statements'] },
-  { href: '/tools?open=insurance', label: 'nav.tools.lifeInsurance', icon: ShieldPlus, arrow: true, activeOn: [] },
+  { href: '/tools?open=basics', label: 'nav.tools.basics', icon: Calculator, activeOn: BASIC_TOOLS.map((tool) => tool.href) },
+  { href: '/tools?open=accounting', label: 'nav.tools.accounting', icon: FileSpreadsheet, activeOn: ['/tools/statements'] },
+  { href: '/tools?open=insurance', label: 'nav.tools.lifeInsurance', icon: ShieldPlus, activeOn: [] },
 ]
 
 export const COMMUNITY_LINKS: NavLeaf[] = [
@@ -91,11 +90,8 @@ export function isActive(item: NavLeaf, pathname: string): boolean {
 
 export type MenuEntry = NavLeaf | 'divider'
 
-/**
- * A top-bar dropdown. On the phone menu it folds open under its name, or,
- * with `mobile: 'list'` (Tools), always shows its links under a heading.
- */
-export type PublicMenu = { label: CopyKey; entries: MenuEntry[]; mobile?: 'collapse' | 'list' }
+/** A top-bar dropdown. On the phone menu every one folds open under its name (Carlos, 2026-10-02). */
+export type PublicMenu = { label: CopyKey; entries: MenuEntry[] }
 export type PublicNavEntry = { href: string; label: CopyKey } | PublicMenu
 
 export const isPublicMenu = (entry: PublicNavEntry): entry is PublicMenu => 'entries' in entry
@@ -109,13 +105,14 @@ export const PUBLIC_NAV: PublicNavEntry[] = [
   {
     label: 'pub.about',
     entries: [
-      { href: '/#features', label: 'pub.how', icon: Sparkles },
+      { href: '/#how-it-works', label: 'pub.how', icon: Sparkles },
       { href: '/#trust', label: 'pub.why', icon: ShieldCheck },
       { href: '/#faq', label: 'pub.faq', icon: BadgeQuestionMark },
+      { href: '/how-its-built', label: 'pub.built', icon: Layers },
     ],
   },
   { href: '/markets', label: 'pub.markets' },
   { label: 'nav.community', entries: COMMUNITY_LINKS },
-  { label: 'nav.tools', entries: TOOL_LINKS, mobile: 'list' },
+  { label: 'nav.tools', entries: TOOL_LINKS },
   { href: '/support', label: 'nav.support' },
 ]

@@ -10,6 +10,7 @@ import { Footer } from './sections/footer'
 import { Hero } from './sections/hero'
 import { HowItWorks } from './sections/how-it-works'
 import { MarketsSection } from './sections/markets'
+import { PhoneSection } from './sections/phone'
 import { PracticeFloor } from './sections/practice-floor'
 import { Ticker, TickerFallback } from './sections/ticker'
 import { Trust } from './sections/trust'
@@ -22,9 +23,10 @@ import { Trust } from './sections/trust'
  * costs no network round trip.
  *
  * Redesigned 2026-10-02 ("High Street Blue Hour", LANDING_PALDO_PLAN.md):
- * the frame takes the scene's colours (`landing`), the real app plays on a
- * laptop and a phone, and the street ticker streams in behind its own
- * Suspense so the hero never waits on a price.
+ * the frame takes the scene's colours (`landing`) and the street ticker
+ * streams in behind its own Suspense so the hero never waits on a price.
+ * Made static the same day (Carlos): stills of the real app, a MacBook first
+ * and the phone layout in its own section, never the two combined.
  */
 export async function LandingPage() {
   const user = await getShellUser()
@@ -36,6 +38,7 @@ export async function LandingPage() {
           <Ticker />
         </Suspense>
         <HowItWorks />
+        <PhoneSection />
         <MarketsSection />
         <PracticeFloor />
         <Trust />

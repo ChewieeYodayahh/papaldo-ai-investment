@@ -14,8 +14,6 @@ const PROVIDER_LIMITS: Array<{ target: string; name: string; limit: string }> = 
   { target: 'alpaca', name: 'Alpaca market data', limit: '200 calls a minute' },
   { target: 'finnhub', name: 'Finnhub', limit: 'about 60 calls a minute' },
   { target: 'exchange-rate', name: 'ExchangeRate-API', limit: '1,500 calls a month (cached 6 h)' },
-  { target: 'gemini', name: 'Gemini (AI outlook)', limit: 'per-key quota, see Google AI Studio' },
-  { target: 'claude', name: 'Claude API', limit: 'not called yet' },
 ]
 
 function bytes(value: number): string {

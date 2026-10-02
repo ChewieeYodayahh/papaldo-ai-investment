@@ -45,7 +45,7 @@ export async function IntegrationLogsPage({ searchParams }: { searchParams: RawF
       kind: 'select',
       name: 'target',
       label: 'Service',
-      options: [{ value: '', label: 'Any service' }, ...['alpaca', 'finnhub', 'exchange-rate', 'gemini', 'claude', 'supabase-auth'].map((t) => ({ value: t, label: t }))],
+      options: [{ value: '', label: 'Any service' }, ...['alpaca', 'finnhub', 'exchange-rate', 'supabase-auth', 'cloudinary'].map((t) => ({ value: t, label: t }))],
     },
     { kind: 'text', name: 'action', label: 'Action', placeholder: 'e.g. bars, snapshots' },
     { kind: 'text', name: 'tx', label: 'Transaction ID' },

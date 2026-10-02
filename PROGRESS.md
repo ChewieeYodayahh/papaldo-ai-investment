@@ -5,6 +5,99 @@ domain vocabulary and architecture rules.
 
 ---
 
+## Phase 10 — v1 scope cut and a static landing page (2026-10-02)
+
+What's parked, and why, is in `V1_SCOPE_PLAN.md`: ETF dialog UI, Developer-only
+social features, and the marketing video decision.
+
+**Markets cleanup:**
+- AI advisory removed (`features/advisory`, `/api/advisory/outlook`,
+  `core/services/claude.ts`, `@google/genai`);
+- the Alpaca "All US stocks" catalogue is gone, and search covers Papaldo's
+  names only;
+- the universe grows to 70 (`20261002120000_universe_70.sql`);
+- the `etf_profiles` table and its weekly `python/etf_profiles.py` (Alpha
+  Vantage) are added, waiting on the `ALPHAVANTAGE_API_KEY` secret.
+
+**Landing page, now static (Carlos):** the v0.5.2 video clips were too small to
+read, so `/` now shows stills of the real app.
+- **Stills:** `marketing/video/scripts/render-shots.mjs` renders them at 2x
+  into `public/landing/shots/`, 37–83 KB each.
+  - Laptop stills use the new 1024 × 640 `Shot-*-Laptop` compositions.
+  - Phone stills use the 392 × 848 phone clips.
+  - `--props` `{ still: true }` hides the pointer.
+- **Devices:** `components/devices.tsx` is static `MacBook` and `IPhone` frames,
+  no client JS. The `DevicePair` and `<video>` code is removed. A laptop and a
+  phone are never combined.
+  - A `MockupFrame` path is ready for licensed Adobe Stock PNGs in
+    `public/landing/devices/`.
+  - Until those arrive, `MACBOOK_FRAME` and `IPHONE_FRAME` stay `null` and CSS
+    frames stand in.
+- **The 50 | 50 rule (Carlos):** every section with a device splits half text,
+  half device on desktop, alternating sides; the device never dominates. That
+  covers the hero, the three How it works rows, the new "Works on your phone
+  too" section (two iPhones), and Markets.
+  - On desktop the hero skyline drops to 28% height so it never runs behind the
+    text.
+  - Phones stack; the iPhones swipe sideways.
+- **Checked:**
+  - at 1920 px, each MacBook is about 48% of its row;
+  - at 375 px, no sideways scroll;
+  - typecheck and lint pass.
+- **Known:** the drawn Dynamic Island covers part of the app's header in the
+  iPhone stills. The fix is a status-bar strip, or re-rendering the phone stills
+  with a safe-area inset.
+- **Unused on `/` but kept for the promo video:** `public/landing/clips/` and
+  `learn-phone.webp`.
+
+**"How it's built" page (`/how-its-built`, under About Papaldo):**
+- The opening is 50 | 50: the title and section chips on one side, David's
+  developer card on the other (his GitHub avatar, and the GitHub, LinkedIn and
+  Facebook links from his portfolio).
+- Then seven groups of tiles: the app, charts, accounts and data, market data,
+  pipelines and hosting, AI and MCP servers (Claude Code included), and dev
+  tools.
+- Each tile links to the tool's own site.
+- The data lives in `features/landing/built/stack.ts`; keep it in step with
+  `package.json` and `EXTERNAL_SERVICES.md`.
+- **Logos:** from the Simple Icons CDN. Brands it lacks (Alpaca, Finnhub,
+  Alpha Vantage, Remotion, Base UI, Yahoo and others) use Google's favicon
+  service. Black marks invert in dark mode.
+
+**Stack audit (Carlos: "only what's used at this moment"):** the evidence was
+`integration_logs` for the last 30 days (Alpaca 1,580 calls, ExchangeRate-API
+2,010, Finnhub 329), live table counts, `auth.identities`, and MCP calls in
+past session transcripts.
+- **Taken off the page:**
+  - Alpha Vantage and its MCP: no fund rows, and 18 MCP calls in all;
+  - Cloudinary: no keys and no uploads;
+  - GSAP and Motion: only in 12 components under `src/components/` that
+    nothing renders;
+  - shadcn MCP: 3 calls;
+  - Claude Code Security Review: runs on pull requests, and the repo has had
+    one merge;
+  - Prettier and uv.
+- **Added:** Claude's in-app browser, 758 calls.
+- The code and pipelines themselves are untouched.
+
+**The landing scene follows the theme:** the sky, towers and street had fixed
+blue colours, so changing the palette changed nothing there. They now mix the
+palette's own `--background`, `--card` and `--primary`: Forest and Midnight
+give a green dusk, Orchid a plum one, and the mono palettes grey. The window
+lights stay warm. This also covers `/how-its-built`.
+
+**Portfolio:**
+- The developer card links https://sensei-david.vercel.app/.
+- Papaldo Ka is a project in `my-portfolio` (`src/lib/constants.ts`, image
+  `public/assets/papaldo-ka.webp`), linking https://papaldo-ka.vercel.app.
+  That URL is now live; the old `papaldo-ai-investment.vercel.app` alias
+  answers 404.
+
+**Phone menu:** Tools now folds open like About Papaldo and Community. The
+Tools links lost their arrows, in both the public menus and the app sidebar
+(the `arrow` flag and `mobile: 'list'` are gone). "How it works" points to
+`/#how-it-works`; it was `/#features`, which no longer exists.
+
 ## Phase 9 — Cheaper agent sessions (v0.4) and the v0.5 plan (2026-09-29 → 30)
 
 **v0.4 (committed as `a42898d`): agentic orchestration for fewer tokens.** The

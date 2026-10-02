@@ -11,7 +11,7 @@ import { logIntegration, routePattern as actionFor } from './integration-log'
  *
  * Two hosts, for one reason. Prices and bars come from
  * `data.alpaca.markets`. The asset *catalogue* (`/v2/assets`) is only served
- * by the trading host, so `getAsset`/`listTradableAssets` read
+ * by the trading host, so `getAsset` reads
  * `paper-api.alpaca.markets` -- a read of a public reference list, not a
  * touch of the account.
  *
@@ -511,35 +511,3 @@ export async function getAsset(symbol: string): Promise<AlpacaAsset> {
   return toAsset(raw)
 }
 
-/**
- * Active, tradable assets on the major venues.
- *
- * `exchanges` exists because the unfiltered list is mostly OTC warrants and
- * shells -- the first entry Alpaca returns is a Chicken Soup for the Soul
- * warrant. Defaulting to NASDAQ and NYSE keeps the browsable universe to
- * names a learner would recognise without hardcoding a curated ticker list.
- *
- * **Uncached on purpose, and expensive: 8.5MB over the wire.** Next's data
- * cache rejects anything over 2MB, and per-exchange requests are still 2.5MB
- * for NASDAQ alone, so there is no payload shape that fits. Callers must not
- * invoke this per request -- `features/markets/api/assets.ts` wraps it in
- * `unstable_cache`, which caches the trimmed result (a few hundred KB)
- * instead of the raw body.
- */
-export async function listTradableAssets(
-  assetClass: AssetClass = 'equity',
-  exchanges: string[] = ['NASDAQ', 'NYSE'],
-): Promise<AlpacaAsset[]> {
-  const raw = await alpacaFetch<RawAsset[]>(
-    '/v2/assets',
-    { status: 'active', asset_class: assetClass === 'crypto' ? 'crypto' : 'us_equity' },
-    0,
-    ALPACA_TRADING_URL,
-  )
-
-  return raw
-    .filter((asset) => asset.tradable)
-    .filter((asset) => exchanges.length === 0 || exchanges.includes(asset.exchange))
-    .map(toAsset)
-    .sort((a, b) => a.symbol.localeCompare(b.symbol))
-}

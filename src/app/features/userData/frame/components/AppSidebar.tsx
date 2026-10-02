@@ -3,7 +3,7 @@
 import Link, { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ArrowRight, ChevronRight, ChevronsLeft, CircleHelp, ExternalLink, ShieldCheck } from 'lucide-react'
+import { ChevronRight,ChevronsLeft, CircleHelp, ExternalLink, ShieldCheck } from 'lucide-react'
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
@@ -124,8 +124,6 @@ function GroupItem({ group }: { group: NavGroup }) {
                   <span>{t(child.label)}</span>
                   {child.external ? (
                     <ExternalLink aria-label="Opens in a new tab" className="ml-auto size-3! opacity-60" />
-                  ) : child.arrow ? (
-                    <ArrowRight aria-hidden className="ml-auto size-3.5! opacity-60" />
                   ) : (
                     <PendingSpinner />
                   )}

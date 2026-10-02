@@ -465,37 +465,44 @@ html[data-font="system"] {
  * The landing page's scene (2026-10-02, "High Street Blue Hour"): BGC's glass
  * towers on a clear morning in light mode, the same street at blue hour in
  * dark mode, office windows lighting up. Scene colours only -- actions keep
- * the palette's --primary. Not per palette: the street looks the same whatever
- * a visitor picks in Settings.
+ * the palette's --primary.
+ *
+ * Follows the palette (Carlos, 2026-10-02: it was a fixed blue whatever a
+ * visitor picked). The street is the palette's own background and cards, and
+ * the sky and towers are that background tinted with its --primary, so Forest
+ * is a green dusk, Orchid a pink one and the mono palettes grey. Declared on
+ * <html>, where the palette's tokens live, so each resolves there and
+ * [data-landing]'s remap below inherits plain colours. The office lights stay
+ * warm: they're lamps, not brand.
  */
 :root {
-  --sky-top: oklch(0.9 0.03 228);
-  --sky-horizon: oklch(0.97 0.008 190);
-  --glass: oklch(0.74 0.035 228);
-  --glass-edge: oklch(0.9 0.015 220);
+  --sky-top: color-mix(in oklch, var(--primary) 20%, var(--background));
+  --sky-horizon: color-mix(in oklch, var(--primary) 4%, var(--background));
+  --glass: color-mix(in oklch, var(--primary) 22%, color-mix(in oklch, var(--foreground) 32%, var(--background)));
+  --glass-edge: color-mix(in oklch, var(--primary) 10%, color-mix(in oklch, var(--foreground) 10%, var(--background)));
   --window: oklch(0.86 0.09 75);
-  --window-off: oklch(0.82 0.025 225);
+  --window-off: color-mix(in oklch, var(--glass) 55%, var(--background));
   /* Morning: sunlight catching single panes. */
-  --window-lit: oklch(0.97 0.012 215);
-  --street: oklch(0.975 0.005 210);
-  --street-raised: oklch(1 0 0);
-  --device: oklch(0.24 0.012 240);
-  --device-edge: oklch(0.42 0.015 240);
+  --window-lit: color-mix(in oklch, var(--primary) 6%, var(--card));
+  --street: var(--background);
+  --street-raised: var(--card);
+  --device: oklch(0.24 0 0);
+  --device-edge: oklch(0.42 0 0);
 }
 
 .dark {
-  --sky-top: oklch(0.22 0.04 242);
-  --sky-horizon: oklch(0.39 0.055 232);
-  --glass: oklch(0.27 0.04 238);
-  --glass-edge: oklch(0.43 0.06 232);
+  --sky-top: color-mix(in oklch, var(--primary) 5%, var(--background));
+  --sky-horizon: color-mix(in oklch, var(--primary) 24%, var(--background));
+  --glass: color-mix(in oklch, var(--primary) 8%, var(--card));
+  --glass-edge: color-mix(in oklch, var(--primary) 24%, var(--card));
   --window: oklch(0.81 0.12 72);
-  --window-off: oklch(0.31 0.035 238);
-  /* Blue hour: office lights coming on. */
+  --window-off: color-mix(in oklch, var(--foreground) 9%, var(--card));
+  /* Dusk: office lights coming on. */
   --window-lit: var(--window);
-  --street: oklch(0.205 0.03 240);
-  --street-raised: oklch(0.25 0.035 238);
-  --device: oklch(0.19 0.012 240);
-  --device-edge: oklch(0.36 0.02 240);
+  --street: var(--background);
+  --street-raised: var(--card);
+  --device: oklch(0.19 0 0);
+  --device-edge: oklch(0.36 0 0);
 }
 
 /* The landing page's frame repaints the app's surfaces in the scene. */

@@ -155,3 +155,7 @@ python/.venv/
 __pycache__/
 *.pyc
 python/out/
+
+# Remotion bundle and render scratch (2026-10-02): rebuildable, never committed
+/marketing/video/build/
+/marketing/video/out/

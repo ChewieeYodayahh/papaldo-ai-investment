@@ -5,6 +5,7 @@ name: Market data
 #   python/market_caps.py  tradable_assets.market_cap_usd  (heatmap tile sizes)
 #   python/benchmarks.py   public.market_benchmarks        (index benchmarker)
 #   python/cpi.py          public.cpi_annual               (purchasing power)
+#   python/etf_profiles.py public.etf_profiles             (ETF top holdings)
 #
 # Weekly is plenty: market caps drift slowly, and the benchmarker is monthly
 # data -- a weekly run only moves the current month's month-to-date close.
@@ -29,6 +30,7 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -65,3 +67,9 @@ jobs:
       # New years appear once a year; a weekly run just upserts the same rows.
       - name: Refresh consumer price index
         run: python python/cpi.py
+
+      # ETF facts and top-10 holdings from Alpha Vantage (15 calls, inside the
+      # free tier's 25 a day). Skipped until the repository secret exists.
+      - name: Refresh ETF profiles
+        if: ${{ env.ALPHAVANTAGE_API_KEY != '' }}
+        run: python python/etf_profiles.py

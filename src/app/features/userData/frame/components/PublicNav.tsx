@@ -39,11 +39,7 @@ function useOpen() {
     item.external ? window.open(item.href, '_blank', 'noopener,noreferrer') : router.push(item.href)
 }
 
-/**
- * One dropdown in the top bar: links and dividers, no submenus (Carlos,
- * 2026-09-30). "›" marks an entry that opens a section of a page (Tools:
- * Basics, Accounting, Life insurance).
- */
+/** One dropdown in the top bar: links and dividers, no submenus and no arrows (Carlos, 2026-09-30 and 10-02). */
 function NavMenu({ menu }: { menu: PublicMenu }) {
   const t = useCopy()
   const pathname = usePathname()
@@ -64,11 +60,7 @@ function NavMenu({ menu }: { menu: PublicMenu }) {
             <DropdownMenuItem key={entry.href} onClick={() => open(entry)}>
               <Icon />
               {t(entry.label)}
-              {entry.external ? (
-                <ExternalLink className="ml-auto size-3.5 opacity-60" aria-label="Opens in a new tab" />
-              ) : entry.arrow ? (
-                <ChevronRight className="ml-auto size-3.5 opacity-60" aria-hidden />
-              ) : null}
+              {entry.external && <ExternalLink className="ml-auto size-3.5 opacity-60" aria-label="Opens in a new tab" />}
             </DropdownMenuItem>
           )
         })}
@@ -81,9 +73,9 @@ function NavMenu({ menu }: { menu: PublicMenu }) {
 const ROW = 'flex min-h-12 w-full items-center gap-3 px-1 text-left text-[1.0625rem] transition-colors hover:text-foreground'
 
 /**
- * The phone menu (Carlos, 2026-09-30): one divided list. About Papaldo and
- * Community fold open under a hamburger that turns into an X; Tools always
- * shows its four entries under a heading; Markets and Support are rows.
+ * The phone menu (Carlos, 2026-09-30): one divided list. About Papaldo,
+ * Community and Tools fold open under a hamburger that turns into an X, their
+ * links without arrows (2026-10-02); Markets and Support are rows.
  */
 function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const t = useCopy()
@@ -98,7 +90,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     )
     const trailing = item.external ? (
       <ExternalLink className="ml-auto size-4 opacity-60" aria-label="Opens in a new tab" />
-    ) : item.arrow || !nested ? (
+    ) : !nested ? (
       <ChevronRight className="ml-auto size-4 opacity-50" aria-hidden />
     ) : null
     return item.external ? (
@@ -121,14 +113,6 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
           return (
             <div key={entry.href} className="py-1">
               {leaf({ href: entry.href, label: entry.label, icon: ChevronRight }, false)}
-            </div>
-          )
-        }
-        if (entry.mobile === 'list') {
-          return (
-            <div key={entry.label} className="py-2">
-              <p className="px-1 pt-1 pb-0.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">{t(entry.label)}</p>
-              {leavesOf(entry).map((item) => leaf(item, true))}
             </div>
           )
         }

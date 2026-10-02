@@ -27,6 +27,9 @@ const CLIPS = {
 
 const DEVICES: Device[] = ["laptop", "phone"];
 
+/** The landing page's laptop screen: 1024 x 640, the app's desktop layout at a size that stays readable. */
+const SHOT_LAPTOP = { width: 1024, height: 640 };
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -45,6 +48,23 @@ export const RemotionRoot: React.FC = () => {
             />
           )),
         )}
+      </Folder>
+      {/* The landing page's still screens (2026-10-02): a smaller laptop
+          screen, so the app reads larger inside the MacBook frame. Phone
+          stills reuse the Clip-*-Phone compositions. scripts/render-shots.mjs. */}
+      <Folder name="Landing-Shots">
+        {Object.entries(CLIPS).map(([name, Clip]) => (
+          <Composition
+            key={name}
+            id={`Shot-${name}-Laptop`}
+            component={Clip}
+            defaultProps={{ device: "laptop" as Device }}
+            durationInFrames={CLIP_FRAMES}
+            fps={30}
+            width={SHOT_LAPTOP.width}
+            height={SHOT_LAPTOP.height}
+          />
+        ))}
       </Folder>
       <Composition id="PapaldoPromo" component={PapaldoPromo} durationInFrames={PROMO_FRAMES} fps={30} width={1920} height={1080} />
       <Folder name="PapaldoPromo-Scenes">
