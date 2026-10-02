@@ -20,6 +20,42 @@ import { shareOrDownload, type ImageFormat, type ShareCard } from '../share-imag
 import { TermHelp } from './lesson'
 
 /**
+ * A number input that can be emptied (Carlos, 2026-10-02: clearing a field
+ * kept snapping back to 0). The figure lives in state as a number, but while
+ * the field has focus it shows exactly what was typed -- an empty box
+ * included -- and an empty or half-typed value ("1.", "-") never reaches
+ * `onValue`. Leaving the field shows the stored number again. Use it for
+ * every numeric input instead of a bare `<Input type="number">`.
+ */
+export function NumberInput({
+  value,
+  onValue,
+  ...props
+}: Omit<React.ComponentProps<typeof Input>, 'value' | 'onChange' | 'type'> & {
+  value: number
+  onValue: (value: number) => void
+}) {
+  const [draft, setDraft] = useState<string | null>(null)
+  return (
+    <Input
+      {...props}
+      type="number"
+      value={draft ?? (Number.isFinite(value) ? value : '')}
+      onChange={(event) => {
+        const text = event.target.value
+        setDraft(text)
+        const next = Number(text)
+        if (text.trim() !== '' && Number.isFinite(next)) onValue(next)
+      }}
+      onBlur={(event) => {
+        setDraft(null)
+        props.onBlur?.(event)
+      }}
+    />
+  )
+}
+
+/**
  * An amount typed in the viewer's display currency (dollars or pesos) but
  * held in USD, like every other figure Papaldo shows -- so switching the
  * currency toggle re-renders the same amount instead of reinterpreting it.
@@ -50,15 +86,14 @@ export function AmountField({
         <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
           {currency === 'PHP' ? '₱' : '$'}
         </span>
-        <Input
+        <NumberInput
           id={id}
-          type="number"
           inputMode="decimal"
           min={0}
           step={currency === 'PHP' ? 500 : 10}
           value={Number.isFinite(shown) ? shown : 0}
-          onChange={(event) => {
-            const value = Math.max(0, Number(event.target.value) || 0)
+          onValue={(typed) => {
+            const value = Math.max(0, typed)
             onChange(currency === 'PHP' && fx ? value / fx.rate : value)
           }}
           className="figure h-10 rounded-xl pl-7"
@@ -96,19 +131,14 @@ export function NumberField({
     <Field>
       <FieldLabelWithHelp id={id} label={label} help={help} />
       <div className="relative">
-        <Input
+        <NumberInput
           id={id}
-          type="number"
           inputMode="decimal"
           min={min}
           max={max}
           step={step}
           value={value}
-          onChange={(event) => {
-            const next = Number(event.target.value)
-            if (!Number.isFinite(next)) return
-            onChange(Math.min(max ?? Infinity, Math.max(min, next)))
-          }}
+          onValue={(next) => onChange(Math.min(max ?? Infinity, Math.max(min, next)))}
           className="figure h-10 rounded-xl pr-12"
         />
         {suffix ? (

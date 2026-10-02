@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 
 import { budgetTips, BUCKETS, PRESETS, splitBudget, TARGET_SHARE, type Bucket, type BudgetLine, type BudgetRegion } from '../budget'
 import { budgetSheet } from '../workbook'
-import { ShareResultButton } from './fields'
+import { NumberInput, ShareResultButton } from './fields'
 import { LessonCard, ResultHeadline, TermHelp } from './lesson'
 
 const BUCKET_LABEL: Record<Bucket, string> = { needs: 'Needs', wants: 'Wants', savings: 'Savings & debt' }
@@ -103,15 +103,13 @@ export function BudgetPlanner() {
               <FieldLabel htmlFor={payId}>Monthly take-home pay ({CURRENCY[region].code})</FieldLabel>
               <TermHelp id="takeHome" />
             </div>
-            <Input
+            <NumberInput
               id={payId}
-              type="number"
               inputMode="decimal"
               min={0}
               value={pay}
-              onChange={(event) => {
-                const next = Number(event.target.value)
-                if (Number.isFinite(next) && next >= 0) setPay(next)
+              onValue={(next) => {
+                if (next >= 0) setPay(next)
               }}
               className="figure h-10 rounded-xl"
             />

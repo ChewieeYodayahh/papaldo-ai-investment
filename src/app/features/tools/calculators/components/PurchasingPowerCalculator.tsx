@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { useTutorialDemo } from '@/app/features/tutorials/tutorial-store'
 import { useFx } from '@/app/features/userData/preferences/components/Money'
@@ -16,7 +15,7 @@ import { pointDot } from '@/lib/chart-dots'
 
 import type { CpiData } from '../api/cpi'
 import { averageInflation, buyingPower, cpiAt, equivalent, projectBuyingPower } from '../inflation'
-import { NumberField, ShareResultButton, Stat } from './fields'
+import { NumberField, NumberInput, ShareResultButton, Stat } from './fields'
 import { LessonCard, TermHelp } from './lesson'
 
 type Currency = 'PHP' | 'USD'
@@ -135,15 +134,13 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
           </Field>
           <Field>
             <FieldLabel htmlFor={amountId}>Amount</FieldLabel>
-            <Input
+            <NumberInput
               id={amountId}
-              type="number"
               inputMode="decimal"
               min={0}
               value={amount}
-              onChange={(event) => {
-                const next = Number(event.target.value)
-                if (Number.isFinite(next) && next >= 0) setAmount(next)
+              onValue={(next) => {
+                if (next >= 0) setAmount(next)
                 setPortfolioIn(null)
               }}
               className="figure h-10 rounded-xl"
