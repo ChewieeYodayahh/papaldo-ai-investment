@@ -5,7 +5,7 @@ import { ToolIntro } from '../components/lesson'
 export function StatementsPage() {
   return (
     <>
-      <ToolIntro tour="statements" currency={false} question="What do the three financial statements say about an organisation?">
+      <ToolIntro tour="statements" currency={false} question="tool.statements.q">
         Fill in your own numbers or start from the sample. The statements check each other, so you can see how they connect.
       </ToolIntro>
       <StatementsBuilder />

@@ -56,45 +56,45 @@ export async function ToolsPage({ open }: { open?: string }) {
     <div className={GRID}>
       <SimpleToolCard
         icon="returns"
-        title="Returns calculator"
-        body="What if you had invested back then? Replay real prices and see what it would be worth today."
+        title="tool.returns.title"
+        body="tool.returns.body"
         href="/tools/returns"
-        action="Run the numbers"
+        action="tool.returns.action"
       />
       <SimpleToolCard
         icon="savings"
-        title="Savings planner"
-        body="How much to save each month for a goal, with an emergency fund kept safe on the side."
+        title="tool.savings.title"
+        body="tool.savings.body"
         href="/tools/savings"
-        action="Plan a goal"
+        action="tool.savings.action"
       />
       <SimpleToolCard
         icon="purchasing"
-        title="Purchasing power"
-        body="What is money from back then worth today? See how fast cash loses value."
+        title="tool.purchasing.title"
+        body="tool.purchasing.body"
         href="/tools/purchasing-power"
-        action="Compare the years"
+        action="tool.purchasing.action"
       />
       <SimpleToolCard
         icon="budget"
-        title="Budget 50/30/20"
-        body="Where should your pay go each month? Split it into needs, wants and savings."
+        title="tool.budget.title"
+        body="tool.budget.body"
         href="/tools/budget"
-        action="Plan my month"
+        action="tool.budget.action"
       />
       <SimpleToolCard
         icon="dca"
-        title="Cost averaging vs lump sum"
-        body="Invest all at once, or a little every month? Replay both and see which won."
+        title="tool.dca.title"
+        body="tool.dca.body"
         href="/tools/dca"
-        action="Compare the two"
+        action="tool.dca.action"
       />
       <SimpleToolCard
         icon="waiting"
-        title="The cost of waiting"
-        body="Start now or later? See how much more you would need to save by waiting."
+        title="tool.waiting.title"
+        body="tool.waiting.body"
         href="/tools/cost-of-waiting"
-        action="See the gap"
+        action="tool.waiting.action"
       />
       <BenchmarkToolCard preview={preview} />
     </div>
@@ -103,10 +103,10 @@ export async function ToolsPage({ open }: { open?: string }) {
     <div className={GRID}>
       <SimpleToolCard
         icon="statements"
-        title="Financial statements"
-        body="Build the three statements and check that the books balance. Stays in this browser."
+        title="tool.statements.title"
+        body="tool.statements.body"
         href="/tools/statements"
-        action="Build statements"
+        action="tool.statements.action"
       />
     </div>
   );
@@ -143,22 +143,22 @@ export async function ToolsPage({ open }: { open?: string }) {
               <WalkthroughToolCard quizDone={Boolean(risk)} />
               <TourToolCard
                 tour="account"
-                title="Navigate your account"
-                body="The sidebar, notifications, settings and your account menu, one at a time."
+                title="tool.tourAccount.title"
+                body="tool.tourAccount.body"
                 steps={["Getting around", "Notifications", "Settings", "Your account"]}
               />
               <TourToolCard
                 tour="markets"
-                title="Navigate the markets"
-                body="Search, the buyable list, today’s movers, the heatmap and the index comparison."
+                title="tool.tourMarkets.title"
+                body="tool.tourMarkets.body"
                 steps={["Search", "What you can buy", "Movers", "Heatmap", "Indices"]}
               />
               <SimpleToolCard
                 icon="export"
-                title="Export my data"
-                body="Download your trades, holdings and profile as a spreadsheet or report."
+                title="tool.export.title"
+                body="tool.export.body"
                 href="/tools/export"
-                action="Build a report"
+                action="tool.export.action"
               />
             </div>
           ),

@@ -18,7 +18,7 @@ export async function CostOfWaitingPage() {
 
   return (
     <>
-      <ToolIntro tour="waiting" question="How much more do you need to save if you start later?">
+      <ToolIntro tour="waiting" question="tool.waiting.q">
         Tell it the income you want in retirement. See what you would need to save each month starting now, or 5,
         10 or 15 years from now.
       </ToolIntro>
