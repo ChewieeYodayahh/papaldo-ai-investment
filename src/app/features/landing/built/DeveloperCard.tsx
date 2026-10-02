@@ -1,10 +1,13 @@
 import { FaFacebook, FaGithub, FaGlobe, FaLinkedin } from 'react-icons/fa6'
+import { SiLinktree } from 'react-icons/si'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const LINKS = [
+  // His booking page, the same one "Talk to an Advisor" opens (2026-10-02).
+  { label: 'Book a financial review', href: 'https://linktr.ee/DavidFinancial21', Icon: SiLinktree },
   { label: 'Portfolio', href: 'https://sensei-david.vercel.app/', Icon: FaGlobe },
   { label: 'GitHub', href: 'https://github.com/ChewieeYodayahh', Icon: FaGithub },
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/carlos-david-jamandre-57ab2a278/', Icon: FaLinkedin },

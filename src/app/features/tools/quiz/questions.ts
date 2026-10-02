@@ -3,12 +3,12 @@ import type { IsqChoice, IsqQuestion } from './types'
 /**
  * The six-item Investment Suitability Questionnaire.
  *
- * Rewritten in plain language on 2026-09-26 (Carlos's call). The six topics
- * and their low-to-high risk ordering still follow Manulife's Client
- * Suitability Assessment, but the wording is now ours and every question has
- * exactly three choices -- one per risk band -- each with a short title, a
- * one-line description and an icon. The verbatim transcription it replaces
- * is in git history (before this date) if the source wording is ever needed.
+ * Papaldo's own questionnaire, in plain language (rewritten 2026-09-26,
+ * Carlos's call). Six topics -- age, how long you have invested, what you
+ * have invested in, horizon, how a dip would feel, and the goal -- each with exactly three
+ * choices, one per risk band, each with a short title, a one-line
+ * description and an icon. It is not presented as any institution's
+ * assessment, on screen or in these comments (Carlos, 2026-10-02).
  *
  * Choices are listed in on-screen order, lowest risk first. Weights are
  * derived from that position rather than typed by hand -- see `withPoints`.

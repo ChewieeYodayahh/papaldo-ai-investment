@@ -277,9 +277,9 @@ export function SimpleToolCard({
 /**
  * Life insurance (Carlos, 2026-09-30): Manulife Philippines' own calculators
  * and nothing else -- no in-app insurance maths, no other insurers. "Talk to
- * an Advisor" waits, disabled, for Carlos's advisor profile.
+ * an Advisor" opens David's Linktree (`advisorHref`, nav.ts ADVISOR_URL, 2026-10-02).
  */
-export function LifeInsuranceToolCard({ href }: { href: string }) {
+export function LifeInsuranceToolCard({ href, advisorHref }: { href: string; advisorHref: string }) {
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
@@ -300,10 +300,16 @@ export function LifeInsuranceToolCard({ href }: { href: string }) {
           Open Manulife’s calculators
           <ExternalLink data-icon="inline-end" aria-label="Opens in a new tab" />
         </a>
-        <Button size="lg" variant="outline" disabled className="h-9 rounded-full px-4 sm:h-10 sm:px-5">
+        <a
+          href={advisorHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5')}
+        >
           <MessageCircle data-icon="inline-start" />
-          Talk to an Advisor · Coming soon
-        </Button>
+          Talk to an Advisor
+          <ExternalLink data-icon="inline-end" aria-label="Opens in a new tab" />
+        </a>
       </CardFooter>
     </Card>
   )

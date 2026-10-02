@@ -44,6 +44,13 @@ export type NavGroup = { label: CopyKey; icon: LucideIcon; href: string; childre
  */
 export const MANULIFE_TOOLS_URL = 'https://www.manulife.com/ph/services/tools-calculators'
 
+/**
+ * "Talk to an Advisor" (Carlos, 2026-10-02): David's Linktree, where people
+ * book a financial review session or reach him by Viber, email or LinkedIn.
+ * Opens in a new tab. Swap for an in-app booking page if one is ever built.
+ */
+export const ADVISOR_URL = 'https://linktr.ee/DavidFinancial21'
+
 /** The Basics section of the /tools hub, in its order. */
 export const BASIC_TOOLS: NavLeaf[] = [
   { href: '/tools/returns', label: 'nav.tools.returns', icon: Calculator },

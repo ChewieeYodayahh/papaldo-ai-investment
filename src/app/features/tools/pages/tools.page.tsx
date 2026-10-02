@@ -3,7 +3,7 @@ import { MenuToggleIcon } from "@/components/menu-toggle-icon";
 import { getProfile, isSetupComplete } from "@/app/features/auth/api/profile";
 import { getBenchmarks } from "@/app/features/markets/benchmarks/api/benchmarks";
 import { getCurrentRiskProfile } from "@/app/features/tools/quiz/api/submit";
-import { MANULIFE_TOOLS_URL } from "@/app/features/userData/frame/nav";
+import { ADVISOR_URL, MANULIFE_TOOLS_URL } from "@/app/features/userData/frame/nav";
 import { T, type CopyKey } from "@/app/features/userData/preferences/copy";
 
 import {
@@ -112,7 +112,7 @@ export async function ToolsPage({ open }: { open?: string }) {
   );
   const insurance = (
     <div className={GRID}>
-      <LifeInsuranceToolCard href={MANULIFE_TOOLS_URL} />
+      <LifeInsuranceToolCard href={MANULIFE_TOOLS_URL} advisorHref={ADVISOR_URL} />
     </div>
   );
 

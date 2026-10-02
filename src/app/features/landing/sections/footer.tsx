@@ -2,16 +2,18 @@ const FOOTER_COLUMNS = [
   {
     title: 'Product',
     links: [
-      { href: '#how-it-works', label: 'How it works' },
+      // Absolute (`/#…`), so they also work from /privacy and /how-its-built.
+      { href: '/#how-it-works', label: 'How it works' },
       { href: '/markets', label: 'Markets' },
       { href: '/tools', label: 'Tools' },
-      { href: '#faq', label: 'FAQ' },
+      { href: '/#faq', label: 'FAQ' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { href: '#trust', label: 'About' },
+      { href: '/#trust', label: 'About' },
+      { href: '/how-its-built', label: "How it's built" },
       { href: '/community', label: 'Community' },
       { href: '/blog', label: 'Blog' },
       { href: '/support', label: 'Contact support' },
@@ -20,9 +22,9 @@ const FOOTER_COLUMNS = [
   {
     title: 'Legal',
     links: [
-      { href: '#', label: 'Privacy' },
+      { href: '/privacy', label: 'Privacy' },
       { href: '#', label: 'Terms' },
-      { href: '#', label: 'Cookie policy' },
+      { href: '/privacy#cookies', label: 'Cookie policy' },
     ],
   },
 ] as const
