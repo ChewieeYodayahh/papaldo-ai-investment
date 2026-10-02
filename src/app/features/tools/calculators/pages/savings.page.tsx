@@ -22,7 +22,7 @@ export async function SavingsPage() {
 
   return (
     <>
-      <ToolIntro tour="savings" question="How much should you save each month to reach your goal?">
+      <ToolIntro tour="savings" question="tool.savings.q">
         Set a goal and a date to see the monthly amount. Keep an emergency fund safe in a bank deposit while you
         invest the rest: both show on one chart.
       </ToolIntro>

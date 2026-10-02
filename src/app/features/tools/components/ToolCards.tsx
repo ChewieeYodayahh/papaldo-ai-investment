@@ -10,7 +10,7 @@ import { formatIncome } from '@/app/features/auth/components/profile-fields'
 import type { UserProfile } from '@/app/features/auth/types'
 import { BAND_ICON, ScoreMeter } from '@/app/features/tools/quiz/components/quiz-visuals'
 import type { RiskBand } from '@/app/features/tools/quiz/types'
-import { useCopy } from '@/app/features/userData/preferences/copy'
+import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 import { useSetupHydrated, useSetupStore } from '@/app/features/tutorials/setup-store'
 import { useTutorialStore } from '@/app/features/tutorials/tutorial-store'
 import { TOUR_HOME, type TourId } from '@/app/features/tutorials/tours'
@@ -236,19 +236,20 @@ export function SimpleToolCard({
   external = false,
 }: {
   icon: keyof typeof SIMPLE_ICONS
-  title: string
-  body: string
+  title: CopyKey
+  body: CopyKey
   href: string
-  action: string
+  action: CopyKey
   /** Another site (Manulife): opens in a new tab without an opener. */
   external?: boolean
 }) {
+  const t = useCopy()
   return (
     <Card className={CARD}>
       <CardHeader className="px-5 sm:px-6">
         <ToolIcon icon={SIMPLE_ICONS[icon]} />
-        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">{title}</CardTitle>
-        <CardDescription className="text-[0.8125rem]">{body}</CardDescription>
+        <CardTitle className="pt-2 text-base font-semibold sm:pt-3 sm:text-lg">{t(title)}</CardTitle>
+        <CardDescription className="text-[0.8125rem]">{t(body)}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 max-sm:hidden" />
       <CardFooter className="border-0 bg-transparent px-5 pt-2 sm:px-6">
@@ -259,12 +260,12 @@ export function SimpleToolCard({
             rel="noopener noreferrer"
             className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}
           >
-            {action}
+            {t(action)}
             <ExternalLink data-icon="inline-end" aria-label="Opens in a new tab" />
           </a>
         ) : (
           <Link href={href} className={cn(buttonVariants({ size: 'lg' }), 'h-9 rounded-full px-4 sm:h-10 sm:px-5 font-semibold')}>
-            {action}
+            {t(action)}
             <ArrowRight data-icon="inline-end" />
           </Link>
         )}
@@ -312,7 +313,8 @@ export function LifeInsuranceToolCard({ href }: { href: string }) {
  * A Tutorial Mode tour as a card (2026-09-30): opens the tour's page with the
  * tour already running. Finished tours show a tick (remembered per browser).
  */
-export function TourToolCard({ tour, title, body, steps }: { tour: TourId; title: string; body: string; steps: string[] }) {
+export function TourToolCard({ tour, title, body, steps }: { tour: TourId; title: CopyKey; body: CopyKey; steps: string[] }) {
+  const t = useCopy()
   const router = useRouter()
   const start = useTutorialStore((s) => s.start)
   const hydrated = useSetupHydrated()
@@ -323,10 +325,10 @@ export function TourToolCard({ tour, title, body, steps }: { tour: TourId; title
       <CardHeader className="px-5 sm:px-6">
         <ToolIcon icon={Compass} />
         <CardTitle className="flex items-center gap-1.5 pt-2 text-base font-semibold sm:pt-3 sm:text-lg">
-          {title}
+          {t(title)}
           {done ? <CircleCheck className="size-4 text-gain" aria-label="Done" /> : null}
         </CardTitle>
-        <CardDescription className="text-[0.8125rem]">{body}</CardDescription>
+        <CardDescription className="text-[0.8125rem]">{t(body)}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 px-5 sm:px-6">
         <ol className="space-y-2 text-sm text-muted-foreground">

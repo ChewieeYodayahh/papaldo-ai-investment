@@ -15,7 +15,7 @@ export async function PurchasingPowerPage() {
 
   return (
     <>
-      <ToolIntro tour="purchasing" question="What is money from back then worth today?">
+      <ToolIntro tour="purchasing" question="tool.purchasing.q">
         Prices rise, so the same money buys less every year. Compare any two years from 1960 to the latest World Bank data.
       </ToolIntro>
       <PurchasingPowerCalculator cpi={cpi} portfolioUsd={portfolioUsd} />

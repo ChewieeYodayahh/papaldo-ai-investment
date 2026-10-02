@@ -6,6 +6,7 @@ import { HelpTip } from '@/components/help-tip'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMode'
 import type { TourId } from '@/app/features/tutorials/tours'
+import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 import { useFx } from '@/app/features/userData/preferences/components/Money'
 import { usePreferences, type Currency } from '@/app/features/userData/preferences/store'
 import { cn } from '@/lib/utils'
@@ -37,10 +38,11 @@ export function ToolIntro({
   children,
 }: {
   tour: TourId
-  question: string
+  question: CopyKey
   currency?: boolean
   children?: React.ReactNode
 }) {
+  const t = useCopy()
   return (
     <div className="mb-4 grid gap-1.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -48,7 +50,7 @@ export function ToolIntro({
         {currency ? <CurrencySwitch /> : null}
       </div>
       <p className="max-w-3xl text-[0.9375rem] font-medium text-foreground" data-tut={`${tour}.question`}>
-        {question}
+        {t(question)}
       </p>
       {children ? <p className="max-w-3xl text-[0.8125rem] text-muted-foreground">{children}</p> : null}
     </div>

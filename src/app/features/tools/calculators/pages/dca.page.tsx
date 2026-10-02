@@ -7,7 +7,7 @@ export async function DcaPage() {
   const options = await getAssetOptions()
   return (
     <>
-      <ToolIntro tour="dca" question="Should you invest all at once, or a little every month?">
+      <ToolIntro tour="dca" question="tool.dca.q">
         Pick an index, fund or stock and replay both ways on its real prices.
       </ToolIntro>
       <DcaSimulator options={options} defaultAsset="SP500" />
