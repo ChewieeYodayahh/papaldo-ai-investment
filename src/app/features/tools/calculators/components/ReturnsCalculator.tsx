@@ -20,6 +20,7 @@ import { whatItBuys } from '../purchases'
 import { AmountField, NumberField, ShareResultButton, Stat, useMoney, WhatItBuys } from './fields'
 import { LessonCard, TermHelp } from './lesson'
 import { SavingsGoalDialog } from './SavingsGoalDialog'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** 10 or 15 years back (Carlos, 2026-09-30), or everything Papaldo has. */
 export const YEAR_OPTIONS = [10, 15, 'max'] as const
@@ -294,7 +295,7 @@ export function ReturnsCalculator({ options, defaultAsset }: { options: AssetOpt
               <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4" data-tut="returns.share">
                 <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                   <Checkbox checked={saveOpen} onCheckedChange={(checked) => setSaveOpen(Boolean(checked))} />
-                  How much should I save?
+                  <T k="calc.howMuchSave" />
                 </label>
                 <ShareResultButton
                   filename={`papaldo-returns-${asset.toLowerCase()}`}

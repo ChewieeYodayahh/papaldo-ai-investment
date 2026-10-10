@@ -17,6 +17,7 @@ import type { CpiData } from '../api/cpi'
 import { averageInflation, buyingPower, cpiAt, equivalent, projectBuyingPower } from '../inflation'
 import { NumberField, NumberInput, ShareResultButton, Stat } from './fields'
 import { LessonCard, TermHelp } from './lesson'
+import { T } from '@/app/features/userData/preferences/copy'
 
 type Currency = 'PHP' | 'USD'
 const SERIES_FOR: Record<Currency, keyof CpiData> = { PHP: 'PHL', USD: 'USA' }
@@ -119,7 +120,7 @@ export function PurchasingPowerCalculator({ cpi, portfolioUsd }: { cpi: CpiData;
     <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <Card className="rounded-2xl border-0 py-4 sm:py-5">
         <CardHeader className="px-4 sm:px-5">
-          <CardTitle className="text-base font-semibold">Money across the years</CardTitle>
+          <CardTitle className="text-base font-semibold"><T k="calc.acrossYears" /></CardTitle>
           <CardDescription>Pick an amount and two years to compare.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 px-4 sm:px-5">

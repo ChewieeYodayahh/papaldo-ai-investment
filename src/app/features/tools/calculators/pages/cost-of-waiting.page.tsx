@@ -4,6 +4,7 @@ import { getCpi } from '../api/cpi'
 import { CostOfWaiting } from '../components/CostOfWaiting'
 import { ToolIntro } from '../components/lesson'
 import { averageInflation, cpiAt, type CpiPoint } from '../inflation'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** How far back the default inflation figure looks. */
 const INFLATION_YEARS = 20
@@ -19,8 +20,7 @@ export async function CostOfWaitingPage() {
   return (
     <>
       <ToolIntro tour="waiting" question="tool.waiting.q">
-        Tell it the income you want in retirement. See what you would need to save each month starting now, or 5,
-        10 or 15 years from now.
+        <T k="tool.waiting.intro" />
       </ToolIntro>
       <CostOfWaiting
         profileIncome={profile?.idealIncome ?? null}

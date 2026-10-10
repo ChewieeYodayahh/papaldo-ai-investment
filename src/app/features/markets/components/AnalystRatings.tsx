@@ -2,6 +2,7 @@ import type { FinnhubRecommendation } from '@/app/core/services/finnhub'
 import type { MarketResult } from '../api/result'
 import { marketUnavailableMessage } from '../market-status'
 import { PanelFrame } from './PanelFrame'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /**
  * The most recent analyst recommendation month, as published by Finnhub.
@@ -17,7 +18,7 @@ export function AnalystRatings({
   embedded?: boolean
 }) {
   return (
-    <PanelFrame title="Analyst ratings" embedded={embedded}>
+    <PanelFrame title={<T k="sym.analysts" />} embedded={embedded}>
       <Body ratings={ratings} />
     </PanelFrame>
   )

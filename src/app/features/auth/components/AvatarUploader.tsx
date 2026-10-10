@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
+import { T } from '@/app/features/userData/preferences/copy'
 
 const MAX_BYTES = 2 * 1024 * 1024
 const ACCEPT = 'image/jpeg,image/png,image/webp'
@@ -96,7 +97,7 @@ export function AvatarUploader({
       </div>
       {hasCustom && !uploading ? (
         <button type="button" onClick={remove} className="text-[11px] text-muted-foreground underline-offset-2 hover:underline">
-          Remove
+          <T k="prof.remove" />
         </button>
       ) : null}
       {error ? (

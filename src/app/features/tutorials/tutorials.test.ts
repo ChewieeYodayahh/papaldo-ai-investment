@@ -21,7 +21,9 @@ describe('tours', () => {
 describe('translateTutorial', () => {
   it('falls back to English, then to the key', () => {
     expect(translateTutorial('brainrot', 'ui.next')).toBe('Next W')
-    expect(translateTutorial('brainrot', 'budget.buckets.title')).toBe('How it splits')
+    // Slang and brainrot cover every key since 2026-10-10, so the fallback is
+    // exercised with a key no dictionary has.
+    expect(translateTutorial('brainrot', 'no.such.key')).toBe('no.such.key')
     expect(translateTutorial('en', 'no.such.key')).toBe('no.such.key')
   })
 

@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
+import { T, useCopy, type CopyKey } from '@/app/features/userData/preferences/copy'
 
 import { useFormSubmit } from '../hooks/use-form-submit'
 import { RETIREMENT_INCOME_HELP } from '../income'
@@ -35,7 +35,7 @@ function SectionCard({
 }: {
   icon: typeof UserRound
   title: CopyKey
-  description: string
+  description: CopyKey
   children: React.ReactNode
 }) {
   const t = useCopy()
@@ -48,7 +48,7 @@ function SectionCard({
           </span>
           <div>
             <CardTitle className="text-base font-semibold">{t(title)}</CardTitle>
-            <CardDescription className="text-[0.8125rem]">{description}</CardDescription>
+            <CardDescription className="text-[0.8125rem]">{t(description)}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -68,7 +68,7 @@ function SaveRow({ pending, saved, message }: { pending: boolean; saved: boolean
         </span>
       ) : null}
       <Button type="submit" disabled={pending} className="h-10 rounded-full px-5 font-semibold">
-        {pending ? 'Saving…' : t('prof.save')}
+        {pending ? t('prof.saving') : t('prof.save')}
       </Button>
     </div>
   )
@@ -104,7 +104,7 @@ export function DetailsCard({ profile }: { profile: UserProfile }) {
   }
 
   return (
-    <SectionCard icon={UserRound} title="prof.details" description="How Papaldo addresses and reaches you.">
+    <SectionCard icon={UserRound} title="prof.details" description="prof.detailsNote">
       <form onSubmit={onSubmit} noValidate>
         <FieldGroup className="gap-5">
           <Field data-invalid={Boolean(errors.username) || undefined}>
@@ -177,7 +177,7 @@ export function WorkIncomeCard({ profile }: { profile: UserProfile }) {
   }
 
   return (
-    <SectionCard icon={BriefcaseBusiness} title="prof.work" description="What you do, what you earn, and where you want to be.">
+    <SectionCard icon={BriefcaseBusiness} title="prof.work" description="prof.workNote">
       <form onSubmit={onSubmit} noValidate>
         <FieldGroup className="gap-5">
           <Field data-invalid={Boolean(errors.occupations) || undefined}>
@@ -265,7 +265,7 @@ export function WorkIncomeCard({ profile }: { profile: UserProfile }) {
 export function ConnectedAccountsCard({ providers, linkError }: { providers: string[]; linkError?: string }) {
   const linked = providers.includes('google')
   return (
-    <SectionCard icon={Link2} title="prof.connected" description="Sign in faster by linking another account.">
+    <SectionCard icon={Link2} title="prof.connected" description="prof.connectedNote">
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-muted/50 p-4">
         <div>
           <p className="font-medium">Google</p>
@@ -318,7 +318,7 @@ export function SecurityCard({ confirmed }: { confirmed: boolean }) {
   }
 
   return (
-    <SectionCard icon={KeyRound} title="prof.security" description="Changing your password is confirmed by email.">
+    <SectionCard icon={KeyRound} title="prof.security" description="prof.securityNote">
       {done ? (
         <Alert className="border-primary/30">
           <ShieldCheck />
@@ -419,7 +419,7 @@ export function AboutYouCard({ profile }: { profile: UserProfile }) {
   }
 
   return (
-    <SectionCard icon={Globe} title="prof.about" description="What other investors see when they open your profile.">
+    <SectionCard icon={Globe} title="prof.about" description="prof.aboutNote">
       <form onSubmit={onSubmit} noValidate>
         <FieldGroup className="gap-5">
           <Field data-invalid={Boolean(errors.website) || undefined}>
@@ -454,7 +454,7 @@ export function AboutYouCard({ profile }: { profile: UserProfile }) {
           <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2.5 text-sm">
             <span className="text-muted-foreground">Connect Facebook or LinkedIn</span>
             <Badge variant="outline" className="rounded-full">
-              Coming soon
+              <T k="prof.soon" />
             </Badge>
           </div>
           <SaveRow pending={pending} saved={saved} message={Object.keys(errors).length ? undefined : message} />

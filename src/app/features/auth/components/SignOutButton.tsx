@@ -6,6 +6,7 @@ import { LogOut } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** Signs out through the API route, then lands on the landing page. */
 export function useSignOut() {
@@ -28,7 +29,7 @@ export function SignOutButton({ className, variant = 'outline' }: { className?: 
   return (
     <Button type="button" variant={variant} onClick={signOut} disabled={pending} className={cn('rounded-full px-4', className)}>
       <LogOut data-icon="inline-start" />
-      {pending ? 'Signing out…' : 'Sign out'}
+      {pending ? <T k="header.signingOut" /> : <T k="header.signout" />}
     </Button>
   )
 }

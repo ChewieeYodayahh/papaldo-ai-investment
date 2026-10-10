@@ -1,33 +1,35 @@
+import { T, type CopyKey } from '@/app/features/userData/preferences/copy'
+
 const FOOTER_COLUMNS = [
   {
-    title: 'Product',
+    title: 'land.foot.product',
     links: [
       // Absolute (`/#…`), so they also work from /privacy and /how-its-built.
-      { href: '/#how-it-works', label: 'How it works' },
-      { href: '/markets', label: 'Markets' },
-      { href: '/tools', label: 'Tools' },
-      { href: '/#faq', label: 'FAQ' },
+      { href: '/#how-it-works', label: 'pub.how' },
+      { href: '/markets', label: 'pub.markets' },
+      { href: '/tools', label: 'nav.tools' },
+      { href: '/#faq', label: 'pub.faq' },
     ],
   },
   {
-    title: 'Company',
+    title: 'land.foot.company',
     links: [
-      { href: '/#trust', label: 'About' },
-      { href: '/how-its-built', label: "How it's built" },
-      { href: '/community', label: 'Community' },
-      { href: '/blog', label: 'Blog' },
-      { href: '/support', label: 'Contact support' },
+      { href: '/#trust', label: 'land.foot.about' },
+      { href: '/how-its-built', label: 'pub.built' },
+      { href: '/community', label: 'nav.community' },
+      { href: '/blog', label: 'land.foot.blog' },
+      { href: '/support', label: 'land.foot.support' },
     ],
   },
   {
-    title: 'Legal',
+    title: 'land.foot.legal',
     links: [
-      { href: '/privacy', label: 'Privacy' },
-      { href: '#', label: 'Terms' },
-      { href: '/privacy#cookies', label: 'Cookie policy' },
+      { href: '/privacy', label: 'land.foot.privacy' },
+      { href: '#', label: 'land.foot.terms' },
+      { href: '/privacy#cookies', label: 'land.foot.cookies' },
     ],
   },
-] as const
+] as const satisfies ReadonlyArray<{ title: CopyKey; links: ReadonlyArray<{ href: string; label: CopyKey }> }>
 
 export function Footer() {
   return (
@@ -37,17 +39,17 @@ export function Footer() {
           <div>
             <p className="text-[0.9375rem] font-semibold tracking-[0.22em]">PAPALDO KA</p>
             <p className="mt-3 max-w-xs text-sm text-pretty text-muted-foreground">
-              A practice stock market for Filipino first-time investors.
+              <T k="land.foot.tagline" />
             </p>
           </div>
           {FOOTER_COLUMNS.map((column) => (
             <div key={column.title}>
-              <h3 className="mb-4 text-sm font-semibold">{column.title}</h3>
+              <h3 className="mb-4 text-sm font-semibold"><T k={column.title} /></h3>
               <ul className="space-y-2">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <a href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-                      {link.label}
+                      <T k={link.label} />
                     </a>
                   </li>
                 ))}

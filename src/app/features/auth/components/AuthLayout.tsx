@@ -22,8 +22,8 @@ export function AuthLayout({
   children,
   footer,
 }: {
-  title: string
-  subtitle: string
+  title: React.ReactNode
+  subtitle: React.ReactNode
   children: React.ReactNode
   footer: React.ReactNode
 }) {

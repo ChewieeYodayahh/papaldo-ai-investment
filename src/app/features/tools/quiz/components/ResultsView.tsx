@@ -9,6 +9,7 @@ import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 import type { AnsweredQuestion } from '../api/submit'
+import { useIsqText } from '../copy'
 import type { RiskBand } from '../types'
 import { BAND_ICON, CHOICE_ICON, ScoreMeter } from './quiz-visuals'
 
@@ -31,6 +32,7 @@ export function ResultsView({
   children?: React.ReactNode
 }) {
   const t = useCopy()
+  const q = useIsqText()
   const BandIcon = BAND_ICON[band]
   const outdated = answers.some((answer) => !answer.choice)
 
@@ -42,17 +44,17 @@ export function ResultsView({
             <BandIcon className="size-8" strokeWidth={1.75} />
           </span>
           <p className="text-xs font-semibold tracking-[0.18em] text-highlight uppercase">
-            Taken {new Date(takenAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+            {t('isq.taken', { date: new Date(takenAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) })}
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
             {t('tools.youAre')} <span className="text-highlight">{t(`tools.band.${band}`)}</span>
           </h2>
           <p className="max-w-md text-[0.9375rem] text-muted-foreground">{t(`dash.blurb.${band}`)}</p>
           <ScoreMeter score={score} className="mt-3 max-w-md" />
-          <p className="figure text-sm text-muted-foreground">Score {score} / 100</p>
+          <p className="figure text-sm text-muted-foreground">{t('isq.score', { score: String(score) })}</p>
           <div className="mt-2 flex flex-wrap justify-center gap-3">
             <Link href="/tools" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-11 rounded-full px-5')}>
-              Back to Tools
+              {t('isq.backTools')}
             </Link>
             <Link href="/isq" className={cn(buttonVariants({ size: 'lg' }), 'h-11 rounded-full px-6 font-semibold')}>
               <RotateCcw data-icon="inline-start" />
@@ -66,10 +68,10 @@ export function ResultsView({
       <div className="grid items-start gap-4 lg:grid-cols-2">
         <Card className="rounded-2xl border-0 py-5">
           <CardHeader className="px-5 sm:px-6">
-            <CardTitle className="text-base font-semibold">Your answers</CardTitle>
+            <CardTitle className="text-base font-semibold">{t('isq.answers')}</CardTitle>
             {outdated ? (
               <p className="text-[0.8125rem] text-muted-foreground">
-                Some answers are from an earlier version of the quiz. Retake it to see them in today’s wording.
+                {t('isq.outdated')}
               </p>
             ) : null}
           </CardHeader>
@@ -84,10 +86,10 @@ export function ResultsView({
                     </span>
                     <div className="min-w-0">
                       <p className="text-[0.8125rem] text-muted-foreground">
-                        <span className="figure">Q{index + 1}.</span> {answer.prompt}
+                        <span className="figure">Q{index + 1}.</span> {q.prompt({ id: answer.questionId, prompt: answer.prompt })}
                       </p>
-                      <p className="font-medium">{answer.choice?.label ?? 'Answered in an earlier version'}</p>
-                      {answer.choice ? <p className="text-[0.8125rem] text-muted-foreground">{answer.choice.description}</p> : null}
+                      <p className="font-medium">{answer.choice ? q.label(answer.choice) : t('isq.earlier')}</p>
+                      {answer.choice ? <p className="text-[0.8125rem] text-muted-foreground">{q.description(answer.choice)}</p> : null}
                     </div>
                   </li>
                 )

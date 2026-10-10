@@ -1,6 +1,7 @@
 import { getAssetOptions } from '../api/history'
 import { ReturnsCalculator } from '../components/ReturnsCalculator'
 import { ToolIntro } from '../components/lesson'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** `/tools/returns` -- the historical returns calculator. */
 export async function ReturnsPage() {
@@ -8,7 +9,7 @@ export async function ReturnsPage() {
   return (
     <>
       <ToolIntro tour="returns" question="tool.returns.q">
-        Pick an index, fund or stock and an amount. See what it would be worth today on real prices, and where it could go if the trend held.
+        <T k="tool.returns.intro" />
       </ToolIntro>
       <ReturnsCalculator options={options} defaultAsset="SP500" />
     </>

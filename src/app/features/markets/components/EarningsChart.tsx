@@ -7,6 +7,7 @@ import { PanelFrame } from './PanelFrame'
 
 import type { FundamentalPoint } from '../api/symbol'
 import { useChartTheme } from './use-chart-theme'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /**
  * Quarterly earnings per share.
@@ -70,7 +71,7 @@ export function EarningsChart({ points, embedded = false }: { points: Fundamenta
 
   if (points.length === 0) {
     return (
-      <PanelFrame title="Quarterly earnings" embedded={embedded}>
+      <PanelFrame title={<T k="sym.earnings" />} embedded={embedded}>
         <p className="text-sm text-muted-foreground">Finnhub returned no quarterly earnings series for this symbol.</p>
       </PanelFrame>
     )
@@ -80,7 +81,7 @@ export function EarningsChart({ points, embedded = false }: { points: Fundamenta
   const last = points[points.length - 1]
 
   return (
-    <PanelFrame title="Quarterly earnings" embedded={embedded}>
+    <PanelFrame title={<T k="sym.earnings" />} embedded={embedded}>
       <p className="mb-3 text-xs text-muted-foreground">
         Earnings per share, {first.time} to {last.time} · {points.length} quarters
       </p>

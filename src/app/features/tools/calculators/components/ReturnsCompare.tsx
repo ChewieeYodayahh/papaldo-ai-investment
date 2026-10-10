@@ -15,6 +15,7 @@ import { AmountField, ShareResultButton, useMoney, WhatItBuys } from './fields'
 import { YEAR_OPTIONS, type YearOption } from './ReturnsCalculator'
 import { SavingsGoalDialog } from './SavingsGoalDialog'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { T } from '@/app/features/userData/preferences/copy'
 
 export type CompareSeries = { key: string; label: string; color: string; points: MonthlyPoint[] }
 
@@ -57,7 +58,7 @@ export function ReturnsCompare({ series }: { series: CompareSeries[] }) {
   return (
     <Card className="rounded-2xl border-0 py-4 sm:py-5">
       <CardHeader className="px-4 sm:px-5">
-        <CardTitle className="text-base font-semibold">If you had invested</CardTitle>
+        <CardTitle className="text-base font-semibold"><T k="calc.ifInvested" /></CardTitle>
         <CardDescription>
           The same money in each index, using their real monthly prices. Tap an index to see what its result buys.
         </CardDescription>
@@ -131,7 +132,7 @@ export function ReturnsCompare({ series }: { series: CompareSeries[] }) {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
             <Checkbox checked={saveOpen} onCheckedChange={(checked) => setSaveOpen(Boolean(checked))} />
-            How much should I save?
+            <T k="calc.howMuchSave" />
           </label>
           <ShareResultButton
             filename="papaldo-index-returns"

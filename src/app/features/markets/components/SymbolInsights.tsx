@@ -7,6 +7,7 @@ import type { FundamentalPoint } from '../api/symbol'
 import { AnalystRatings } from './AnalystRatings'
 import { EarningsChart } from './EarningsChart'
 import { SymbolNews } from './SymbolNews'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /**
  * Analyst ratings, news and quarterly earnings in one Insights card, each a
@@ -27,12 +28,12 @@ export function SymbolInsights({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">Insights</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground"><T k="sym.insights" /></CardTitle>
       </CardHeader>
       <CardContent>
         <Accordion>
           <AccordionItem value="ratings">
-            <AccordionTrigger>Analyst ratings</AccordionTrigger>
+            <AccordionTrigger><T k="sym.analysts" /></AccordionTrigger>
             <AccordionContent>
               <AnalystRatings ratings={ratings} embedded />
             </AccordionContent>
@@ -44,7 +45,7 @@ export function SymbolInsights({
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="earnings">
-            <AccordionTrigger>Quarterly earnings</AccordionTrigger>
+            <AccordionTrigger><T k="sym.earnings" /></AccordionTrigger>
             <AccordionContent>
               <EarningsChart points={earnings} embedded />
             </AccordionContent>

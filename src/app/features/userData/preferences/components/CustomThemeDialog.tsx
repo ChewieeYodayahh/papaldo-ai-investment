@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 
 import { hexToRgb, hsvToRgb, normalizeHex, readableOn, rgbToHex, rgbToHsv, type Hsv } from '../colors'
 import { usePreferences, type CustomColors } from '../store'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** The picker's square, in CSS pixels: one step per 0-255 channel value (Carlos, 2026-09-30). */
 const SIZE = 255
@@ -71,7 +72,7 @@ export function CustomThemeDialog({ open, onOpenChange }: { open: boolean; onOpe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Your own theme</DialogTitle>
+          <DialogTitle><T k="theme.title" /></DialogTitle>
           <DialogDescription>Pick a primary and a secondary colour. Buttons, highlights and charts follow them.</DialogDescription>
         </DialogHeader>
 
@@ -161,7 +162,7 @@ export function CustomThemeDialog({ open, onOpenChange }: { open: boolean; onOpe
             className="grid h-10 min-w-24 place-items-center rounded-xl px-3 text-sm font-semibold"
             style={{ background: draft.primary, color: readableOn(draft.primary) }}
           >
-            Preview
+            <T k="theme.preview" />
           </span>
         </div>
 
@@ -176,7 +177,7 @@ export function CustomThemeDialog({ open, onOpenChange }: { open: boolean; onOpe
               onOpenChange(false)
             }}
           >
-            Use these colours
+            <T k="theme.use" />
           </Button>
         </DialogFooter>
       </DialogContent>

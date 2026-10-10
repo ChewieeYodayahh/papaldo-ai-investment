@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { useFormSubmit } from '../hooks/use-form-submit'
 import { ONBOARDING_PATHS } from '../routes'
 import type { OnboardingStep } from '../types'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** Why the callback bounced someone back here, in words. */
 const CALLBACK_ERRORS: Record<string, string> = {
@@ -83,7 +84,7 @@ export function LoginForm() {
         </Field>
 
         <Button type="submit" size="lg" disabled={pending} className="mt-1 h-11 w-full rounded-full text-[0.9375rem] font-semibold">
-          {pending ? 'Logging in…' : 'Log in'}
+          {pending ? <T k="auth.loggingIn" /> : <T k="header.login" />}
         </Button>
       </FieldGroup>
     </form>

@@ -17,6 +17,7 @@ import { KeyStats } from '../components/KeyStats'
 import { PriceChart } from '../components/PriceChart'
 import { SymbolHeader } from '../components/SymbolHeader'
 import { SymbolInsights } from '../components/SymbolInsights'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /**
  * One symbol, opened from the dashboard watchlist.
@@ -108,9 +109,9 @@ export async function SymbolPage({ symbol }: { symbol: string }) {
               <Card>
                 <CardContent className="p-6 text-sm text-muted-foreground">
                   <Link href="/login" className="underline">
-                    Sign in
+                    <T k="sym.signIn" />
                   </Link>{' '}
-                  to place a simulated order.
+                  <T k="sym.toOrder" />
                 </CardContent>
               </Card>
             )}

@@ -13,6 +13,7 @@ import { getProfile, isSetupComplete } from '../api/profile'
 import { AvatarUploader } from '../components/AvatarUploader'
 import { AboutYouCard, ConnectedAccountsCard, DetailsCard, SecurityCard, WorkIncomeCard } from '../components/ProfileCards'
 import { SignOutButton } from '../components/SignOutButton'
+import { T } from '@/app/features/userData/preferences/copy'
 
 const ROW = 'flex h-11 items-center gap-3 px-4 text-sm font-medium transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none'
 
@@ -54,7 +55,7 @@ export async function ProfileDashboardPage({ searchParams }: { searchParams: Rec
                   setupDone ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground',
                 )}
               >
-                {setupDone ? 'Profile complete' : 'Profile setup in progress'}
+                {setupDone ? <T k="prof.complete" /> : <T k="prof.inProgress" />}
               </Badge>
             </div>
           </div>
@@ -63,13 +64,13 @@ export async function ProfileDashboardPage({ searchParams }: { searchParams: Rec
             {profile.username ? (
               <Link href={`/u/${encodeURIComponent(profile.username)}`} className={ROW}>
                 <UsersRound className="size-4 text-muted-foreground" />
-                <span className="flex-1">Member profile &amp; friends</span>
+                <span className="flex-1"><T k="prof.memberLink" /></span>
                 <ChevronRight className="size-4 text-muted-foreground" />
               </Link>
             ) : null}
             <Link href="/tools/export" className={ROW}>
               <Download className="size-4 text-muted-foreground" />
-              <span className="flex-1">Export my data</span>
+              <span className="flex-1"><T k="nav.tools.export" /></span>
               <ChevronRight className="size-4 text-muted-foreground" />
             </Link>
             <SignOutButton variant="ghost" className="h-11 justify-start gap-3 rounded-none px-4 text-loss hover:text-loss" />

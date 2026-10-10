@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 
 export type GuestPass = { secret: string; name: string; expiresAt: string }
 
@@ -75,6 +76,7 @@ export function GuestJoinDialog({
   onOpenChange: (open: boolean) => void
   onJoined: (pass: GuestPass) => void
 }) {
+  const t = useCopy()
   const [name, setName] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -109,7 +111,7 @@ export function GuestJoinDialog({
       <DialogContent className="sm:max-w-md">
         <form onSubmit={submit} className="grid gap-4">
           <DialogHeader>
-            <DialogTitle>Pick a name to join</DialogTitle>
+            <DialogTitle>{t('chat.pickName')}</DialogTitle>
             <DialogDescription>
               Chat as a guest for up to 10 minutes. The name lasts until you close this tab or the time runs out.
               Messages are public; never share personal or financial details.
@@ -131,7 +133,7 @@ export function GuestJoinDialog({
           </Field>
           <DialogFooter>
             <Button type="submit" disabled={pending || name.trim().length < 2} className="rounded-full px-5">
-              {pending ? 'Joining…' : 'Join the chat'}
+              {pending ? t('chat.joining') : t('chat.join')}
             </Button>
           </DialogFooter>
         </form>

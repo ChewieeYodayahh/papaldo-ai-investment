@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+import { T } from '@/app/features/userData/preferences/copy'
+
 import type { Order } from '../types'
 
 const money = new Intl.NumberFormat('en-US', {
@@ -20,7 +22,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">Order history</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground"><T k="trade.history" /></CardTitle>
       </CardHeader>
       <CardContent>
         {orders.length === 0 ? (

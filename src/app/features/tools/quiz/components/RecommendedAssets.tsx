@@ -37,8 +37,8 @@ export function RecommendedAssets({ band, assets }: { band: RiskBand; assets: Re
   const t = useCopy()
   if (assets.length === 0) return null
   const groups = [
-    { key: 'fund', label: 'Top ETFs', items: assets.filter((a) => a.kind === 'fund') },
-    { key: 'stock', label: 'Top stocks', items: assets.filter((a) => a.kind !== 'fund') },
+    { key: 'fund', label: t('isq.topFunds'), items: assets.filter((a) => a.kind === 'fund') },
+    { key: 'stock', label: t('isq.topStocks'), items: assets.filter((a) => a.kind !== 'fund') },
   ].filter((group) => group.items.length > 0)
 
   return (

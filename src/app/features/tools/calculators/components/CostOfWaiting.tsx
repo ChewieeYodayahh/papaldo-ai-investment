@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { monthlySavingNeeded, retirementPlan } from '../strategies'
 import { AmountField, NumberField, ShareResultButton, useMoney } from './fields'
 import { LessonCard, ResultHeadline } from './lesson'
+import { T } from '@/app/features/userData/preferences/copy'
 
 const DELAYS = [0, 5, 10, 15] as const
 /** The chart stops this many years before retirement, where the monthly figure shoots up. */
@@ -84,7 +85,7 @@ export function CostOfWaiting({
     <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <Card className="rounded-2xl border-0 py-4 sm:py-5">
         <CardHeader className="px-4 sm:px-5">
-          <CardTitle className="text-base font-semibold">Your retirement</CardTitle>
+          <CardTitle className="text-base font-semibold"><T k="calc.yourRetirement" /></CardTitle>
           <CardDescription>When you want to stop working, and what you want to live on.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 px-4 sm:px-5" data-tut="waiting.inputs">

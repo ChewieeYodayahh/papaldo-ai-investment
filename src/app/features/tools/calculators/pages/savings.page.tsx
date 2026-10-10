@@ -3,6 +3,7 @@ import { ToolIntro } from '../components/lesson'
 import type { RatePreset } from '../components/SavingsGoalCalculator'
 import { SavingsGoalCalculator } from '../components/SavingsGoalCalculator'
 import { lastYears, seriesCagr } from '../math'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** Ten years is the window the presets quote, like the benchmarker's middle range. */
 const PRESET_YEARS = 10
@@ -23,8 +24,7 @@ export async function SavingsPage() {
   return (
     <>
       <ToolIntro tour="savings" question="tool.savings.q">
-        Set a goal and a date to see the monthly amount. Keep an emergency fund safe in a bank deposit while you
-        invest the rest: both show on one chart.
+        <T k="tool.savings.intro" />
       </ToolIntro>
       <SavingsGoalCalculator presets={presets} emergencyFund />
     </>

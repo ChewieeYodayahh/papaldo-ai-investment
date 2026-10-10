@@ -152,6 +152,9 @@ graphify-out/
 
 # Python pipelines (python/*.py)
 python/.venv/
+# Any virtualenv anywhere, e.g. a leftover .venv_old/ at the root.
+.venv*/
+venv*/
 __pycache__/
 *.pyc
 python/out/

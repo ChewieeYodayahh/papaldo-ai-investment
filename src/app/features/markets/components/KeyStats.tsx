@@ -4,6 +4,7 @@ import type { Quote } from '../api/quotes'
 import type { MarketResult } from '../api/result'
 import { marketUnavailableMessage } from '../market-status'
 import { StatHelp, type StatId } from './StatHelp'
+import { T } from '@/app/features/userData/preferences/copy'
 
 type Metrics = Record<string, number | string | null>
 
@@ -61,7 +62,7 @@ export function KeyStats({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">Key stats</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground"><T k="sym.keyStats" /></CardTitle>
       </CardHeader>
       <CardContent>
         {!metrics.ok ? (

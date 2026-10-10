@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import type { Candle } from '../api/candles'
 import { useChartTheme } from './use-chart-theme'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** Approximate trading days per window. Labels are what the buttons show. */
 const RANGES = [
@@ -111,8 +112,8 @@ export function PriceChart({ candles }: { candles: Candle[] }) {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
         <div>
-          <CardTitle className="text-sm font-medium text-muted-foreground">Price</CardTitle>
-          <p className="mt-1 text-xs text-muted-foreground">Daily candles</p>
+          <CardTitle className="text-sm font-medium text-muted-foreground"><T k="sym.price" /></CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground"><T k="sym.candles" /></p>
         </div>
       </CardHeader>
 

@@ -1,24 +1,25 @@
+import { T, type CopyKey } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 import { MacBook, type LaptopShot } from '../components/devices'
 
-const STEPS: Array<{ shot: LaptopShot; title: string; body: string; alt: string }> = [
+const STEPS: Array<{ shot: LaptopShot; title: CopyKey; body: CopyKey; alt: string }> = [
   {
     shot: 'quiz',
-    title: 'Find your risk level',
-    body: 'Six questions about your goals, your timeline and how you would feel if a price fell. You get a risk level, and the funds and companies that suit it.',
+    title: 'land.step.quiz.title',
+    body: 'land.step.quiz.body',
     alt: 'A quiz result in the Papaldo app: the score meter at Moderate Investor, with the suggested funds and stocks.',
   },
   {
     shot: 'trade',
-    title: 'Practice with $100,000',
-    body: 'Buy and sell real companies and funds at their real prices. Before any order goes through you see what it costs and what you will have left. None of it is real money.',
+    title: 'land.step.trade.title',
+    body: 'land.step.trade.body',
     alt: 'A practice order in the Papaldo app: the confirmation for ten shares of an S&P 500 fund, with the estimated cost and the cash left after.',
   },
   {
     shot: 'learn',
-    title: 'Learn as you go',
-    body: 'Tools that each answer one money question, like how much more you need to save if you start later, and a guided tour on every page. Each ends with the lesson, in plain words.',
+    title: 'land.step.learn.title',
+    body: 'land.step.learn.body',
     alt: 'Tutorial Mode in the Papaldo app, walking through the Cost of Waiting tool and its lesson.',
   },
 ]
@@ -34,10 +35,10 @@ export function HowItWorks() {
     <section id="how-it-works" aria-labelledby="how-title" className="scroll-mt-20">
       <div className="mx-auto max-w-7xl px-4 py-20 md:px-6 md:py-28">
         <h2 id="how-title" className="font-display text-3xl font-semibold tracking-[-0.02em] font-stretch-[112%] sm:text-4xl">
-          How it works
+          <T k="land.how.title" />
         </h2>
         <p className="mt-3 max-w-xl text-pretty text-muted-foreground">
-          Three steps, at your own pace. Every screen here is the real app, with a sample account.
+          <T k="land.how.sub" />
         </p>
 
         <ol className="mt-14 grid gap-20 md:mt-20 lg:gap-28">
@@ -51,9 +52,9 @@ export function HowItWorks() {
                   {i + 1}
                 </span>
                 <h3 className="mt-4 font-display text-2xl font-semibold tracking-[-0.015em] font-stretch-[110%] sm:text-[1.75rem]">
-                  {step.title}
+                  <T k={step.title} />
                 </h3>
-                <p className="mt-3 max-w-md text-pretty text-muted-foreground">{step.body}</p>
+                <p className="mt-3 max-w-md text-pretty text-muted-foreground"><T k={step.body} /></p>
               </div>
               <MacBook
                 shot={step.shot}

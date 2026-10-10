@@ -23,11 +23,12 @@ import { RETIREMENT_INCOME_HELP } from '@/app/features/auth/income'
 import type { IncomeCurrency } from '@/app/features/auth/schema'
 import type { UserProfile } from '@/app/features/auth/types'
 import { cn } from '@/lib/utils'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 
 const STEPS = [
-  { key: 'about', label: 'About you', icon: UserRound },
-  { key: 'work', label: 'Work', icon: BriefcaseBusiness },
-  { key: 'income', label: 'Income', icon: Target },
+  { key: 'about', label: 'setup.step.about', icon: UserRound },
+  { key: 'work', label: 'setup.step.work', icon: BriefcaseBusiness },
+  { key: 'income', label: 'setup.step.income', icon: Target },
 ] as const
 
 type Draft = { amount: string; currency: IncomeCurrency }
@@ -49,6 +50,7 @@ function firstIncomplete(profile: UserProfile): number {
  * it has one. Everything else can be finished later from the checklist.
  */
 export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfile; quizDone: boolean }) {
+  const t = useCopy()
   const router = useRouter()
   const { pending, message, errors, submit } = useFormSubmit('/api/auth/profile', 'PATCH')
   const [step, setStep] = useState(() => firstIncomplete(profile))
@@ -101,22 +103,20 @@ export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfil
           <span className="grid size-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
             <CircleCheck className="size-8" strokeWidth={2} />
           </span>
-          <p className="text-xs font-semibold tracking-[0.18em] text-highlight uppercase">User setup 1 of 3 · done</p>
-          <h2 className="text-2xl font-semibold tracking-tight">Your profile is set</h2>
+          <p className="text-xs font-semibold tracking-[0.18em] text-highlight uppercase">{t('setup.doneTag')}</p>
+          <h2 className="text-2xl font-semibold tracking-tight">{t('setup.doneTitle')}</h2>
           <p className="max-w-sm text-[0.9375rem] text-muted-foreground">
-            {quizDone
-              ? 'Last step: place your first simulated trade with a guided walkthrough.'
-              : 'Next up: six quick questions to find your risk profile. About five minutes.'}
+            {quizDone ? t('setup.doneTrade') : t('setup.doneQuiz')}
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-3">
             <Link href="/dashboard" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-11 rounded-full px-5')}>
-              Back to Home
+              {t('isq.backHome')}
             </Link>
             <Link
               href={quizDone ? '/tools' : '/isq'}
               className={cn(buttonVariants({ size: 'lg' }), 'h-11 rounded-full px-6 font-semibold')}
             >
-              {quizDone ? 'Take your first trade' : 'Take the quiz'}
+              {quizDone ? t('gs.trade') : t('gs.quiz')}
               <ArrowRight data-icon="inline-end" />
             </Link>
           </div>
@@ -132,12 +132,12 @@ export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfil
     <JourneyCard>
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold tracking-[0.18em] text-highlight uppercase">User setup · 1 of 3</span>
+          <span className="font-semibold tracking-[0.18em] text-highlight uppercase">{t('setup.tag')}</span>
           <span className="figure text-muted-foreground">
-            Step {step + 1} of {STEPS.length}
+            {t('setup.stepOf', { n: String(step + 1), m: String(STEPS.length) })}
           </span>
         </div>
-        <Progress value={((step + 1) / STEPS.length) * 100} aria-label={`Step ${step + 1} of ${STEPS.length}`} />
+        <Progress value={((step + 1) / STEPS.length) * 100} aria-label={t('setup.stepOf', { n: String(step + 1), m: String(STEPS.length) })} />
         <ol className="grid grid-cols-3 gap-2">
           {STEPS.map((item, index) => (
             <li
@@ -148,7 +148,7 @@ export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfil
               )}
             >
               {index < step ? <CircleCheck className="size-3.5 text-primary" /> : <item.icon className="size-3.5" />}
-              {item.label}
+              {t(item.label)}
             </li>
           ))}
         </ol>
@@ -156,13 +156,13 @@ export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfil
 
       <form onSubmit={onContinue} noValidate className="mt-7">
         {step === 0 ? (
-          <StepIntro title="Let’s start with you" body="How Papaldo should address you, and a number to reach you on." />
+          <StepIntro title={t('setup.about.title')} body={t('setup.about.body')} />
         ) : step === 1 ? (
-          <StepIntro title="What do you do?" body="Pick the closest match. Search the list or scroll through all 100." />
+          <StepIntro title={t('setup.work.title')} body={t('setup.work.body')} />
         ) : (
           <StepIntro
-            title="Where you are, and where you’re going"
-            body="Your yearly income today, and the income you’re working toward. Pick ₱ or $ for each."
+            title={t('setup.income.title')}
+            body={t('setup.income.body')}
           />
         )}
 
@@ -243,16 +243,16 @@ export function ProfileSetupJourney({ profile, quizDone }: { profile: UserProfil
           <div className="flex flex-wrap items-center gap-3 pt-2">
             {step > 0 ? (
               <Button type="button" variant="ghost" onClick={() => setStep(step - 1)} className="h-10 rounded-full px-4">
-                <ArrowLeft data-icon="inline-start" /> Back
+                <ArrowLeft data-icon="inline-start" /> {t('isq.back')}
               </Button>
             ) : null}
             {hasUsername ? (
               <Link href="/dashboard" className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-                Finish later
+                {t('setup.later')}
               </Link>
             ) : null}
             <Button type="submit" size="lg" disabled={pending} className="ml-auto h-11 rounded-full px-6 font-semibold">
-              {pending ? 'Saving…' : step === STEPS.length - 1 ? 'Finish' : 'Continue'}
+              {pending ? t('prof.saving') : step === STEPS.length - 1 ? t('setup.finish') : t('setup.continue')}
               {pending ? null : <ArrowRight data-icon="inline-end" />}
             </Button>
           </div>

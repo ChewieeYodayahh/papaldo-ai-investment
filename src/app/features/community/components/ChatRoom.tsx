@@ -7,6 +7,7 @@ import { SendHorizontal, Trash2 } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 import type { ChatMessage } from '../api/messages'
@@ -34,6 +35,7 @@ const timeLabel = (iso: string) => {
  * Friend" / "View Profile" on members' names (`AuthorMenu`).
  */
 export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[]; signedIn: boolean; isAdmin: boolean }) {
+  const t = useCopy()
   const [messages, setMessages] = useState(initial)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
@@ -120,22 +122,22 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
           className="flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-5"
           role="log"
           aria-live="polite"
-          aria-label="Chat messages"
+          aria-label={t('chat.messages')}
         >
           {messages.length === 0 ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">No messages yet. Say hello and start the conversation.</p>
+            <p className="py-16 text-center text-sm text-muted-foreground">{t('chat.empty')}</p>
           ) : (
             messages.map((message) => (
               <div key={message.id} className={cn('group flex flex-col gap-1', message.mine ? 'items-end' : 'items-start')}>
                 <span className="px-1 text-xs text-muted-foreground">
                   {message.mine ? (
-                    <span className="font-medium text-foreground">You</span>
+                    <span className="font-medium text-foreground">{t('chat.you')}</span>
                   ) : signedIn && !message.guest ? (
                     <AuthorMenu name={message.author} />
                   ) : (
                     <span className="font-medium text-foreground">{message.author}</span>
                   )}
-                  {message.guest ? <span className="text-muted-foreground"> · Guest</span> : null} · {timeLabel(message.createdAt)}
+                  {message.guest ? <span className="text-muted-foreground"> · {t('chat.guest')}</span> : null} · {timeLabel(message.createdAt)}
                 </span>
                 <div className="flex max-w-[85%] items-center gap-1.5 sm:max-w-[70%]">
                   {isAdmin && !message.mine ? (
@@ -189,7 +191,7 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
                 />
                 <Button type="submit" disabled={sending || !draft.trim()} className="h-10 gap-2 rounded-full px-4">
                   <SendHorizontal className="size-4" />
-                  <span className="hidden sm:inline">{sending ? 'Sending…' : 'Send'}</span>
+                  <span className="hidden sm:inline">{sending ? t('chat.sending') : t('chat.send')}</span>
                 </Button>
               </div>
               <div className="flex justify-between gap-3 text-xs text-muted-foreground">
@@ -197,14 +199,14 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
                   {error ??
                     (guest.pass && !signedIn ? (
                       <>
-                        Chatting as <span className="font-medium text-foreground">{guest.pass.name}</span> · Guest ·{' '}
-                        {guest.minutesLeft} min left ·{' '}
+                        {t('chat.chattingAs')} <span className="font-medium text-foreground">{guest.pass.name}</span> · {t('chat.guest')} ·{' '}
+                        {t('chat.minutesLeft', { n: String(guest.minutesLeft) })} ·{' '}
                         <button type="button" onClick={guest.clear} className="underline underline-offset-2 hover:text-foreground">
-                          Leave
+                          {t('chat.leave')}
                         </button>
                       </>
                     ) : (
-                      'Enter to send, Shift+Enter for a new line.'
+                      t('chat.hint')
                     ))}
                 </span>
                 <span className="figure shrink-0">
@@ -214,16 +216,16 @@ export function ChatRoom({ initial, signedIn, isAdmin }: { initial: ChatMessage[
             </form>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground">You’re reading as a guest. Pick a name to chat for 10 minutes, or sign in.</p>
+              <p className="text-sm text-muted-foreground">{t('chat.readingAsGuest')}</p>
               <div className="flex flex-wrap gap-2">
                 <Button onClick={() => setJoining(true)} className="h-9 rounded-full px-4">
-                  Join as a guest
+                  {t('chat.joinGuest')}
                 </Button>
                 <Link href="/login" className={cn(buttonVariants({ variant: 'outline' }), 'h-9 rounded-full px-4')}>
-                  Log in
+                  {t('header.login')}
                 </Link>
                 <Link href="/sign-up" className={cn(buttonVariants(), 'h-9 rounded-full px-4')}>
-                  Create an account
+                  {t('chat.createAccount')}
                 </Link>
               </div>
             </div>

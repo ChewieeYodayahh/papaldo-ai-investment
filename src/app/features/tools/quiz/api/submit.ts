@@ -95,7 +95,7 @@ export type AnsweredQuestion = {
   questionId: string
   prompt: string
   /** Null when the stored choice id is from an earlier version of the quiz. */
-  choice: { label: string; description: string; icon: ChoiceIcon } | null
+  choice: { id: string; label: string; description: string; icon: ChoiceIcon } | null
 }
 
 /**
@@ -120,7 +120,7 @@ export async function getCurrentAnswers(profile: CurrentRiskProfile): Promise<An
     return {
       questionId: question.id,
       prompt: question.prompt,
-      choice: choice ? { label: choice.label, description: choice.description, icon: choice.icon } : null,
+      choice: choice ? { id: choice.id, label: choice.label, description: choice.description, icon: choice.icon } : null,
     }
   })
 }

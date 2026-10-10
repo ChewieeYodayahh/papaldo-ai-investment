@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field'
 
 import { NETWORK_ERROR } from '../hooks/use-form-submit'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /**
  * Starts a Google round trip without importing Supabase into the browser:
@@ -22,7 +23,7 @@ export function GoogleButton({
   endpoint = '/api/auth/oauth/google',
   className,
 }: {
-  label: string
+  label: React.ReactNode
   endpoint?: string
   className?: string
 }) {
@@ -64,7 +65,7 @@ export function GoogleButton({
         className={className ?? 'h-11 w-full rounded-full text-[0.9375rem]'}
       >
         <FcGoogle className="size-5" />
-        {pending ? 'Redirecting…' : label}
+        {pending ? <T k="auth.redirecting" /> : label}
       </Button>
       <FieldError className="text-center">{message}</FieldError>
     </div>

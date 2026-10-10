@@ -6,6 +6,7 @@ import { ReturnsCompare, type CompareSeries } from '@/app/features/tools/calcula
 import { getBenchmarks } from '../api/benchmarks'
 import { INDEX_COLOR } from '../colors'
 import { Benchmarker } from '../components/Benchmarker'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /**
  * `/markets/benchmarks` -- the Stock Exchange Index Benchmarker, with the
@@ -45,8 +46,7 @@ export async function BenchmarksPage() {
       <Benchmarker data={data} />
       <ReturnsCompare series={series} />
       <LessonCard terms={['diversification', 'indexFund']}>
-        Each market had its own good and bad stretches, and none led every year. Spreading money across markets
-        smooths the ride, so one slow market hurts less.
+        <T k="bm.lesson" />
       </LessonCard>
     </div>
   )

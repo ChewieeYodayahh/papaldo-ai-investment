@@ -18,6 +18,7 @@ import { budgetTips, BUCKETS, PRESETS, splitBudget, TARGET_SHARE, type Bucket, t
 import { budgetSheet } from '../workbook'
 import { NumberInput, ShareResultButton } from './fields'
 import { LessonCard, ResultHeadline, TermHelp } from './lesson'
+import { T } from '@/app/features/userData/preferences/copy'
 
 const BUCKET_LABEL: Record<Bucket, string> = { needs: 'Needs', wants: 'Wants', savings: 'Savings & debt' }
 
@@ -71,7 +72,7 @@ export function BudgetPlanner() {
     <div className="grid gap-4 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
       <Card className="rounded-2xl border-0 py-4 sm:py-5">
         <CardHeader className="px-4 sm:px-5">
-          <CardTitle className="text-base font-semibold">Your month</CardTitle>
+          <CardTitle className="text-base font-semibold"><T k="calc.yourMonth" /></CardTitle>
           <CardDescription>Take-home pay, then what each peso or dollar is for.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 px-4 sm:px-5">

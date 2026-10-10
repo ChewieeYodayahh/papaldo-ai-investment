@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { useFormSubmit } from '../hooks/use-form-submit'
 import { ONBOARDING_PATHS } from '../routes'
 import type { OnboardingStep } from '../types'
+import { T } from '@/app/features/userData/preferences/copy'
 
 const FIELDS = [
   { name: 'username', label: 'Username', type: 'text', autoComplete: 'username', hint: 'At least 3 characters.' },
@@ -64,7 +65,7 @@ export function SignUpForm() {
         ))}
 
         <Button type="submit" size="lg" disabled={pending} className="mt-1 h-11 w-full rounded-full text-[0.9375rem] font-semibold">
-          {pending ? 'Creating account…' : 'Create account'}
+          {pending ? <T k="auth.creating" /> : <T k="auth.create" />}
         </Button>
       </FieldGroup>
     </form>

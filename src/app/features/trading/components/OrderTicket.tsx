@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 
 import { useFormSubmit } from '@/app/features/auth/hooks/use-form-submit'
 import { Money } from '@/app/features/userData/preferences/components/Money'
+import { useCopy } from '@/app/features/userData/preferences/copy'
 import type { Order } from '../types'
 
 type Side = 'buy' | 'sell'
@@ -81,6 +82,7 @@ export function OrderTicket({
   /** In `tradable_assets` and active. Mirrors the PA007 check. */
   isBuyable: boolean
 }) {
+  const t = useCopy()
   const router = useRouter()
   const { pending, message, errors, submit } = useFormSubmit('/api/trading/orders')
 
@@ -142,7 +144,7 @@ export function OrderTicket({
     return (
       <Card data-tour="order-ticket">
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Trade {symbol}</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">{t('trade.title', { symbol })}</CardTitle>
           <Badge variant="outline" className="text-[10px]">
             Simulated
           </Badge>
@@ -161,7 +163,7 @@ export function OrderTicket({
               </p>
               <Link href="/isq" className={cn(buttonVariants({ size: 'default' }), 'mt-4 w-full')}>
                 <Compass className="size-4" />
-                Discover your Risk Appetite
+                {t('trade.discover')}
               </Link>
             </>
           )}
@@ -173,7 +175,7 @@ export function OrderTicket({
   return (
     <Card data-tour="order-ticket">
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-        <CardTitle className="text-sm font-medium text-muted-foreground">Trade {symbol}</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{t('trade.title', { symbol })}</CardTitle>
         <Badge variant="outline" className="text-[10px]">
           Simulated
         </Badge>
@@ -211,7 +213,7 @@ export function OrderTicket({
           <p className="mb-4 text-xs text-muted-foreground">
             You can close this position, but buying needs a risk profile first.{' '}
             <Link href="/isq" className="underline">
-              Take the questionnaire
+              {t('trade.takeQuiz')}
             </Link>
             .
           </p>
@@ -278,13 +280,13 @@ export function OrderTicket({
             disabled={pending || !validQuantity || exceedsCash || exceedsPosition}
             className={cn('h-10 w-full rounded-full font-semibold capitalize', SIDE_FILL[side])}
           >
-            Review {side} {symbol}
+            {t(side === 'buy' ? 'trade.reviewBuy' : 'trade.reviewSell', { symbol })}
           </Button>
         </form>
 
         {filled ? (
           <p className="mt-3 rounded-md border border-border p-3 text-xs text-muted-foreground" role="status">
-            Filled: {filled.side} {filled.quantity.toLocaleString('en-US')} {filled.symbol} at{' '}
+            {t('trade.filled')} {filled.side} {filled.quantity.toLocaleString('en-US')} {filled.symbol} at{' '}
             <Money usd={filled.fillPrice} /> for <Money usd={filled.cashAmount} />.
           </p>
         ) : null}
@@ -302,7 +304,7 @@ export function OrderTicket({
             <AlertDialogTitle className="capitalize">
               {side} {symbol}?
             </AlertDialogTitle>
-            <AlertDialogDescription>Check the order before it goes through.</AlertDialogDescription>
+            <AlertDialogDescription>{t('trade.confirmNote')}</AlertDialogDescription>
           </AlertDialogHeader>
           <dl className="grid gap-2 rounded-xl bg-muted/50 p-4 text-sm">
             <SummaryRow label="Asset" value={name ? `${symbol} · ${name}` : symbol} />
@@ -320,7 +322,7 @@ export function OrderTicket({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={onExecute} disabled={pending} className={cn('font-semibold capitalize', SIDE_FILL[side])}>
-              {pending ? 'Placing…' : `Execute ${side}`}
+              {pending ? t('trade.placing') : t(side === 'buy' ? 'trade.executeBuy' : 'trade.executeSell')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

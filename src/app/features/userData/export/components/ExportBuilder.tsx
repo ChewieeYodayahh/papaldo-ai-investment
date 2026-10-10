@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import type { ExportData } from '../api/data'
 import { downloadText, htmlReport, sparklineSvg, tableFrom, toCsv, type Column, type ReportSection, type Table } from '../formats'
 import { summarize, withRealizedPnl, type TradeRow } from '../metrics'
+import { T } from '@/app/features/userData/preferences/copy'
 
 type Persona = 'regular' | 'trader'
 type DatasetId = 'summary' | 'holdings' | 'trades' | 'equity' | 'market' | 'bars' | 'profile'
@@ -335,7 +336,7 @@ export function ExportBuilder({ data }: { data: ExportData }) {
       <div className="grid gap-4">
         <Card className="rounded-2xl border-0 py-5">
           <CardHeader className="px-5">
-            <CardTitle className="text-base font-semibold">Who is this report for?</CardTitle>
+            <CardTitle className="text-base font-semibold"><T k="exp.who" /></CardTitle>
             <CardDescription>This picks sensible defaults. You can change anything below.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 px-5 sm:grid-cols-2" role="radiogroup" aria-label="Report type">
@@ -346,7 +347,7 @@ export function ExportBuilder({ data }: { data: ExportData }) {
 
         <Card className="rounded-2xl border-0 py-5">
           <CardHeader className="px-5">
-            <CardTitle className="text-base font-semibold">What to include</CardTitle>
+            <CardTitle className="text-base font-semibold"><T k="exp.include" /></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2 px-5 sm:grid-cols-2">
             {DATASETS.map((dataset) => {
@@ -367,7 +368,7 @@ export function ExportBuilder({ data }: { data: ExportData }) {
 
         <Card className="rounded-2xl border-0 py-5">
           <CardHeader className="px-5">
-            <CardTitle className="text-base font-semibold">Filters</CardTitle>
+            <CardTitle className="text-base font-semibold"><T k="exp.filters" /></CardTitle>
             <CardDescription>Dates apply to trades and daily values. Symbol applies to trades and holdings.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 px-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -428,7 +429,7 @@ export function ExportBuilder({ data }: { data: ExportData }) {
 
       <Card className="h-fit rounded-2xl border-0 py-5 xl:sticky xl:top-4">
         <CardHeader className="px-5">
-          <CardTitle className="text-base font-semibold">Your file</CardTitle>
+          <CardTitle className="text-base font-semibold"><T k="exp.file" /></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 px-5">
           <Field>
@@ -468,7 +469,7 @@ export function ExportBuilder({ data }: { data: ExportData }) {
           <div className="flex flex-wrap gap-2">
             <Button onClick={download} disabled={busy || chosen.length === 0} className="h-10 flex-1 gap-2 rounded-full font-semibold">
               <Download className="size-4" />
-              {busy ? 'Building…' : format === 'csv' ? 'Download CSV' : 'Download report'}
+              {busy ? <T k="exp.building" /> : format === 'csv' ? <T k="exp.csv" /> : <T k="exp.report" />}
             </Button>
             <Button variant="outline" onClick={reset} disabled={busy} className="h-10 rounded-full px-4">
               Cancel

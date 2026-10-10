@@ -3,6 +3,7 @@ import { PanelFrame } from './PanelFrame'
 import type { FinnhubNewsItem } from '@/app/core/services/finnhub'
 import type { MarketResult } from '../api/result'
 import { marketUnavailableMessage } from '../market-status'
+import { T } from '@/app/features/userData/preferences/copy'
 
 /** Company headlines from Finnhub, last 30 days. Real, unranked, unfiltered. */
 export function SymbolNews({
@@ -15,7 +16,7 @@ export function SymbolNews({
   embedded?: boolean
 }) {
   return (
-    <PanelFrame title={`News · ${symbol}`} embedded={embedded}>
+    <PanelFrame title={<T k="sym.news" vars={{ symbol }} />} embedded={embedded}>
         {!items.ok ? (
           <p className="text-sm text-muted-foreground">{marketUnavailableMessage(items.reason, 'Finnhub')}</p>
         ) : items.data.length === 0 ? (

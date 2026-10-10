@@ -1,3 +1,5 @@
+'use client'
+
 import {
   BriefcaseBusiness,
   CalendarRange,
@@ -17,6 +19,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
+import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
 import type { ChoiceIcon, RiskBand } from '../types'
@@ -48,6 +51,7 @@ export const BAND_ICON: Record<RiskBand, LucideIcon> = { Low: Shield, Medium: Sc
  * 67-100). Segments are muted tokens; the marker is the only accent.
  */
 export function ScoreMeter({ score, className }: { score: number; className?: string }) {
+  const t = useCopy()
   const clamped = Math.min(100, Math.max(0, score))
   return (
     <div className={cn('w-full', className)}>
@@ -69,9 +73,9 @@ export function ScoreMeter({ score, className }: { score: number; className?: st
         />
       </div>
       <div className="mt-2 grid grid-cols-3 text-[0.6875rem] text-muted-foreground">
-        <span>Conservative</span>
-        <span className="text-center">Moderate</span>
-        <span className="text-right">Aggressive</span>
+        <span>{t('isq.meter.Low')}</span>
+        <span className="text-center">{t('isq.meter.Medium')}</span>
+        <span className="text-right">{t('isq.meter.High')}</span>
       </div>
     </div>
   )

@@ -17,6 +17,7 @@ import { whatItBuys } from '../purchases'
 import { EmergencyFundFields, useEmergencyFund } from './EmergencyFundPlanner'
 import { AmountField, NumberField, ShareResultButton, Stat, useMoney, WhatItBuys } from './fields'
 import { LessonCard, TermHelp } from './lesson'
+import { T } from '@/app/features/userData/preferences/copy'
 
 const FREQUENCIES: Array<{ value: Frequency; label: string; per: string }> = [
   { value: 'weekly', label: 'Weekly', per: 'a week' },
@@ -82,7 +83,7 @@ export function SavingsGoalCalculator({
     <div className={cn('grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]', className)}>
       <Card className="rounded-2xl border-0 py-4 sm:py-5" data-tut="savings.goal">
         <CardHeader className="px-4 sm:px-5">
-          <CardTitle className="text-base font-semibold">Your goal</CardTitle>
+          <CardTitle className="text-base font-semibold"><T k="calc.yourGoal" /></CardTitle>
           <CardDescription>The amount, the deadline and the return you expect.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 px-4 sm:px-5">

@@ -19,7 +19,7 @@ export function Cta() {
           <T k="land.ctaTitle" />
         </h2>
         <p className="mt-4 max-w-md text-pretty text-foreground/80">
-          Take the six-question quiz, then make your first trade with practice money. It&apos;s free.
+          <T k="land.ctaBody" />
         </p>
         <Link href="/sign-up" className={cn(buttonVariants({ size: 'lg' }), 'mt-8 h-12 rounded-full px-7 text-base font-semibold')}>
           <T k="land.cta" />

@@ -1,3 +1,5 @@
+import { T } from '@/app/features/userData/preferences/copy'
+
 /**
  * "A practice floor, not a casino" (2026-10-02): the gambling worry,
  * answered with what the app actually does. Each line is enforced by the
@@ -29,10 +31,10 @@ export function PracticeFloor() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 md:px-6 md:py-28 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
         <div>
           <h2 id="floor-title" className="font-display text-3xl font-semibold tracking-[-0.02em] text-balance font-stretch-[112%] sm:text-4xl">
-            A practice floor, not a casino
+            <T k="land.floor.title" />
           </h2>
           <p className="mt-4 max-w-md text-pretty text-muted-foreground">
-            Papaldo is for learning how investing works, calmly. This is what that means in the app.
+            <T k="land.floor.sub" />
           </p>
         </div>
         <dl className="divide-y divide-border border-y border-border">

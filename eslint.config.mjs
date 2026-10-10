@@ -22,6 +22,9 @@ const eslintConfig = [
       // The Remotion marketing video is its own package with its own lint.
       "marketing/**",
       "next-env.d.ts",
+      // Python virtualenvs ship third-party JS (e.g. sklearn assets).
+      "**/.venv*/**",
+      "**/venv*/**",
     ],
   },
 ];

@@ -27,6 +27,7 @@ import { TutorialTrigger } from '@/app/features/tutorials/components/TutorialMod
 import { useCopy } from '@/app/features/userData/preferences/copy'
 import { cn } from '@/lib/utils'
 
+import { useIsqText } from '../copy'
 import { ANSWER_DEPENDENCIES, ISQ_QUESTIONS } from '../questions'
 import type { RiskBand } from '../types'
 import { BAND_ICON, CHOICE_ICON, ScoreMeter } from './quiz-visuals'
@@ -48,11 +49,12 @@ type Scored = { band: RiskBand; totalScore: number }
  * required-answer validation and the shortcuts; this component owns the
  * selections, the "Not yet -> nothing yet" auto-answer, and the result.
  *
- * Question text stays plain English in every language register -- the copy
- * rule for anything a user's money decisions hang on.
+ * Question and choice text follow the language register through `useIsqText`
+ * (Carlos, 2026-10-10); scoring reads ids only, so wording never moves a score.
  */
 export function IsqForm({ retake }: { retake: boolean }) {
   const t = useCopy()
+  const q = useIsqText()
   const router = useRouter()
   const { pending, message, submit } = useFormSubmit('/api/isq')
   const [selections, setSelections] = useState<Record<string, string>>({})
@@ -95,19 +97,19 @@ export function IsqForm({ retake }: { retake: boolean }) {
           <span className="grid size-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
             <BandIcon className="size-8" strokeWidth={1.75} />
           </span>
-          <p className="text-xs font-semibold tracking-[0.18em] text-highlight uppercase">Your risk profile</p>
+          <p className="text-xs font-semibold tracking-[0.18em] text-highlight uppercase">{t('isq.yourProfile')}</p>
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
             {t('tools.youAre')} <span className="text-highlight">{t(`tools.band.${result.band}`)}</span>
           </h2>
           <p className="max-w-md text-[0.9375rem] text-muted-foreground">{t(`dash.blurb.${result.band}`)}</p>
           <ScoreMeter score={result.totalScore} className="mt-3 max-w-md" />
-          <p className="figure text-sm text-muted-foreground">Score {result.totalScore} / 100</p>
+          <p className="figure text-sm text-muted-foreground">{t('isq.score', { score: String(result.totalScore) })}</p>
           <div className="mt-2 flex flex-wrap justify-center gap-3">
             <Link href="/isq/results" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-11 rounded-full px-5')}>
               {t('tools.viewResults')}
             </Link>
             <Link href="/dashboard" className={cn(buttonVariants({ size: 'lg' }), 'h-11 rounded-full px-6 font-semibold')}>
-              Back to Home
+              {t('isq.backHome')}
               <ArrowRight data-icon="inline-end" />
             </Link>
           </div>
@@ -122,13 +124,13 @@ export function IsqForm({ retake }: { retake: boolean }) {
       <div className="mb-7 space-y-3" data-tut="quiz.progress">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold tracking-[0.18em] text-highlight uppercase">
-            {retake ? 'Retake' : 'User setup · 2 of 3'}
+            {retake ? t('isq.retakeTag') : t('isq.setupTag')}
           </span>
           <span className="figure text-muted-foreground">
-            Question {index + 1} of {ISQ_QUESTIONS.length}
+            {t('isq.questionOf', { n: String(index + 1), m: String(ISQ_QUESTIONS.length) })}
           </span>
         </div>
-        <Progress value={((index + 1) / ISQ_QUESTIONS.length) * 100} aria-label={`Question ${index + 1} of ${ISQ_QUESTIONS.length}`} />
+        <Progress value={((index + 1) / ISQ_QUESTIONS.length) * 100} aria-label={t('isq.questionOf', { n: String(index + 1), m: String(ISQ_QUESTIONS.length) })} />
       </div>
 
       {message ? (
@@ -140,9 +142,9 @@ export function IsqForm({ retake }: { retake: boolean }) {
       <Questionnaire items={ITEMS} item={current} onItemChange={setCurrent} onSubmit={handleSubmit} shortcuts="numbers">
         {ISQ_QUESTIONS.map((question) => (
           <QuestionnaireItem key={question.id} name={question.id} required>
-            <QuestionnaireTitle data-tut="quiz.question" className="text-2xl leading-tight font-semibold tracking-tight">{question.prompt}</QuestionnaireTitle>
+            <QuestionnaireTitle data-tut="quiz.question" className="text-2xl leading-tight font-semibold tracking-tight">{q.prompt(question)}</QuestionnaireTitle>
             {question.helperText ? (
-              <QuestionnaireDescription className="-mt-2 text-[0.9375rem]">{question.helperText}</QuestionnaireDescription>
+              <QuestionnaireDescription className="-mt-2 text-[0.9375rem]">{q.helperText(question)}</QuestionnaireDescription>
             ) : null}
 
             <QuestionnaireChoices data-tut="quiz.choices" className="mt-2 gap-3">
@@ -161,8 +163,8 @@ export function IsqForm({ retake }: { retake: boolean }) {
                         <Icon className="size-5" />
                       </span>
                       <span className="flex min-w-0 flex-col gap-0.5">
-                        <span className="text-[0.9375rem] font-semibold">{choice.label}</span>
-                        <QuestionnaireChoiceDescription className="text-[0.8125rem]">{choice.description}</QuestionnaireChoiceDescription>
+                        <span className="text-[0.9375rem] font-semibold">{q.label(choice)}</span>
+                        <QuestionnaireChoiceDescription className="text-[0.8125rem]">{q.description(choice)}</QuestionnaireChoiceDescription>
                       </span>
                     </span>
                   </QuestionnaireChoice>
@@ -172,11 +174,11 @@ export function IsqForm({ retake }: { retake: boolean }) {
 
             <QuestionnaireActions className="mt-4">
               <QuestionnairePrevious variant="ghost" className="h-10 rounded-full px-4">
-                Back
+                {t('isq.back')}
               </QuestionnairePrevious>
-              <QuestionnaireNext className="h-10 rounded-full px-5 font-semibold">Next</QuestionnaireNext>
+              <QuestionnaireNext className="h-10 rounded-full px-5 font-semibold">{t('isq.next')}</QuestionnaireNext>
               <QuestionnaireSubmit disabled={pending} className="h-10 rounded-full px-5 font-semibold">
-                {pending ? 'Scoring…' : 'See my result'}
+                {pending ? t('isq.scoring') : t('isq.seeResult')}
               </QuestionnaireSubmit>
             </QuestionnaireActions>
           </QuestionnaireItem>
