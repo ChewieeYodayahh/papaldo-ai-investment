@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Globe, LogOut, Palette as PaletteIcon, Settings, UserRound } from 'lucide-react'
+import { Globe, LogOut, Palette as PaletteIcon, Settings, Type, UserRound } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
 import { useSignOut } from '@/app/features/auth/components/SignOutButton'
@@ -24,11 +24,13 @@ import {
 import { CustomThemeDialog } from '@/app/features/userData/preferences/components/CustomThemeDialog'
 import { useCopy } from '@/app/features/userData/preferences/copy'
 import {
+  FONT_SIZES,
   FONTS,
   LANGUAGES,
   PALETTES,
   usePreferences,
   type Font,
+  type FontSize,
   type Language,
   type Palette,
 } from '@/app/features/userData/preferences/store'
@@ -40,7 +42,8 @@ const FONT_LABELS: Record<Font, string> = {
 }
 
 /**
- * The header gear: Profile, Themes (mode, palette, font), Language and, when
+ * The header gear: Profile, Themes (mode, palette), Language, Font (style
+ * and size) and, when
  * signed in, Sign out. Also in the public top bar, where only the display
  * settings show.
  *
@@ -59,6 +62,8 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
   const [customOpen, setCustomOpen] = useState(false)
   const font = usePreferences((s) => s.font)
   const setFont = usePreferences((s) => s.setFont)
+  const fontSize = usePreferences((s) => s.fontSize)
+  const setFontSize = usePreferences((s) => s.setFontSize)
   const language = usePreferences((s) => s.language)
   const setLanguage = usePreferences((s) => s.setLanguage)
 
@@ -134,17 +139,6 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
                 ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{t('header.fonts')}</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={font} onValueChange={(value) => setFont(value as Font)}>
-                {FONTS.map((option) => (
-                  <DropdownMenuRadioItem key={option} value={option}>
-                    {FONT_LABELS[option]}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
@@ -161,6 +155,36 @@ export function SettingsMenu({ signedIn }: { signedIn: boolean }) {
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Type />
+            {t('header.fonts')}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-48">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{t('header.fontStyle')}</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={font} onValueChange={(value) => setFont(value as Font)}>
+                {FONTS.map((option) => (
+                  <DropdownMenuRadioItem key={option} value={option}>
+                    {FONT_LABELS[option]}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{t('header.fontSize')}</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={fontSize} onValueChange={(value) => setFontSize(value as FontSize)}>
+                {FONT_SIZES.map((option) => (
+                  <DropdownMenuRadioItem key={option} value={option}>
+                    {t(`header.size.${option}`)}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 

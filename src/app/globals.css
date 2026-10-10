@@ -96,7 +96,7 @@ body {
  * of breakpoints. Scoped with :has() so the landing page keeps its own scale.
  */
 html:has([data-app-shell]) {
-  font-size: clamp(13.5px, 0.25vw + 10.5px, 15px);
+  font-size: calc(clamp(13.5px, 0.25vw + 10.5px, 15px) * var(--font-scale));
 }
 
 /*
@@ -107,7 +107,7 @@ html:has([data-app-shell]) {
 @media (max-width: 767px) {
   html:has([data-app-shell]) {
     /* 15px since 2026-10-01 (16px made cards feel oversized). */
-    font-size: 15px;
+    font-size: calc(15px * var(--font-scale));
   }
 }
 
@@ -126,7 +126,26 @@ html[data-navigating] * {
   cursor: progress !important;
 }
 
-/* Settings -> Themes -> Fonts. `html[...]` outranks the next/font class. */
+/*
+ * Settings -> Themes -> Font -> Size (2026-10-10). One multiplier on the root
+ * size, so every rem-based size and spacing scales with it. The landing page
+ * keeps the browser's own root size, times the same multiplier.
+ */
+html {
+  --font-scale: 1;
+  font-size: calc(100% * var(--font-scale));
+}
+html[data-font-size="small"] {
+  --font-scale: 0.9;
+}
+html[data-font-size="large"] {
+  --font-scale: 1.1;
+}
+html[data-font-size="xlarge"] {
+  --font-scale: 1.2;
+}
+
+/* Settings -> Themes -> Font -> Style. `html[...]` outranks the next/font class. */
 html[data-font="geist"] {
   --font-sans: var(--font-geist-sans);
 }

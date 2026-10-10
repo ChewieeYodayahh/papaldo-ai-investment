@@ -21,7 +21,7 @@ const CUSTOM_TOKENS = [
 ] as const
 
 /**
- * Mounted once in the root layout. Mirrors palette and font onto <html>,
+ * Mounted once in the root layout. Mirrors palette, font and text size onto <html>,
  * where globals.css picks them up. Loading saved preferences is
  * PreferencePersistence's job, since only a signed-in shell may load them.
  *
@@ -34,6 +34,7 @@ export function PreferencesEffects() {
   const palette = usePreferences((s) => s.palette)
   const custom = usePreferences((s) => s.customColors)
   const font = usePreferences((s) => s.font)
+  const fontSize = usePreferences((s) => s.fontSize)
 
   useEffect(() => {
     const root = document.documentElement
@@ -62,6 +63,12 @@ export function PreferencesEffects() {
     if (font === 'figtree') root.removeAttribute('data-font')
     else root.setAttribute('data-font', font)
   }, [font])
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (fontSize === 'default') root.removeAttribute('data-font-size')
+    else root.setAttribute('data-font-size', fontSize)
+  }, [fontSize])
 
   return null
 }

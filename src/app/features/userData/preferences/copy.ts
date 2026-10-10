@@ -77,7 +77,7 @@ const en = {
   'header.palette.black': 'Black',
   'header.palette.white': 'White',
   'header.palette.custom': 'Custom…',
-  'header.fonts': 'Fonts',
+  'header.fonts': 'Font',
   'header.language': 'Language',
   'header.lang.en': 'English',
   'header.lang.slang': 'Slang English',
@@ -537,6 +537,13 @@ const en = {
   'land.phone.glance': 'Your holdings at a glance',
   'land.phone.check': 'Check every order first',
   'land.ctaBody': 'Take the six-question quiz, then make your first trade with practice money. It’s free.',
+  // Settings -> Themes -> Font (2026-10-10).
+  'header.fontStyle': 'Style',
+  'header.fontSize': 'Size',
+  'header.size.small': 'Small',
+  'header.size.default': 'Default',
+  'header.size.large': 'Large',
+  'header.size.xlarge': 'Extra large',
 } as const
 
 export type CopyKey = keyof typeof en
@@ -964,6 +971,12 @@ const slang: Dictionary = {
   'land.phone.glance': 'Your stuff at a glance',
   'land.phone.check': 'Double-check every order',
   'land.ctaBody': 'Do the six-question quiz, then make your first trade with practice money. It’s free.',
+  'header.fontStyle': 'Style',
+  'header.fontSize': 'Size',
+  'header.size.small': 'Small',
+  'header.size.default': 'Normal',
+  'header.size.large': 'Big',
+  'header.size.xlarge': 'Huge',
 }
 
 const brainrot: Dictionary = {
@@ -1422,6 +1435,12 @@ const brainrot: Dictionary = {
   'land.phone.glance': 'Your bag at a glance',
   'land.phone.check': 'Lock in before every order',
   'land.ctaBody': 'Take the six-question Mewing quiz, then ape in with practice money. Free fr.',
+  'header.fontStyle': 'Font vibe',
+  'header.fontSize': 'Text size',
+  'header.size.small': 'Smol',
+  'header.size.default': 'Mid (default)',
+  'header.size.large': 'Big',
+  'header.size.xlarge': 'Absolute unit',
 }
 
 const DICTIONARIES: Record<Language, Dictionary> = { en, slang, brainrot }

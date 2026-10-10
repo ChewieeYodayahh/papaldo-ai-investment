@@ -5,7 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 
 /**
  * Per-viewer display preferences: which currency figures render in, which
- * copy register the UI speaks, and which palette and font it wears.
+ * copy register the UI speaks, and which palette, font and text size it wears.
  *
  * Browser-local on purpose. None of these change what the account *is* --
  * balances stay in USD in the database whatever the toggle says -- so they do
@@ -40,6 +40,10 @@ export type CustomColors = { primary: string; secondary: string }
 export const FONTS = ['figtree', 'geist', 'system'] as const
 export type Font = (typeof FONTS)[number]
 
+/** Root size multipliers live in globals.css under `html[data-font-size]`. */
+export const FONT_SIZES = ['small', 'default', 'large', 'xlarge'] as const
+export type FontSize = (typeof FONT_SIZES)[number]
+
 export const THEMES = ['light', 'dark', 'system'] as const
 export type ThemeMode = (typeof THEMES)[number]
 
@@ -50,6 +54,7 @@ export const DEFAULT_PREFERENCES = {
   palette: 'midnight' as Palette,
   customColors: { primary: '#9be15d', secondary: '#5fb3b3' } as CustomColors,
   font: 'figtree' as Font,
+  fontSize: 'default' as FontSize,
   theme: 'dark' as ThemeMode,
   notificationsSeenAt: null as string | null,
 }
@@ -87,6 +92,7 @@ type Preferences = {
   palette: Palette
   customColors: CustomColors
   font: Font
+  fontSize: FontSize
   /** Light / dark / system, mirrored from next-themes so it is saved per account. */
   theme: ThemeMode
   /** ISO time the notification list was last opened. Drives the unread badge. */
@@ -96,6 +102,7 @@ type Preferences = {
   setPalette: (palette: Palette) => void
   setCustomColors: (colors: CustomColors) => void
   setFont: (font: Font) => void
+  setFontSize: (fontSize: FontSize) => void
   setTheme: (theme: ThemeMode) => void
   markNotificationsSeen: () => void
 }
@@ -109,6 +116,7 @@ export const usePreferences = create<Preferences>()(
       setPalette: (palette) => set({ palette }),
       setCustomColors: (customColors) => set({ customColors, palette: 'custom' }),
       setFont: (font) => set({ font }),
+      setFontSize: (fontSize) => set({ fontSize }),
       setTheme: (theme) => set({ theme }),
       markNotificationsSeen: () => set({ notificationsSeenAt: new Date().toISOString() }),
     }),
@@ -136,12 +144,13 @@ export const usePreferences = create<Preferences>()(
       },
       storage: createJSONStorage(() => accountStorage),
       skipHydration: true,
-      partialize: ({ currency, language, palette, customColors, font, theme, notificationsSeenAt }) => ({
+      partialize: ({ currency, language, palette, customColors, font, fontSize, theme, notificationsSeenAt }) => ({
         currency,
         language,
         palette,
         customColors,
         font,
+        fontSize,
         theme,
         notificationsSeenAt,
       }),
